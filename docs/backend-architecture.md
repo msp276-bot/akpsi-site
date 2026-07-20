@@ -17,30 +17,56 @@ behind the same UI.
 
 ## Database source of truth
 
-The first schema draft lives in [`db/schema.sql`](../db/schema.sql). It covers:
+Two files:
 
-- members and users/auth
-- events and RSVPs/check-ins
-- announcements
-- documents
-- rush applications
-- audit logs
+- [`db/supabase-roles.sql`](../db/supabase-roles.sql) — **implemented and
+  runnable.** The `members` roster/allowlist table, its Row-Level Security, and
+  the auth-signup trigger that powers real login + role management today. Run
+  this in Supabase to switch the site from mock mode to live mode.
+- [`db/schema.sql`](../db/schema.sql) — broader design draft for later tables
+  (events, announcements, documents, applications, audit logs). Aspirational.
+
+## Roles, allowlist & auth (implemented)
+
+Login and role management run against Supabase, called directly from the browser
+(the site stays a static export). See [`docs/supabase-setup.md`](./supabase-setup.md)
+for setup.
+
+- **Roster = allowlist.** The `members` table (email primary key) is the single
+  source of truth for who can log in and what role they have. An email not on it
+  cannot sign in — enforced by a `before insert` trigger on `auth.users` that
+  rejects unknown emails at signup (Google or magic link).
+- **President-only writes.** Only `president` and `admin` roles may insert /
+  update / delete rows, enforced by RLS (`is_roster_manager()`), not just the
+  UI. The client anon key can't bypass it.
+- **Login methods.** Google OAuth (hosted-domain hint `@rutgers.edu`) and magic
+  link email. Both resolve the signed-in email to a role via the roster.
+- **Graceful fallback.** When `NEXT_PUBLIC_SUPABASE_*` are unset the app runs in
+  mock mode (in-browser demo accounts) so previews work with no backend.
+
+Data-access layer: [`src/lib/roles.ts`](../src/lib/roles.ts) (Supabase +
+mock impls); auth: [`src/context/AuthContext.tsx`](../src/context/AuthContext.tsx);
+UI: the **Roles & access** module in `src/app/portal/admin/page.tsx`.
 
 ## RBAC mapping
 
-The frontend mock roles map to backend roles like this:
-
-| Frontend role | Backend role | Meaning |
+| Frontend role | Backend role (roster) | Meaning |
 | --- | --- | --- |
-| `pledge` | `member` with pledge cohort flag | pledge-facing portal |
-| `active` | `active` / `member` | general chapter member |
-| `board` | `eboard` | e-board officer |
-| `admin` | `admin` | tech/admin owner |
+| `pledge` | `pledge` | pledge-facing portal |
+| `active` | `active` | general chapter member |
+| `board` | `board` | e-board officer |
+| `president` | `president` | e-board + manages the roster/roles |
+| `admin` | `admin` | tech/admin owner (full command center) |
 
-Frontend permissions live in `src/lib/access.ts`. Server routes should enforce
-the same permissions server-side before returning sensitive data.
+Frontend permissions live in `src/lib/access.ts` (`manage:roles` gates the Roles
+& access screen). Server enforcement lives in the RLS policies in
+`db/supabase-roles.sql` — the two must stay in sync.
 
 ## Route/API contract
+
+Roster/roles are handled via the Supabase client (`src/lib/roles.ts`), not
+custom endpoints — the equivalent operations are: list members, upsert a member
+(add/change role), and delete a member, all gated by RLS.
 
 Future API endpoints:
 
@@ -64,6 +90,9 @@ Future API endpoints:
 - `GET /api/documents`
 - `POST /api/documents`
 - `DELETE /api/documents/[id]`
+- `GET /api/documents/archive`
+- `POST /api/documents/[id]/archive`
+- `POST /api/documents/[id]/restore`
 - `POST /api/applications`
 - `GET /api/applications`
 - `GET /api/applications/[id]`
@@ -74,6 +103,29 @@ Gateway + Lambda or Supabase. If the site moves to a server-capable host, these
 can be implemented as Next.js route handlers.
 
 ## Data entry flows
+
+### Document archive
+
+Older documents should stay out of the member-facing document library without
+being immediately deleted. Admins can archive stale folders, expired rush files,
+old meeting minutes, financial packets, and sensitive exports.
+
+Recommended behavior:
+
+- member document views only return documents where `archived_at is null`
+- admin archive views return archived documents with folder, owner, retention
+  status, and restore/delete actions
+- restricted or financial records should require admin permission to hard-delete
+- archive and restore actions should write audit log rows
+- archived files should keep their object storage path unless a lifecycle policy
+  moves them into colder storage
+
+Recommended object paths:
+
+```text
+documents/{folder}/{document_id}/{filename}
+archive/documents/{folder}/{document_id}/{filename}
+```
 
 ### Profile setup
 

@@ -35,7 +35,8 @@ const NAV = [
     label: "Admin",
     href: "/portal/admin",
     Icon: ShieldCheck,
-    permission: "admin:*" as const,
+    // President reaches the admin area for role management; admin sees it via admin:*.
+    permission: "manage:roles" as const,
   },
 ];
 

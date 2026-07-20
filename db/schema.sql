@@ -1,5 +1,11 @@
--- AKPsi Omicron Tau backend schema draft.
+-- AKPsi Omicron Tau backend schema draft (aspirational — later tables).
 -- Target database: PostgreSQL via Supabase, Neon, or Prisma migrations.
+--
+-- NOTE: Live auth + role management uses a simpler, self-contained `members`
+-- table defined in db/supabase-roles.sql (email PK + role + allowlist trigger).
+-- That file is what actually runs today; the richer `members` table below is a
+-- future design and is not yet deployed. Don't run both `members` definitions
+-- against the same database.
 
 create extension if not exists pgcrypto;
 
@@ -105,6 +111,10 @@ create table documents (
   visibility varchar(20) default 'members'
     check (visibility in ('public', 'members', 'active', 'pledge', 'eboard')),
   download_count integer default 0,
+  archived_at timestamp,
+  archived_by uuid references members(id),
+  retention_status varchar(30) default 'retained'
+    check (retention_status in ('retained', 'restricted', 'retention_lock')),
   created_at timestamp default now()
 );
 
@@ -149,5 +159,6 @@ create index members_email_idx on members(email);
 create index members_slug_idx on members(slug);
 create index events_start_time_idx on events(start_time);
 create index events_visibility_idx on events(visibility);
+create index documents_archived_at_idx on documents(archived_at);
 create index applications_status_idx on applications(status);
 create index audit_logs_actor_created_idx on audit_logs(actor_id, created_at desc);
