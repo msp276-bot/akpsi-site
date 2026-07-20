@@ -1,26 +1,222 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ============================================================
+   Alpha Kappa Psi — Omicron Tau Chapter | Design System
+   ============================================================ */
 
 @theme inline {
+  /* Brand palette */
+  --color-navy: #1a2744;
+  --color-navy-2: #2d3e5f;
+  --color-navy-3: #223255;
+  --color-gold: #d4a853;
+  --color-gold-soft: #e5c583;
+  --color-blue: #5b8ec6;
+  --color-scarlet: #cc0033;
+
+  --color-ink: #1e293b;
+  --color-muted: #64748b;
+  --color-line: #e2e8f0;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  /* Fonts (wired up in layout.tsx via next/font) */
+  --font-sans: var(--font-inter), "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-display), "Playfair Display", Didot, Bodoni, Georgia, serif;
+  --font-cinematic: var(--font-instrument), "Instrument Serif", Georgia, serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #ffffff;
+  --foreground: #1e293b;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Uppercase display headline helper */
+.headline {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 0.98;
+}
+
+/* Thin scrollbar for dark panels */
+.scroll-slim::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-slim::-webkit-scrollbar-thumb {
+  background: #3a4d73;
+  border-radius: 8px;
+}
+
+/* ---------- Keyframe animations ---------- */
+@keyframes silk-drift {
+  0% {
+    transform: translate3d(-3%, -2%, 0);
+  }
+  50% {
+    transform: translate3d(3%, 2%, 0);
+  }
+  100% {
+    transform: translate3d(-3%, -2%, 0);
+  }
+}
+
+@keyframes silk-drift-2 {
+  0% {
+    transform: translate3d(3%, 2%, 0);
+  }
+  50% {
+    transform: translate3d(-4%, -2%, 0);
+  }
+  100% {
+    transform: translate3d(3%, 2%, 0);
+  }
+}
+
+@keyframes chevron-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ---------- Liquid glass (hero CTAs / glass chips) ---------- */
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.01);
+  background-blend-mode: luminosity;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: none;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+.liquid-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.15) 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0.15) 80%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ---------- Cinematic entrance ---------- */
+@keyframes fade-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-rise {
+  animation: fade-rise 0.8s ease-out both;
+}
+.animate-fade-rise-delay {
+  animation: fade-rise 0.8s ease-out 0.2s both;
+}
+.animate-fade-rise-delay-2 {
+  animation: fade-rise 0.8s ease-out 0.4s both;
+}
+
+/* Logo marquee (About → Our Network) */
+@keyframes marquee-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+@keyframes marquee-right {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+.animate-marquee {
+  animation: marquee-left 35s linear infinite;
+}
+.marquee-track-1 {
+  animation: marquee-left 40s linear infinite;
+}
+.marquee-track-2 {
+  animation: marquee-right 35s linear infinite;
+}
+.marquee-band:hover .marquee-track-1,
+.marquee-band:hover .marquee-track-2 {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track-1,
+  .marquee-track-2 {
+    animation: none;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.animate-silk {
+  animation: silk-drift 22s ease-in-out infinite;
+}
+.animate-silk-2 {
+  animation: silk-drift-2 28s ease-in-out infinite;
+}
+.animate-chevron {
+  animation: chevron-bounce 2s ease-in-out infinite;
+}
+
+/* Reduced motion: neutralize transforms/animations globally */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
