@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Pin, Heart, MessageSquare } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Pin, Heart, MessageSquare, Plus, X } from "lucide-react";
 import PortalShell from "@/components/portal/PortalShell";
 import { useAuth } from "@/context/AuthContext";
 import { getInitials } from "@/data/members";
@@ -85,20 +85,63 @@ function Announcements() {
   const { user } = useAuth();
   const role = portalRole(user);
   const isBoard = isEboardOrAdmin(role);
+  const [posts, setPosts] = useState<Post[]>(POSTS);
   const [likes, setLikes] = useState<Record<string, boolean>>({});
+  const [showComposer, setShowComposer] = useState(false);
   const toggle = (id: string) =>
     setLikes((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  const sorted = POSTS
-    .filter((post) => canAccessVisibility(post.visibility, role))
-    .sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned));
+  const sorted = useMemo(
+    () =>
+      posts
+        .filter((post) => canAccessVisibility(post.visibility, role))
+        .sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned)),
+    [posts, role]
+  );
+
+  function addPost(post: Pick<Post, "title" | "body" | "visibility" | "pinned">) {
+    setPosts((current) => [
+      {
+        id: `local-${Date.now()}`,
+        title: post.title,
+        body: post.body,
+        author: user?.name ?? "Admin",
+        posted: "Just now",
+        pinned: post.pinned,
+        likes: 0,
+        comments: 0,
+        visibility: post.visibility,
+      },
+      ...current,
+    ]);
+    setShowComposer(false);
+  }
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="text-2xl font-bold text-ink">Announcements</h1>
-      <p className="mt-1 text-sm text-muted">
-        The latest from the chapter board.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-ink">Announcements</h1>
+          <p className="mt-1 text-sm text-muted">
+            The latest from the chapter board.
+          </p>
+        </div>
+        {isBoard && (
+          <button
+            onClick={() => setShowComposer(true)}
+            className="inline-flex items-center gap-2 rounded-full bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy/90"
+          >
+            <Plus size={15} /> Add announcement
+          </button>
+        )}
+      </div>
+
+      {showComposer && (
+        <AnnouncementComposer
+          onClose={() => setShowComposer(false)}
+          onCreate={addPost}
+        />
+      )}
 
       <div className="mt-6 space-y-4">
         {sorted.map((post) => {
@@ -152,5 +195,88 @@ function Announcements() {
         })}
       </div>
     </div>
+  );
+}
+
+function AnnouncementComposer({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (post: Pick<Post, "title" | "body" | "visibility" | "pinned">) => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [visibility, setVisibility] = useState<Visibility>("members");
+  const [pinned, setPinned] = useState(false);
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!title.trim() || !body.trim()) return;
+    onCreate({ title: title.trim(), body: body.trim(), visibility, pinned });
+    setTitle("");
+    setBody("");
+  }
+
+  return (
+    <form
+      onSubmit={submit}
+      className="mt-6 rounded-2xl border border-gold/30 bg-white p-5 shadow-sm"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="font-semibold text-ink">Create announcement</h2>
+          <p className="text-xs text-muted">
+            Mock write flow — ready to connect to POST /api/announcements.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg p-1.5 text-muted hover:bg-slate-100"
+          aria-label="Close composer"
+        >
+          <X size={17} />
+        </button>
+      </div>
+      <div className="mt-4 grid gap-3">
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Announcement title"
+          className="rounded-lg border border-line px-3 py-2.5 text-sm outline-none focus:border-blue"
+        />
+        <textarea
+          rows={4}
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          placeholder="Write the update..."
+          className="rounded-lg border border-line px-3 py-2.5 text-sm outline-none focus:border-blue"
+        />
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+          <select
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value as Visibility)}
+            className="rounded-lg border border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-blue"
+          >
+            <option value="members">All members</option>
+            <option value="active">Active only</option>
+            <option value="pledge">Pledge only</option>
+            <option value="eboard">E-Board only</option>
+          </select>
+          <label className="inline-flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm text-ink">
+            <input
+              type="checkbox"
+              checked={pinned}
+              onChange={(e) => setPinned(e.target.checked)}
+            />
+            Pin post
+          </label>
+        </div>
+      </div>
+      <button className="mt-4 rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy/90">
+        Publish announcement
+      </button>
+    </form>
   );
 }

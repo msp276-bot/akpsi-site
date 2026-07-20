@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Search, X, Mail, GraduationCap } from "lucide-react";
+import { Plus, Search, X, Mail, GraduationCap } from "lucide-react";
 import { LinkedinIcon } from "@/components/BrandIcons";
 import PortalShell from "@/components/portal/PortalShell";
+import { useAuth } from "@/context/AuthContext";
 import { members, getInitials, type Member } from "@/data/members";
+import { hasPermission } from "@/lib/access";
 
 export default function DirectoryPage() {
   return (
@@ -16,18 +18,22 @@ export default function DirectoryPage() {
 }
 
 function Directory() {
+  const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [year, setYear] = useState<string>("all");
   const [selected, setSelected] = useState<Member | null>(null);
+  const [localMembers, setLocalMembers] = useState<Member[]>(members);
+  const [showAdd, setShowAdd] = useState(false);
+  const canAddMembers = hasPermission(user?.role ?? "active", "edit:member");
 
   const years = useMemo(
-    () => ["all", ...Array.from(new Set(members.map((m) => m.classYear))).sort()],
-    []
+    () => ["all", ...Array.from(new Set(localMembers.map((m) => m.classYear))).sort()],
+    [localMembers]
   );
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return members.filter((m) => {
+    return localMembers.filter((m) => {
       const matchesYear = year === "all" || m.classYear === year;
       const matchesQuery =
         !q ||
@@ -36,14 +42,35 @@ function Directory() {
           .some((f) => f!.toLowerCase().includes(q));
       return matchesYear && matchesQuery;
     });
-  }, [query, year]);
+  }, [localMembers, query, year]);
+
+  function addMember(member: Member) {
+    setLocalMembers((current) => [member, ...current]);
+    setShowAdd(false);
+  }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-ink">Member Directory</h1>
-      <p className="mt-1 text-sm text-muted">
-        {results.length} of {members.length} members
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-ink">Member Directory</h1>
+          <p className="mt-1 text-sm text-muted">
+            {results.length} of {localMembers.length} members
+          </p>
+        </div>
+        {canAddMembers && (
+          <button
+            onClick={() => setShowAdd(true)}
+            className="inline-flex items-center gap-2 rounded-full bg-navy px-4 py-2 text-sm font-semibold text-white hover:bg-navy/90"
+          >
+            <Plus size={15} /> Add member
+          </button>
+        )}
+      </div>
+
+      {showAdd && (
+        <AddMemberForm onClose={() => setShowAdd(false)} onCreate={addMember} />
+      )}
 
       {/* Controls */}
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -176,5 +203,95 @@ function Directory() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function AddMemberForm({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (member: Member) => void;
+}) {
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    position: "Active Member",
+    major: "",
+    minor: "",
+    classYear: "2028",
+    group: "actives" as Member["group"],
+    industry: "",
+    linkedin: "",
+  });
+
+  function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
+    setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.name.trim() || !form.major.trim()) return;
+    const slug = form.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+    onCreate({
+      id: `local-${Date.now()}`,
+      slug,
+      name: form.name.trim(),
+      position: form.position.trim() || "Active Member",
+      major: form.major.trim(),
+      minor: form.minor.trim() || undefined,
+      group: form.group,
+      classYear: form.classYear,
+      industry: form.industry.trim() || undefined,
+      linkedin: form.linkedin.trim() || "#",
+    });
+  }
+
+  return (
+    <form
+      onSubmit={submit}
+      className="mt-6 rounded-2xl border border-gold/30 bg-white p-5 shadow-sm"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="font-semibold text-ink">Add member</h2>
+          <p className="text-xs text-muted">
+            Mock create flow — ready for POST /api/members and invite emails.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg p-1.5 text-muted hover:bg-slate-100"
+          aria-label="Close add member form"
+        >
+          <X size={17} />
+        </button>
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <input className="rounded-lg border border-line px-3 py-2.5 text-sm outline-none focus:border-blue" placeholder="Full name" value={form.name} onChange={(e) => update("name", e.target.value)} />
+        <input className="rounded-lg border border-line px-3 py-2.5 text-sm outline-none focus:border-blue" placeholder="Rutgers email" value={form.email} onChange={(e) => update("email", e.target.value)} />
+        <input className="rounded-lg border border-line px-3 py-2.5 text-sm outline-none focus:border-blue" placeholder="Position" value={form.position} onChange={(e) => update("position", e.target.value)} />
+        <input className="rounded-lg border border-line px-3 py-2.5 text-sm outline-none focus:border-blue" placeholder="Major" value={form.major} onChange={(e) => update("major", e.target.value)} />
+        <input className="rounded-lg border border-line px-3 py-2.5 text-sm outline-none focus:border-blue" placeholder="Minor" value={form.minor} onChange={(e) => update("minor", e.target.value)} />
+        <select className="rounded-lg border border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-blue" value={form.classYear} onChange={(e) => update("classYear", e.target.value)}>
+          {["2026", "2027", "2028", "2029", "2030"].map((year) => (
+            <option key={year} value={year}>Class of {year}</option>
+          ))}
+        </select>
+        <select className="rounded-lg border border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-blue" value={form.group} onChange={(e) => update("group", e.target.value as Member["group"])}>
+          <option value="board">Board</option>
+          <option value="directors">Director</option>
+          <option value="actives">Active</option>
+        </select>
+        <input className="rounded-lg border border-line px-3 py-2.5 text-sm outline-none focus:border-blue" placeholder="Industry / track" value={form.industry} onChange={(e) => update("industry", e.target.value)} />
+      </div>
+      <button className="mt-4 rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy/90">
+        Add to directory
+      </button>
+    </form>
   );
 }
