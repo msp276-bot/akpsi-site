@@ -5,7 +5,7 @@ import { Pin, Heart, MessageSquare } from "lucide-react";
 import PortalShell from "@/components/portal/PortalShell";
 import { useAuth } from "@/context/AuthContext";
 import { getInitials } from "@/data/members";
-import { canAccessVisibility, portalRole, visibilityLabel, type Visibility } from "@/lib/access";
+import { canAccessVisibility, isEboardOrAdmin, portalRole, visibilityLabel, type Visibility } from "@/lib/access";
 
 interface Post {
   id: string;
@@ -84,7 +84,7 @@ export default function AnnouncementsPage() {
 function Announcements() {
   const { user } = useAuth();
   const role = portalRole(user);
-  const isBoard = role === "board";
+  const isBoard = isEboardOrAdmin(role);
   const [likes, setLikes] = useState<Record<string, boolean>>({});
   const toggle = (id: string) =>
     setLikes((prev) => ({ ...prev, [id]: !prev[id] }));

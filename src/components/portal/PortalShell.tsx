@@ -10,10 +10,14 @@ import {
   FolderOpen,
   Megaphone,
   LogOut,
+  ClipboardList,
+  ShieldCheck,
+  Bell,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Logo from "@/components/ui/Logo";
 import { getInitials } from "@/data/members";
+import { hasPermission, roleLabel } from "@/lib/access";
 
 const NAV = [
   { label: "Dashboard", href: "/portal/dashboard", Icon: LayoutDashboard },
@@ -21,6 +25,18 @@ const NAV = [
   { label: "Directory", href: "/portal/directory", Icon: Users },
   { label: "Documents", href: "/portal/documents", Icon: FolderOpen },
   { label: "Announcements", href: "/portal/announcements", Icon: Megaphone },
+  {
+    label: "Applications",
+    href: "/portal/applications",
+    Icon: ClipboardList,
+    permission: "read:applications" as const,
+  },
+  {
+    label: "Admin",
+    href: "/portal/admin",
+    Icon: ShieldCheck,
+    permission: "admin:*" as const,
+  },
 ];
 
 const PLEDGE_NAV = NAV.filter(({ href }) =>
@@ -49,7 +65,9 @@ export default function PortalShell({
   }
 
   const isPledge = user.role === "pledge";
-  const visibleNav = isPledge ? PLEDGE_NAV : NAV;
+  const visibleNav = (isPledge ? PLEDGE_NAV : NAV).filter(
+    ({ permission }) => !permission || hasPermission(user.role, permission)
+  );
 
   return (
     <div className="min-h-svh bg-slate-50">
@@ -59,10 +77,17 @@ export default function PortalShell({
           <div className="flex items-center gap-3">
             <Logo tone="light" />
             <span className="hidden text-xs uppercase tracking-widest text-white/50 sm:block">
-              {isPledge ? "Pledge Portal" : "Active Brother Portal"}
+              {roleLabel(user.role)}
             </span>
           </div>
           <div className="flex items-center gap-4">
+            <button
+              className="relative grid h-9 w-9 place-items-center rounded-full border border-white/15 text-white/80 transition-colors hover:bg-white/10"
+              aria-label="Notifications"
+            >
+              <Bell size={16} />
+              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-scarlet" />
+            </button>
             <div className="hidden text-right sm:block">
               <p className="text-sm font-medium leading-tight">{user.name}</p>
               <p className="text-xs text-white/50">{user.email}</p>

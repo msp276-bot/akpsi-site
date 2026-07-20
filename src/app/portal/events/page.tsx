@@ -9,7 +9,7 @@ import {
 import PortalShell from "@/components/portal/PortalShell";
 import { useAuth } from "@/context/AuthContext";
 import { events, EVENT_TYPE_META, type ChapterEvent, type EventType } from "@/data/events";
-import { canAccessVisibility, portalRole, visibilityLabel } from "@/lib/access";
+import { canAccessVisibility, isEboardOrAdmin, portalRole, visibilityLabel } from "@/lib/access";
 import { countdownLabel, formatEventTime } from "@/lib/date";
 import { EASE_OUT_EXPO } from "@/lib/motion";
 
@@ -25,7 +25,7 @@ export default function EventsPage() {
 function EventsCalendar() {
   const { user } = useAuth();
   const role = portalRole(user);
-  const isBoard = role === "board";
+  const isBoard = isEboardOrAdmin(role);
   const [cursor, setCursor] = useState(new Date(2026, 6, 1));
   const [view, setView] = useState<CalendarView>("month");
   const [active, setActive] = useState<Set<EventType>>(new Set(TYPES));

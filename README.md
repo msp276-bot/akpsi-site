@@ -27,6 +27,8 @@ npm run build    # static production build in out/
 | `/portal/directory` | Searchable/filterable member directory + profile modal | Protected |
 | `/portal/documents` | Folder/file browser (upload is board-only) | Protected |
 | `/portal/announcements` | Board announcement feed (pin, like, comment) | Protected |
+| `/portal/applications` | Mock rush application review pipeline | E-Board/Admin |
+| `/portal/admin` | Backend-ready admin module map | Admin |
 
 SEO: per-page metadata, `robots.txt`, `sitemap.xml` (includes member profiles),
 and a generated OG image (`src/app/opengraph-image.tsx`).
@@ -56,6 +58,9 @@ Everything below is mock and typed for a clean swap:
   calendar. The demo "today" is pinned in `src/lib/date.ts` (`DEMO_NOW`).
 - **Documents / Announcements** — currently inline mock arrays in their page
   files; move to `src/data/` or a CMS when wiring a backend.
+- **Backend architecture** — see `docs/backend-architecture.md` and
+  `db/schema.sql` for the PostgreSQL schema, API contract, RBAC model, audit
+  logging, application pipeline, and notification plan.
 
 ## Swapping in real authentication
 

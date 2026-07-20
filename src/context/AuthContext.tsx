@@ -12,7 +12,7 @@ import {
 export interface ChapterUser {
   name: string;
   email: string;
-  role: "board" | "active" | "pledge";
+  role: "admin" | "board" | "active" | "pledge";
 }
 
 interface AuthState {
@@ -33,7 +33,22 @@ const STORAGE_KEY = "akpsi.ot.user";
 const AuthContext = createContext<AuthState | null>(null);
 
 const RUTGERS_DOMAIN = "@rutgers.edu";
+const ADMIN_EMAILS = new Set(["admin@rutgers.edu", "tech@rutgers.edu"]);
 const BOARD_EMAILS = new Set(["president@rutgers.edu", "tech@rutgers.edu"]);
+
+function normalizeStoredUser(
+  stored: Omit<ChapterUser, "role"> & { role?: string }
+): ChapterUser {
+  return {
+    ...stored,
+    role:
+      stored.role === "member"
+        ? "active"
+        : stored.role === "eboard"
+          ? "board"
+          : (stored.role as ChapterUser["role"]),
+  };
+}
 
 function deriveName(email: string): string {
   const local = email.split("@")[0].replace(/[._-]+/g, " ").trim();
@@ -50,20 +65,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Hydrate from localStorage on mount.
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const stored = JSON.parse(raw) as Omit<ChapterUser, "role"> & { role?: string };
-        // Preserve mock sessions created before the portal split.
-        setUser({
-          ...stored,
-          role: stored.role === "member" ? "active" : (stored.role as ChapterUser["role"]),
-        });
+    let cancelled = false;
+    queueMicrotask(() => {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (raw && !cancelled) {
+          const stored = JSON.parse(raw) as Omit<ChapterUser, "role"> & {
+            role?: string;
+          };
+          // Preserve mock sessions created before the portal split.
+          setUser(normalizeStoredUser(stored));
+        }
+      } catch {
+        /* ignore malformed storage */
       }
-    } catch {
-      /* ignore malformed storage */
-    }
-    setLoading(false);
+      if (!cancelled) setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const signInWithGoogle = useCallback(async (
@@ -86,7 +106,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const nextUser: ChapterUser = {
       email: address,
       name: deriveName(address),
-      role: BOARD_EMAILS.has(address) ? "board" : membership,
+      role: ADMIN_EMAILS.has(address)
+        ? "admin"
+        : BOARD_EMAILS.has(address)
+          ? "board"
+          : membership,
     };
 
     setUser(nextUser);

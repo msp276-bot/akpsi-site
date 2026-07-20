@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import PortalShell from "@/components/portal/PortalShell";
 import { useAuth } from "@/context/AuthContext";
-import { canAccessVisibility, portalRole, visibilityLabel, type Visibility } from "@/lib/access";
+import { canAccessVisibility, isEboardOrAdmin, portalRole, visibilityLabel, type Visibility } from "@/lib/access";
 
 interface Doc {
   name: string;
@@ -77,7 +77,7 @@ function Documents() {
   const { user } = useAuth();
   const [open, setOpen] = useState<string | null>("Meeting Minutes");
   const role = portalRole(user);
-  const isBoard = role === "board";
+  const isBoard = isEboardOrAdmin(role);
   const visibleFolders = FOLDERS.map((folder) => ({
     ...folder,
     files: folder.files.filter((file) => canAccessVisibility(file.visibility, role)),
