@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, Pause, Play } from "lucide-react";
 
-const VIDEO_SRC =
+const FALLBACK_VIDEO_SRC =
   "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4";
+const VIDEO_SRC =
+  process.env.NEXT_PUBLIC_HERO_VIDEO_4K_URL || FALLBACK_VIDEO_SRC;
 
 /**
  * Cinematic hero: fullscreen looping background video, Instrument Serif
@@ -51,10 +53,12 @@ export default function Hero() {
         loop
         muted
         playsInline
+        preload="auto"
         aria-hidden
         className="absolute inset-0 z-0 h-full w-full object-cover"
-        src={VIDEO_SRC}
-      />
+      >
+        <source src={VIDEO_SRC} type="video/mp4" />
+      </video>
 
       {/* Subtle vignette so type stays legible over bright frames */}
       <div

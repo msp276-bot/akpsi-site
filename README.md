@@ -9,7 +9,7 @@ Built with **Next.js 16 (App Router)**, **TypeScript**, **Tailwind CSS v4**,
 ```bash
 npm install
 npm run dev      # http://localhost:3000
-npm run build    # production build
+npm run build    # static production build in out/
 ```
 
 ## Routes
@@ -21,7 +21,6 @@ npm run build    # production build
 | `/members` | Full directory — tabs, search, sort; cards link to profiles | Public |
 | `/members/[slug]` | Individual member profile (bio, LinkedIn, click-to-reveal email) | Public |
 | `/rush` | Recruitment — hero, timeline, values, FAQ, **application form** | Public |
-| `/api/applications` | Mock application intake (validates `@rutgers.edu`, GPA range) | POST |
 | `/portal` | Sign-in (mock Google OAuth, `@rutgers.edu` gated) | Public |
 | `/portal/dashboard` | Member home — upcoming events, RSVPs, quick links | Protected |
 | `/portal/events` | Events calendar (month/list, filters, slide-out detail, RSVP) | Protected |
@@ -75,12 +74,47 @@ Auth is mocked in `src/context/AuthContext.tsx`:
 
 ## Rush application form
 
-`src/components/rush/RushForm.tsx` posts to `/api/applications`
-(`src/app/api/applications/route.ts`) — currently an in-memory mock with the
-same validation a real backend would enforce. To go live, replace the store
-with a DB insert (Supabase/Prisma) and upload the resume to object storage;
-the route's doc comment spells out the intended schema. Success fires a
-lightweight canvas confetti (`src/lib/confetti.ts`).
+`src/components/rush/RushForm.tsx` is currently a front-end demo flow because
+the site is prepared for static S3/CloudFront hosting. It validates the form in
+the browser, shows a polished success state, and fires lightweight canvas
+confetti (`src/lib/confetti.ts`).
+
+To collect real applications on AWS, connect the form to a backend such as API
+Gateway + Lambda + DynamoDB/S3, or use a hosted form service. S3 static hosting
+cannot run a Next.js API route by itself.
+
+## Deployment notes
+
+This repo is pushed to GitHub at:
+
+<https://github.com/msp276-bot/akpsi-site>
+
+When Codex updates the website, the change is not magically on GitHub until it
+is committed and pushed. In practice, ask Codex to “push it,” and it will update
+the GitHub `main` branch.
+
+For cheap public hosting at `https://rutgersakpsi.com`, build the static site:
+
+```bash
+npm run build
+```
+
+Then upload the contents of `out/` to S3 and serve the bucket through
+CloudFront. If you later add GitHub Actions or AWS Amplify, pushes to GitHub can
+automatically redeploy the live site.
+
+## Hero video quality
+
+The front-page hero is ready to use a true 4K MP4. Set this build-time
+environment variable to a 3840×2160 MP4 hosted on S3/CloudFront:
+
+```bash
+NEXT_PUBLIC_HERO_VIDEO_4K_URL=https://your-cloudfront-domain/path/hero-4k.mp4
+```
+
+If that variable is not set, the site falls back to the current CloudFront video
+in `src/components/sections/Hero.tsx`. CSS can display the video fullscreen, but
+true 4K quality requires the source video itself to be 4K.
 
 ## Notable implementation notes
 
