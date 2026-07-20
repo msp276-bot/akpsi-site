@@ -32,7 +32,7 @@ const SITE_DESC =
   "The Omicron Tau chapter of Alpha Kappa Psi at Rutgers University — a co-ed professional business fraternity balancing professional development and lifelong brotherhood.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://akpsi-rutgers.com"),
+  metadataBase: new URL("https://rutgersakpsi.com"),
   title: {
     default: SITE_TITLE,
     template: "%s | AKΨ Omicron Tau",

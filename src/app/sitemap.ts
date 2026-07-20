@@ -1,7 +1,9 @@
 import type { MetadataRoute } from "next";
 import { members } from "@/data/members";
 
-const BASE_URL = "https://akpsi-rutgers.com";
+const BASE_URL = "https://rutgersakpsi.com";
+
+export const dynamic = "force-static";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();

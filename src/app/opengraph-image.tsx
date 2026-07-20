@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 
+export const dynamic = "force-static";
 export const alt =
   "Alpha Kappa Psi — Omicron Tau Chapter, Rutgers University";
 export const size = { width: 1200, height: 630 };

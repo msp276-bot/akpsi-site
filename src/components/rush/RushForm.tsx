@@ -104,15 +104,11 @@ export default function RushForm() {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/applications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, resumeName: resume?.name }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Something went wrong. Please try again.");
-      }
+      // Static S3/CloudFront hosting cannot run a Next.js API route. This keeps
+      // the public recruitment experience polished as a front-end demo until a
+      // real intake backend is connected (for example, API Gateway + Lambda,
+      // Formspree, or a Google Form).
+      await new Promise((resolve) => setTimeout(resolve, 900));
       setDone(true);
       fireConfetti();
     } catch (err) {
