@@ -1,134 +1,252 @@
 "use client";
 
-import { motion, type Variants } from "framer-motion";
-import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import { EASE_OUT_EXPO } from "@/lib/motion";
 
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0 },
+/**
+ * Rotating brother testimonials with a portrait on the side. Weighted toward the
+ * social / brotherhood side of the chapter (community, belonging, service) with
+ * one professional voice — membership is more than a résumé line.
+ *
+ * To use real photos, drop them in `public/testimonials/` and set `image` on the
+ * matching entry (e.g. image: "/testimonials/zoe-martinez.jpg"). Entries without
+ * an `image` fall back to a monogram portrait.
+ */
+interface Testimonial {
+  quote: string;
+  name: string;
+  context: string;
+  tag: string;
+  image?: string;
+}
+
+const TESTIMONIALS: Testimonial[] = [
+  {
+    quote:
+      "I joined for the professional side, but what kept me here were the late-night study sessions that turned into lifelong friendships. These are the people I'll be standing next to at weddings.",
+    name: "Zoe Martinez",
+    context: "Active Brother · Supply Chain Management",
+    tag: "Brotherhood",
+  },
+  {
+    quote:
+      "Bowling nights, chapter retreats, spontaneous diner runs at 2am — Omicron Tau gave me a home at Rutgers before I even realized I needed one.",
+    name: "Aiden Park",
+    context: "Active Brother · Management",
+    tag: "Community",
+  },
+  {
+    quote:
+      "As a transfer student I thought I'd missed my chance to find my people. One rush event later, I had thirty new friends who actually showed up for me.",
+    name: "Noah Williams",
+    context: "Active Brother · Finance",
+    tag: "Belonging",
+  },
+  {
+    quote:
+      "Some of my favorite memories are from our service events — packing meals and fundraising for RUDM, laughing the whole way through. Giving back hits different when you do it with your brothers.",
+    name: "Leila Ahmadi",
+    context: "Active Brother · Marketing",
+    tag: "Service",
+  },
+  {
+    quote:
+      "AKPsi completely changed how I approached recruiting. Instead of feeling overwhelmed by the process, it felt like having a mentor by my side 24/7.",
+    name: "Hannah Kim",
+    context: "Director of Alumni Relations · Class of ’27",
+    tag: "Professional",
+  },
+];
+
+const ROTATE_MS = 6500;
+
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("");
+}
+
+const fade: Variants = {
+  enter: { opacity: 0, y: 20 },
+  center: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE_OUT_EXPO } },
+  exit: { opacity: 0, y: -16, transition: { duration: 0.3, ease: "easeIn" } },
 };
 
-const QUOTE =
-  "AKPsi completely changed how I approached recruiting. Instead of feeling overwhelmed by the process, it felt like having a mentor by my side 24/7.";
+function Portrait({ t }: { t: Testimonial }) {
+  return (
+    <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl border border-line shadow-[0_20px_60px_-25px_rgba(2,6,23,0.4)]">
+      {t.image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={t.image}
+          alt={t.name}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(120%_120%_at_30%_0%,#2d3e5f_0%,#1a2744_60%,#131d33_100%)]">
+          <span className="grid h-24 w-24 place-items-center rounded-full border border-gold/40 bg-gold/10 font-display text-3xl text-gold">
+            {initials(t.name)}
+          </span>
+        </div>
+      )}
+      {/* name plate */}
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy/85 via-navy/40 to-transparent p-5 pt-10 text-left">
+        <p className="font-cinematic text-xl italic text-white">{t.name}</p>
+        <p className="mt-0.5 text-xs text-white/70">{t.context}</p>
+      </div>
+      {/* tag badge */}
+      <span className="absolute left-4 top-4 inline-flex items-center rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-navy backdrop-blur-sm">
+        {t.tag}
+      </span>
+    </div>
+  );
+}
 
 export default function Testimonials() {
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const count = TESTIMONIALS.length;
+
+  const go = useCallback(
+    (dir: 1 | -1) => setActive((i) => (i + dir + count) % count),
+    [count]
+  );
+
+  useEffect(() => {
+    if (paused) return;
+    const id = setInterval(() => setActive((i) => (i + 1) % count), ROTATE_MS);
+    return () => clearInterval(id);
+  }, [paused, count]);
+
+  const t = TESTIMONIALS[active];
+
   return (
     <section className="bg-white">
-      <div className="mx-auto max-w-[1360px] px-6 py-20 md:px-10">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.25 }}
-          transition={{ staggerChildren: 0.18 }}
-          className="flex flex-col items-stretch justify-between gap-8 lg:flex-row lg:gap-[25px]"
-        >
-          {/* Left column */}
-          <div className="flex flex-col items-stretch gap-[25px] lg:flex-row">
-            {/* Block A */}
-            <motion.div
-              variants={fadeUp}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="flex flex-row items-center justify-between gap-4 lg:h-full lg:min-h-[447px] lg:flex-col lg:items-start lg:gap-8"
-            >
-              <div className="flex flex-1 flex-col gap-6 lg:flex-none">
-                <h3 className="max-w-[260px] text-3xl leading-tight text-black">
-                  <span className="font-medium">AKPsi</span>{" "}
-                  <em className="font-cinematic italic">
-                    changed my approach
-                  </em>
-                </h3>
-                <div className="hidden items-center gap-2 lg:flex">
-                  <div className="h-2 w-8 rounded-full bg-black" />
-                  <div className="h-2 w-2 rounded-full bg-stone-300" />
-                  <div className="h-2 w-2 rounded-full bg-stone-300" />
-                </div>
-              </div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.4 }}
-                transition={{ delay: 0.3, duration: 0.5, ease: "easeOut" }}
-                className="self-start"
-              >
-                <Link
-                  href="/rush"
-                  className="inline-block whitespace-nowrap rounded-2xl bg-navy px-7 py-3 text-xl font-medium text-white transition-colors hover:bg-[#141d34]"
-                >
-                  Read More
-                </Link>
-              </motion.div>
-            </motion.div>
+      <div
+        className="mx-auto max-w-5xl px-6 py-24 sm:py-28"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocusCapture={() => setPaused(true)}
+        onBlurCapture={() => setPaused(false)}
+      >
+        <div className="text-center">
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.6 }}
+            className="text-[11px] font-semibold uppercase tracking-[0.3em] text-blue"
+          >
+            In Their Words
+          </motion.p>
+          <motion.h2
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ delay: 0.08 }}
+            className="headline mt-4 text-3xl uppercase text-navy sm:text-4xl md:text-5xl"
+          >
+            More Than a <span className="text-gold">Résumé Line</span>
+          </motion.h2>
+        </div>
 
-            {/* Block B */}
-            <motion.div
-              variants={fadeUp}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="flex w-full flex-col gap-3 lg:w-[282px]"
-            >
-              <div className="h-[280px] w-full overflow-hidden rounded-2xl lg:h-[351px]">
-                <div className="relative flex h-full w-full flex-col items-center justify-center gap-3 bg-[radial-gradient(120%_120%_at_30%_0%,#2d3e5f_0%,#1a2744_60%,#131d33_100%)]">
-                  <span className="headline text-6xl text-gold">Ψ</span>
-                  <span className="text-xs uppercase tracking-[0.25em] text-white/40">
-                    Chapter photo
-                  </span>
-                </div>
-              </div>
+        {/* Carousel — portrait on the side, quote alongside */}
+        <div className="mt-14 grid items-center gap-8 sm:gap-12 md:grid-cols-[minmax(0,300px)_1fr]">
+          {/* Portrait */}
+          <div className="mx-auto w-full max-w-[300px]">
+            <AnimatePresence mode="wait">
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.4 }}
-                transition={{ delay: 0.4, duration: 0.55, ease: "easeOut" }}
-                className="flex h-24 w-full items-center justify-center gap-3 rounded-2xl"
-                style={{ backgroundColor: "#F1F0EF" }}
+                key={active}
+                variants={fade}
+                initial="enter"
+                animate="center"
+                exit="exit"
               >
-                <span className="font-display text-3xl font-bold text-black">
-                  Deloitte
-                </span>
+                <Portrait t={t} />
               </motion.div>
-            </motion.div>
+            </AnimatePresence>
           </div>
 
-          {/* Right column — the quote */}
-          <motion.div
-            variants={fadeUp}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="flex max-w-[748px] flex-1 flex-col justify-between gap-10 rounded-2xl p-10"
-            style={{ backgroundColor: "rgba(26, 39, 68, 0.08)" }}
+          {/* Quote */}
+          <div className="relative min-h-[280px] md:min-h-[300px]">
+            <Quote
+              size={40}
+              strokeWidth={1.5}
+              className="text-gold/40"
+              aria-hidden
+            />
+            <AnimatePresence mode="wait">
+              <motion.blockquote
+                key={active}
+                variants={fade}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="mt-4"
+              >
+                <p className="font-cinematic text-2xl italic leading-relaxed text-navy sm:text-[27px] sm:leading-[1.5]">
+                  “{t.quote}”
+                </p>
+                <footer className="mt-6 flex items-center gap-3">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-scarlet text-sm font-semibold text-white">
+                    {initials(t.name)}
+                  </span>
+                  <span>
+                    <span className="block font-cinematic text-lg italic text-navy">
+                      {t.name}
+                    </span>
+                    <span className="block text-xs text-muted">{t.context}</span>
+                  </span>
+                </footer>
+              </motion.blockquote>
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="mt-12 flex items-center justify-center gap-5">
+          <button
+            type="button"
+            onClick={() => go(-1)}
+            aria-label="Previous testimonial"
+            className="grid h-10 w-10 place-items-center rounded-full border border-navy/15 text-navy/60 transition-colors hover:border-navy/40 hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue"
           >
-            <p className="text-3xl leading-10 text-black">
-              {QUOTE.split(" ").map((w, i) => (
-                <motion.span
-                  key={i}
-                  initial={{ opacity: 0, y: 6 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{
-                    duration: 0.35,
-                    delay: 0.4 + i * 0.04,
-                    ease: "easeOut",
-                  }}
-                  className="mr-[0.25em] inline-block"
-                >
-                  {w}
-                </motion.span>
-              ))}
-            </p>
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.6, duration: 0.6, ease: "easeOut" }}
-              className="flex flex-col gap-1"
-            >
-              <span className="font-cinematic text-xl italic text-black">
-                Hannah Kim,
-              </span>
-              <span className="text-xl text-black/50">
-                Director of Alumni Relations · Class of &rsquo;27
-              </span>
-            </motion.div>
-          </motion.div>
-        </motion.div>
+            <ChevronLeft size={18} />
+          </button>
+
+          <div
+            className="flex items-center gap-2.5"
+            role="tablist"
+            aria-label="Testimonials"
+          >
+            {TESTIMONIALS.map((item, i) => (
+              <button
+                key={item.name}
+                type="button"
+                role="tab"
+                aria-selected={i === active}
+                aria-label={`Show testimonial from ${item.name}`}
+                onClick={() => setActive(i)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  i === active ? "w-8 bg-navy" : "w-2 bg-navy/20 hover:bg-navy/40"
+                }`}
+              />
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => go(1)}
+            aria-label="Next testimonial"
+            className="grid h-10 w-10 place-items-center rounded-full border border-navy/15 text-navy/60 transition-colors hover:border-navy/40 hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
       </div>
     </section>
   );

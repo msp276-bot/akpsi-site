@@ -9,9 +9,15 @@ import { useEffect, useRef } from "react";
 export default function GoldParticles({
   className = "",
   density = 60,
+  color = "212,168,83",
+  intensity = 1,
 }: {
   className?: string;
   density?: number;
+  /** Particle color as an "r,g,b" string. Defaults to brand gold. */
+  color?: string;
+  /** Alpha multiplier — bump above 1 to read on light backgrounds. */
+  intensity?: number;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -58,7 +64,7 @@ export default function GoldParticles({
         const alpha = p.a * (0.6 + 0.4 * Math.sin(p.tw));
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(212,168,83,${alpha})`;
+        ctx.fillStyle = `rgba(${color},${Math.min(1, alpha * intensity)})`;
         ctx.fill();
       }
       raf = requestAnimationFrame(render);
@@ -69,7 +75,7 @@ export default function GoldParticles({
       for (const p of particles) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(212,168,83,${p.a})`;
+        ctx.fillStyle = `rgba(${color},${Math.min(1, p.a * intensity)})`;
         ctx.fill();
       }
     };
@@ -124,7 +130,7 @@ export default function GoldParticles({
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [density]);
+  }, [density, color, intensity]);
 
   return (
     <canvas

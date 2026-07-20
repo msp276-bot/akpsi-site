@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 import SectionHeader from "@/components/ui/SectionHeader";
 import MemberCard from "@/components/members/MemberCard";
 import {
@@ -77,9 +78,13 @@ export default function MembersSection() {
         <div className="mt-12 text-center">
           <Link
             href="/members"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue hover:underline"
+            className="group inline-flex items-center gap-1.5 text-sm font-semibold text-blue hover:underline"
           >
-            View the full directory →
+            View the full directory
+            <ArrowRight
+              size={15}
+              className="transition-transform group-hover:translate-x-0.5"
+            />
           </Link>
         </div>
       </div>

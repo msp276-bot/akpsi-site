@@ -9,6 +9,9 @@ import {
   Megaphone,
   Check,
   MapPin,
+  Sparkles,
+  Hand,
+  ArrowRight,
 } from "lucide-react";
 import PortalShell from "@/components/portal/PortalShell";
 import { useAuth } from "@/context/AuthContext";
@@ -73,13 +76,23 @@ function DashboardContent() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-ink">
-        {isPledge ? `Welcome to pledge season, ${firstName} ✨` : `Welcome back, ${firstName} 👋`}
+      <h1 className="flex items-center gap-2 text-2xl font-bold text-ink">
+        {isPledge ? (
+          <>
+            Welcome to pledge season, {firstName}
+            <Sparkles size={22} className="shrink-0 text-gold" aria-hidden />
+          </>
+        ) : (
+          <>
+            Welcome back, {firstName}
+            <Hand size={22} className="shrink-0 text-gold" aria-hidden />
+          </>
+        )}
       </h1>
       <p className="mt-1 text-sm text-muted">
         {isPledge
           ? "Your pledge resources, chapter events, and cohort updates — all in one place."
-          : "Here&rsquo;s what&rsquo;s happening in the Omicron Tau chapter this week."}
+          : "Here’s what’s happening in the Omicron Tau chapter this week."}
       </p>
 
       {/* Stat row */}
@@ -109,9 +122,13 @@ function DashboardContent() {
             <h2 className="text-lg font-semibold text-ink">Upcoming Events</h2>
             <Link
               href="/portal/events"
-              className="text-sm font-medium text-blue hover:underline"
+              className="group inline-flex items-center gap-1 text-sm font-medium text-blue hover:underline"
             >
-              View calendar →
+              View calendar
+              <ArrowRight
+                size={14}
+                className="transition-transform group-hover:translate-x-0.5"
+              />
             </Link>
           </div>
 

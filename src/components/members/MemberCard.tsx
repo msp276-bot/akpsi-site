@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 import { LinkedinIcon } from "@/components/BrandIcons";
 import { getInitials, type Member } from "@/data/members";
 import { cardIn } from "@/lib/motion";
@@ -57,8 +58,9 @@ export default function MemberCard({
       <motion.div variants={cardIn}>
         <Link href={href} className={`${cardClass} h-full`}>
           {inner}
-          <span className="mt-3 text-xs font-medium text-muted opacity-0 transition-opacity group-hover:opacity-100">
-            View profile →
+          <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-muted opacity-0 transition-opacity group-hover:opacity-100">
+            View profile
+            <ArrowRight size={13} />
           </span>
         </Link>
       </motion.div>
