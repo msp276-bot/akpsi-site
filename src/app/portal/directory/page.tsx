@@ -114,7 +114,7 @@ function Directory() {
               <h3 className="truncate font-semibold text-ink">{m.name}</h3>
               <p className="truncate text-xs text-blue">{m.position}</p>
               <p className="truncate text-xs text-muted">
-                {m.major} · &rsquo;{m.classYear.slice(2)}
+                {m.major ?? m.cohort ?? "Brother"} · &rsquo;{m.classYear.slice(2)}
               </p>
             </div>
           </button>
@@ -167,7 +167,7 @@ function Directory() {
                   <div className="mt-4 w-full space-y-2 rounded-xl bg-slate-50 p-4 text-left text-sm">
                     <div className="flex items-center gap-2 text-ink">
                       <GraduationCap size={15} className="text-muted" />
-                      {selected.major}
+                      {selected.major ?? selected.cohort ?? "Chapter Member"}
                     </div>
                     {selected.minor && (
                       <p className="pl-6 text-xs text-muted">

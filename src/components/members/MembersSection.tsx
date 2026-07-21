@@ -13,7 +13,7 @@ import {
 } from "@/data/members";
 import { staggerContainer } from "@/lib/motion";
 
-const TABS: MemberGroup[] = ["board", "directors", "actives"];
+const TABS: MemberGroup[] = ["board", "actives", "alumni"];
 
 export default function MembersSection() {
   const [active, setActive] = useState<MemberGroup>("board");

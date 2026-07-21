@@ -27,7 +27,7 @@ export async function generateMetadata({
   if (!member) return { title: "Member not found" };
   return {
     title: member.name,
-    description: `${member.name} — ${member.position}, ${member.major}. Alpha Kappa Psi, Omicron Tau chapter at Rutgers University.`,
+    description: `${member.name} — ${member.position}${member.major ? `, ${member.major}` : ""}. Alpha Kappa Psi, Omicron Tau chapter at Rutgers University.`,
   };
 }
 
@@ -90,12 +90,15 @@ export default async function MemberProfilePage({
                   <GraduationCap size={18} className="mt-0.5 text-muted" />
                   <div>
                     <p className="text-sm font-medium text-ink">
-                      {member.major}
+                      {member.major ?? member.cohort ?? "Chapter Member"}
                     </p>
                     {member.minor && (
                       <p className="text-xs text-muted">
                         Minor · {member.minor}
                       </p>
+                    )}
+                    {member.major && member.cohort && (
+                      <p className="text-xs text-muted">{member.cohort}</p>
                     )}
                     <p className="text-xs text-muted">
                       Class of {member.classYear}
