@@ -51,7 +51,7 @@ const FOLDERS: { name: string; visibility: Visibility; files: Doc[] }[] = [
     name: "Recruitment Materials",
     visibility: "members",
     files: [
-      { name: "Spring '27 Rush Deck.pdf", kind: "doc", uploaded: "Jul 15, 2026", by: "Sofia Romano", visibility: "members" },
+      { name: "Fall '26 Rush Deck.pdf", kind: "doc", uploaded: "Jul 15, 2026", by: "Sofia Romano", visibility: "members" },
       { name: "Interview Rubric.xlsx", kind: "sheet", uploaded: "Jul 12, 2026", by: "Sofia Romano", visibility: "eboard" },
     ],
   },

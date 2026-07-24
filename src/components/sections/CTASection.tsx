@@ -30,7 +30,7 @@ export default function CTASection() {
           <Reveal delay={0.24}>
             <div className="mt-9 flex flex-col items-start gap-3 sm:flex-row">
               <Button href="/rush" variant="gold" size="lg">
-                Spring &rsquo;27 Application <ArrowUpRight size={18} />
+                Fall &rsquo;26 Application <ArrowUpRight size={18} />
               </Button>
               <Button href="/portal" variant="outlineWhite" size="lg">
                 Access Portal

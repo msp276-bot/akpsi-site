@@ -10,7 +10,7 @@ import RushForm from "@/components/rush/RushForm";
 export const metadata: Metadata = {
   title: "Rush",
   description:
-    "Join the Omicron Tau chapter of Alpha Kappa Psi at Rutgers. Learn about our rush process, what sets us apart, and apply for Spring '27.",
+    "Join the Omicron Tau chapter of Alpha Kappa Psi at Rutgers. Learn about our rush process, what sets us apart, and apply for Fall '26.",
 };
 
 export default function RushPage() {

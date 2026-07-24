@@ -48,7 +48,7 @@ export const EVENT_TYPE_META: Record<
 export const events: ChapterEvent[] = [
   {
     id: "e1",
-    title: "Spring '27 Rush Info Session",
+    title: "Fall '26 Rush Info Session",
     start: "2026-07-19T18:00:00",
     location: "Business School, Room 1140",
     type: "recruitment",

@@ -118,7 +118,7 @@ export default function AboutPage() {
             </Reveal>
             <Reveal delay={0.1}>
               <p className="mx-auto mt-4 max-w-lg text-muted">
-                Recruitment for the Spring &rsquo;27 class is open. Come meet the
+                Recruitment for the Fall &rsquo;26 class is open. Come meet the
                 chapter and see if AKPsi is right for you.
               </p>
             </Reveal>

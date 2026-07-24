@@ -157,7 +157,7 @@ export default function RushForm() {
   return (
     <section id="apply" className="bg-white px-5 py-24 sm:px-8">
       <div className="mx-auto max-w-2xl">
-        <SectionHeader title="Apply Now" subtitle="spring '27 application" />
+        <SectionHeader title="Apply Now" subtitle="fall '26 application" />
 
         <form onSubmit={onSubmit} noValidate className="mt-12 space-y-5">
           {serverError && (

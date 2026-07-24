@@ -23,7 +23,7 @@ interface Post {
 const POSTS: Post[] = [
   {
     id: "p1",
-    title: "Spring '27 Recruitment Kicks Off Monday",
+    title: "Fall '26 Recruitment Kicks Off Monday",
     body: "Our first info session is this Monday at 6PM in the Business School, Room 1140. Please share the flyer with anyone who might be interested and show up to represent the chapter. Let's make this our biggest rush class yet!",
     author: "Sofia Romano",
     posted: "2 hours ago",

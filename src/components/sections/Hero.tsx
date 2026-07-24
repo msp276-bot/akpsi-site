@@ -91,7 +91,7 @@ export default function Hero() {
             href="/rush"
             className="liquid-glass inline-flex items-center justify-center rounded-full px-10 py-4 text-base font-medium text-white transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
           >
-            Spring &rsquo;27 Application
+            Fall &rsquo;26 Application
           </Link>
           <Link
             href="/portal"

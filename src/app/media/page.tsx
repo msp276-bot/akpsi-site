@@ -31,7 +31,7 @@ const INSTAGRAM_POSTS: string[] = [
 //   iframeSrc: a YouTube/Vimeo *embed* URL (e.g. https://www.youtube.com/embed/XXXX)
 // Leave both "" to show a "coming soon" placeholder.
 const RUSH_VIDEO: { title: string; caption: string; mp4: string; iframeSrc: string } = {
-  title: "Spring '27 Rush",
+  title: "Fall '26 Rush",
   caption: "Meet the chapter and see what a semester in Omicron Tau looks like.",
   mp4: "",
   iframeSrc: "",
