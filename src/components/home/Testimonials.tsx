@@ -26,36 +26,36 @@ const TESTIMONIALS: Testimonial[] = [
   {
     quote:
       "I joined for the professional side, but what kept me here were the late-night study sessions that turned into lifelong friendships. These are the people I'll be standing next to at weddings.",
-    name: "Zoe Martinez",
-    context: "Active Brother · Supply Chain Management",
+    name: "Rayyan Ahmed",
+    context: "Active Brother",
     tag: "Brotherhood",
   },
   {
     quote:
       "Bowling nights, chapter retreats, spontaneous diner runs at 2am - Omicron Tau gave me a home at Rutgers before I even realized I needed one.",
-    name: "Aiden Park",
-    context: "Active Brother · Management",
+    name: "Justin Arnoldi",
+    context: "Active Brother",
     tag: "Community",
   },
   {
     quote:
       "As a transfer student I thought I'd missed my chance to find my people. One rush event later, I had thirty new friends who actually showed up for me.",
-    name: "Noah Williams",
-    context: "Active Brother · Finance",
+    name: "John Baylock",
+    context: "Active Brother",
     tag: "Belonging",
   },
   {
     quote:
       "Some of my favorite memories are from our service events - packing meals and fundraising for RUDM, laughing the whole way through. Giving back hits different when you do it with your brothers.",
-    name: "Leila Ahmadi",
-    context: "Active Brother · Marketing",
+    name: "Anika Batki",
+    context: "Active Brother",
     tag: "Service",
   },
   {
     quote:
       "AKPsi completely changed how I approached recruiting. Instead of feeling overwhelmed by the process, it felt like having a mentor by my side 24/7.",
-    name: "Hannah Kim",
-    context: "Director of Alumni Relations · Class of ’27",
+    name: "Ashna Narielwala",
+    context: "VP of Alumni Relations · Class of ’28",
     tag: "Professional",
   },
 ];

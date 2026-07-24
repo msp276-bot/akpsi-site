@@ -72,12 +72,8 @@ export default function Hero() {
 
       {/* Center content */}
       <div className="relative z-10 flex flex-col items-center px-6 pb-10 text-center">
-        <p className="animate-fade-rise rounded-full border border-gold/50 px-5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.3em] text-gold sm:text-xs">
-          Omicron Tau Chapter • Rutgers University
-        </p>
-
         <h1
-          className="animate-fade-rise mt-8 max-w-5xl font-cinematic text-5xl font-normal leading-[0.95] tracking-[-0.02em] text-white sm:text-7xl md:text-8xl"
+          className="animate-fade-rise max-w-5xl font-cinematic text-5xl font-normal leading-[0.95] tracking-[-0.02em] text-white sm:text-7xl md:text-8xl"
         >
           Shaping People,
           <br />
