@@ -2,24 +2,15 @@ import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Reveal from "@/components/anim/Reveal";
-import CountUp from "@/components/anim/CountUp";
 import Button from "@/components/ui/Button";
 import LogoMarquee from "@/components/about/LogoMarquee";
 import Benefits from "@/components/about/Benefits";
-import { cardIn } from "@/lib/motion";
 
 export const metadata: Metadata = {
   title: "About Us",
   description:
     "The story of the Omicron Tau chapter of Alpha Kappa Psi at Rutgers University - our history, the companies we feed into, and the benefits of membership.",
 };
-
-const STATS = [
-  { value: 60, suffix: "+", label: "Members" },
-  { value: 200, suffix: "+", label: "Alumni" },
-  { value: 10, suffix: "+", label: "Industries" },
-  { value: 10, suffix: "+", label: "Majors" },
-];
 
 export default function AboutPage() {
   return (
@@ -108,24 +99,6 @@ export default function AboutPage() {
                 </dl>
               </div>
             </Reveal>
-          </div>
-        </section>
-
-        {/* Stats bar */}
-        <section className="bg-navy py-14">
-          <div className="mx-auto grid max-w-4xl grid-cols-2 gap-8 px-6 sm:grid-cols-4">
-            {STATS.map((s, i) => (
-              <Reveal key={s.label} variants={cardIn} delay={i * 0.08}>
-                <div className="text-center">
-                  <div className="headline text-4xl text-gold sm:text-5xl">
-                    <CountUp to={s.value} suffix={s.suffix} />
-                  </div>
-                  <div className="mt-1 text-xs font-medium uppercase tracking-widest text-white/70">
-                    {s.label}
-                  </div>
-                </div>
-              </Reveal>
-            ))}
           </div>
         </section>
 

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   Users,
   Building2,
@@ -31,8 +32,46 @@ export default function AboutSection() {
       id="about"
       className="relative overflow-hidden bg-white py-24 sm:py-32"
     >
+      {/* Chapter photo backdrop. Sits behind a white scrim so the copy and the
+          stat cards keep their contrast at every viewport width. */}
+      <Image
+        src="/chapter-group.jpg"
+        alt=""
+        aria-hidden
+        fill
+        sizes="100vw"
+        priority={false}
+        className="pointer-events-none select-none object-cover object-center"
+      />
+      {/* Scrim: a flat white wash keeps the copy legible, and a vertical
+          gradient goes fully opaque only at the very top and bottom so the
+          section resolves cleanly against the sections above and below. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-white/55"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(to bottom, #ffffff 0%, rgba(255,255,255,0.35) 24%, rgba(255,255,255,0.35) 76%, #ffffff 100%)",
+        }}
+      />
+      {/* Extra pool of light behind the headline and body copy, so the dark
+          text keeps its contrast over the photo without washing the picture
+          out toward the edges. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 72% 50% at 50% 34%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 100%)",
+        }}
+      />
+
       {/* Starlight - the gold particle field from the rush hero, tuned to read
-          on white. */}
+          on the light scrim. */}
       <GoldParticles
         density={150}
         color="196,150,58"
@@ -62,7 +101,7 @@ export default function AboutSection() {
 
       <div className="relative mx-auto max-w-6xl px-6 text-center">
         <Reveal>
-          <span className="inline-block rounded-full border border-gold/60 bg-gold/10 px-5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#a97e2b]">
+          <span className="inline-block rounded-full border border-gold/60 bg-gold/10 px-5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#a97e2b] backdrop-blur-sm">
             Who We Are
           </span>
         </Reveal>
@@ -74,7 +113,7 @@ export default function AboutSection() {
         </Reveal>
 
         <Reveal delay={0.2}>
-          <p className="mx-auto mt-7 max-w-3xl text-base sm:text-lg leading-relaxed text-ink/70">
+          <p className="mx-auto mt-7 max-w-3xl text-base sm:text-lg leading-relaxed text-ink/80">
             Alpha Kappa Psi is a co-ed professional business fraternity with
             access to a large alumni network spanning top companies and career
             paths across the globe. We pride ourselves on diversity and
@@ -91,7 +130,7 @@ export default function AboutSection() {
         <div className="mt-16 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
           {STATS.map((stat, i) => (
             <Reveal key={stat.label} variants={cardIn} delay={i * 0.1}>
-              <div className="group relative overflow-hidden rounded-2xl border border-line bg-white p-6 text-left shadow-[0_1px_3px_rgba(2,6,23,0.06)] transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/50 hover:shadow-[0_18px_50px_-20px_rgba(212,168,83,0.6)] sm:p-7">
+              <div className="group relative overflow-hidden rounded-2xl border border-line bg-white/85 p-6 text-left shadow-[0_1px_3px_rgba(2,6,23,0.08)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/50 hover:bg-white hover:shadow-[0_18px_50px_-20px_rgba(212,168,83,0.6)] sm:p-7">
                 {/* corner glow on hover */}
                 <div
                   aria-hidden
@@ -120,7 +159,7 @@ export default function AboutSection() {
           <div className="mt-14 flex flex-wrap items-center justify-center gap-x-4 gap-y-3 sm:gap-x-6">
             {VALUES.map((v, i) => (
               <span key={v} className="flex items-center gap-4 sm:gap-6">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-navy/50 transition-colors hover:text-gold">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-navy/55 transition-colors hover:text-gold">
                   {v}
                 </span>
                 {i < VALUES.length - 1 && (

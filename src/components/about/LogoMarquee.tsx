@@ -45,7 +45,7 @@ const ROW_TWO = [
 
 function Chip({ name }: { name: string }) {
   return (
-    <span className="shrink-0 whitespace-nowrap font-display text-xl font-bold text-slate-400 transition-all duration-300 hover:scale-110 hover:text-navy">
+    <span className="shrink-0 whitespace-nowrap font-display text-base font-bold text-white transition-all duration-300 hover:scale-110 hover:text-navy sm:text-lg">
       {name}
     </span>
   );
@@ -59,8 +59,8 @@ function Row({
   track: "marquee-track-1" | "marquee-track-2";
 }) {
   return (
-    <div className="marquee-band overflow-hidden py-4">
-      <div className={`marquee-track ${track} flex w-max items-center gap-16`}>
+    <div className="marquee-band overflow-hidden py-2">
+      <div className={`marquee-track ${track} flex w-max items-center gap-12`}>
         {[...items, ...items].map((name, i) => (
           <Chip key={`${name}-${i}`} name={name} />
         ))}
@@ -71,13 +71,13 @@ function Row({
 
 export default function LogoMarquee() {
   return (
-    <section className="bg-slate-50 py-24 sm:py-28">
+    <section className="bg-blue py-12 sm:py-14">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <SectionHeader title="Our Network" subtitle="where we land" />
+        <SectionHeader title="Our Network" subtitle="where we land" tone="light" />
       </div>
 
       <div
-        className="mt-14 space-y-2"
+        className="mt-7 space-y-1"
         style={{
           maskImage:
             "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
@@ -89,7 +89,7 @@ export default function LogoMarquee() {
         <Row items={ROW_TWO} track="marquee-track-2" />
       </div>
 
-      <p className="mx-auto mt-10 max-w-xl px-5 text-center text-xs text-muted">
+      <p className="mx-auto mt-6 max-w-xl px-5 text-center text-xs leading-relaxed text-white">
         Representative of where Omicron Tau members and alumni have interned and
         worked. Placeholder wordmarks shown pending official brand assets.
       </p>
