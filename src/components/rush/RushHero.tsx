@@ -20,7 +20,7 @@ export default function RushHero() {
         fill
         priority
         sizes="100vw"
-        className="pointer-events-none select-none object-cover object-center"
+        className="pointer-events-none select-none scale-[1.15] object-cover object-center translate-x-[4%] translate-y-[3.5%]"
       />
       <div
         aria-hidden
