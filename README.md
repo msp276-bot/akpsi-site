@@ -1,4 +1,4 @@
-# Alpha Kappa Psi — Omicron Tau Chapter (Rutgers University)
+# Alpha Kappa Psi - Omicron Tau Chapter (Rutgers University)
 
 Marketing site + member portal for the Omicron Tau chapter of Alpha Kappa Psi.
 Built with **Next.js 16 (App Router)**, **TypeScript**, **Tailwind CSS v4**,
@@ -16,13 +16,13 @@ npm run build    # static production build in out/
 
 | Route | Description | Access |
 |-------|-------------|--------|
-| `/` | Home — cinematic video hero ("Shaping People, Shaping Business."), stats, members, CTA | Public |
+| `/` | Home - cinematic video hero ("Shaping People, Shaping Business."), stats, members, CTA | Public |
 | `/about` | Chapter story, national AKΨ, stats bar, "Our Network" logo marquee, Benefits zigzag | Public |
-| `/members` | Full directory — tabs, search, sort; cards link to profiles | Public |
+| `/members` | Full directory - tabs, search, sort; cards link to profiles | Public |
 | `/members/[slug]` | Individual member profile (bio, LinkedIn, click-to-reveal email) | Public |
-| `/rush` | Recruitment — hero, timeline, values, FAQ, **application form** | Public |
+| `/rush` | Recruitment - hero, timeline, values, FAQ, **application form** | Public |
 | `/portal` | Sign-in (mock Google OAuth, `@rutgers.edu` gated) | Public |
-| `/portal/dashboard` | Member home — upcoming events, RSVPs, quick links | Protected |
+| `/portal/dashboard` | Member home - upcoming events, RSVPs, quick links | Protected |
 | `/portal/events` | Events calendar (month/list, filters, slide-out detail, RSVP) | Protected |
 | `/portal/directory` | Searchable/filterable member directory + profile modal | Protected |
 | `/portal/documents` | Folder/file browser (upload is board-only) | Protected |
@@ -40,8 +40,8 @@ Brand tokens live in `src/app/globals.css` under `@theme` (Tailwind v4):
 - `navy #1a2744`, `navy-2 #2d3e5f`, `gold #d4a853`, `blue #5b8ec6`,
   `scarlet #cc0033` (Rutgers accent), plus `ink`/`muted`/`line`.
 - Fonts (all via `next/font` in `src/app/layout.tsx`):
-  **Inter** (sans/body), **Bodoni Moda** (`.headline` display serif — logo,
-  section titles), **Instrument Serif** (`font-cinematic` — hero headline).
+  **Inter** (sans/body), **Bodoni Moda** (`.headline` display serif - logo,
+  section titles), **Instrument Serif** (`font-cinematic` - hero headline).
 - Logo lockup (`src/components/ui/Logo.tsx`): scarlet R shield +
   "ALPHA KAPPA PSI" serif wordmark + gold chapter subtitle; the navbar carries
   a scarlet accent rule across the top edge.
@@ -52,13 +52,13 @@ All animations respect `prefers-reduced-motion`.
 
 Everything below is mock and typed for a clean swap:
 
-- **Members** — `src/data/members.ts` (`Member[]`). Add a `photo` URL per member
+- **Members** - `src/data/members.ts` (`Member[]`). Add a `photo` URL per member
   to replace the scarlet initials fallback. Drives the home grid + directory.
-- **Events** — `src/data/events.ts` (`ChapterEvent[]`). Powers the dashboard and
+- **Events** - `src/data/events.ts` (`ChapterEvent[]`). Powers the dashboard and
   calendar. The demo "today" is pinned in `src/lib/date.ts` (`DEMO_NOW`).
-- **Documents / Announcements** — currently inline mock arrays in their page
+- **Documents / Announcements** - currently inline mock arrays in their page
   files; move to `src/data/` or a CMS when wiring a backend.
-- **Backend architecture** — see `docs/backend-architecture.md` and
+- **Backend architecture** - see `docs/backend-architecture.md` and
   `db/schema.sql` for the PostgreSQL schema, API contract, RBAC model, audit
   logging, application pipeline, and notification plan.
 
@@ -74,7 +74,7 @@ Auth is mocked in `src/context/AuthContext.tsx`:
   `@rutgers.edu` check as a `hd` param + server-side guard, and swap the
   `localStorage` hydration for the provider's session.
 - The "Use a specific email (demo)" control on `/portal` exists only to exercise
-  the domain validation — remove it once real OAuth is connected.
+  the domain validation - remove it once real OAuth is connected.
 - Board-only affordances key off `user.role === "board"` (see `BOARD_EMAILS`).
 
 ## Rush application form

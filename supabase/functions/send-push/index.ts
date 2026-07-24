@@ -13,7 +13,7 @@
 //          (SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are injected automatically)
 //
 // Invoke from the app:  supabase.functions.invoke("send-push", { body:
-//            { title, body, url } })   — see src/lib/push.ts sendPushToChapter().
+//            { title, body, url } })   - see src/lib/push.ts sendPushToChapter().
 // ---------------------------------------------------------------------------
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";

@@ -1,4 +1,4 @@
--- AKPsi Omicron Tau backend schema draft (aspirational — later tables).
+-- AKPsi Omicron Tau backend schema draft (aspirational - later tables).
 -- Target database: PostgreSQL via Supabase, Neon, or Prisma migrations.
 --
 -- NOTE: Live auth + role management uses a simpler, self-contained `members`

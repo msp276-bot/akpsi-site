@@ -2,19 +2,19 @@
 
 The site is an installable **Progressive Web App**. Brothers can add it to their
 home screen and get a full-screen, app-like experience that also works offline.
-Push notifications are **built but dormant** — they turn on once the Supabase
+Push notifications are **built but dormant** - they turn on once the Supabase
 backend is live and VAPID keys are set.
 
 ---
 
 ## What already works (no setup needed)
 
-- **Installable app** — manifest at `/manifest.webmanifest` (`src/app/manifest.ts`),
+- **Installable app** - manifest at `/manifest.webmanifest` (`src/app/manifest.ts`),
   AKΨ icons (`public/icon-*.png`, `public/apple-icon.png`), navy theme color.
-- **Offline shell** — `public/sw.js` caches visited pages + the app shell and
+- **Offline shell** - `public/sw.js` caches visited pages + the app shell and
   serves `/offline/` when there's no connection. Registered by
   `src/components/pwa/ServiceWorkerRegister.tsx` (mounted in `layout.tsx`).
-- **Install prompt** — `src/components/pwa/InstallPrompt.tsx` on the portal
+- **Install prompt** - `src/components/pwa/InstallPrompt.tsx` on the portal
   dashboard (Android install button / iOS "Add to Home Screen" hint).
 
 > Note: install + offline require **HTTPS** (production). On iOS, push only works
@@ -56,7 +56,7 @@ supabase secrets set \
   VAPID_SUBJECT=mailto:president@rutgers.edu
 ```
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected automatically.
-The private key lives **only** in Supabase secrets — never in the app bundle.
+The private key lives **only** in Supabase secrets - never in the app bundle.
 
 ### 5. Done
 - A brother opens the portal → toggles **Push notifications** on → the browser
@@ -83,5 +83,5 @@ The private key lives **only** in Supabase secrets — never in the app bundle.
 | Sender | `supabase/functions/send-push/index.ts` | Manager-only fan-out via web-push |
 
 **Dormant-safe:** with no VAPID key, the toggle shows "not available yet", and
-`sendPushToChapter()` is a no-op — so everything above ships without breaking the
+`sendPushToChapter()` is a no-op - so everything above ships without breaking the
 static build or the mock-mode preview.

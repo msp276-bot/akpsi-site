@@ -19,11 +19,11 @@ behind the same UI.
 
 Two files:
 
-- [`db/supabase-roles.sql`](../db/supabase-roles.sql) — **implemented and
+- [`db/supabase-roles.sql`](../db/supabase-roles.sql) - **implemented and
   runnable.** The `members` roster/allowlist table, its Row-Level Security, and
   the auth-signup trigger that powers real login + role management today. Run
   this in Supabase to switch the site from mock mode to live mode.
-- [`db/schema.sql`](../db/schema.sql) — broader design draft for later tables
+- [`db/schema.sql`](../db/schema.sql) - broader design draft for later tables
   (events, announcements, documents, applications, audit logs). Aspirational.
 
 ## Roles, allowlist & auth (implemented)
@@ -34,7 +34,7 @@ for setup.
 
 - **Roster = allowlist.** The `members` table (email primary key) is the single
   source of truth for who can log in and what role they have. An email not on it
-  cannot sign in — enforced by a `before insert` trigger on `auth.users` that
+  cannot sign in - enforced by a `before insert` trigger on `auth.users` that
   rejects unknown emails at signup (Google or magic link).
 - **President-only writes.** Only `president` and `admin` roles may insert /
   update / delete rows, enforced by RLS (`is_roster_manager()`), not just the
@@ -60,12 +60,12 @@ UI: the **Roles & access** module in `src/app/portal/admin/page.tsx`.
 
 Frontend permissions live in `src/lib/access.ts` (`manage:roles` gates the Roles
 & access screen). Server enforcement lives in the RLS policies in
-`db/supabase-roles.sql` — the two must stay in sync.
+`db/supabase-roles.sql` - the two must stay in sync.
 
 ## Route/API contract
 
 Roster/roles are handled via the Supabase client (`src/lib/roles.ts`), not
-custom endpoints — the equivalent operations are: list members, upsert a member
+custom endpoints - the equivalent operations are: list members, upsert a member
 (add/change role), and delete a member, all gated by RLS.
 
 Future API endpoints:

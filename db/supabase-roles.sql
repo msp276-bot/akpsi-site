@@ -1,5 +1,5 @@
 -- ============================================================================
--- AKPsi Omicron Tau — Roster, roles & login allowlist  (Supabase / PostgreSQL)
+-- AKPsi Omicron Tau - Roster, roles & login allowlist  (Supabase / PostgreSQL)
 -- ============================================================================
 -- This is the RUNNABLE, authoritative setup for portal auth. Paste the whole
 -- file into the Supabase SQL editor (Dashboard → SQL Editor → New query) and
@@ -9,7 +9,7 @@
 --   * blocks anyone whose email is not on the roster from ever signing in.
 --
 -- IMPORTANT: edit the seed block at the very bottom with your real president and
--- tech-admin emails BEFORE running — you need at least one of them so someone
+-- tech-admin emails BEFORE running - you need at least one of them so someone
 -- can log in and add everyone else from the website.
 --
 -- (The broader draft in db/schema.sql is aspirational design for later tables;

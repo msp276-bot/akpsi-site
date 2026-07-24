@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-// Required for `output: "export"` — emit a static /manifest.webmanifest.
+// Required for `output: "export"` - emit a static /manifest.webmanifest.
 export const dynamic = "force-static";
 
 /**
