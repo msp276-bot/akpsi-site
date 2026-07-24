@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Quote } from "lucide-react";
 import Reveal from "@/components/anim/Reveal";
@@ -24,23 +25,18 @@ const REST = [
   "I unassumingly joined AKPsi and underestimated how incredible the pillar of Brotherhood, as my goal to create a community at Rutgers was fulfilled by this organization in the blink of an eye. Whether you are a Pledge, Brother, Alumni, or Guest it is my privilege to welcome you and my hope that you will use our page to understand more about us, our goals, and what drives us as an organization. If our mission resonates with you, I encourage you to learn more about Omicron Tau and consider taking the first step in connecting with us. As the second founding President of Alpha Kappa Psi Omicron Tau, I would be honored to get to know you.",
 ];
 
-/**
- * Portrait placeholder. Drop the real photo at `public/team/olivia-occhipinti.jpg`
- * and replace this block with a next/image (config has images.unoptimized).
- */
-function PortraitPlaceholder() {
+/** President portrait, framed to match the section's navy/gold treatment. */
+function Portrait() {
   return (
-    <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl border border-white/10 bg-[radial-gradient(120%_120%_at_30%_0%,#2d3e5f_0%,#1a2744_60%,#131d33_100%)]">
-      <div className="absolute inset-0 grid place-items-center">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <span className="grid h-24 w-24 place-items-center rounded-full border border-gold/40 bg-gold/10 font-display text-4xl text-gold">
-            OO
-          </span>
-          <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/40">
-            Photo coming soon
-          </span>
-        </div>
-      </div>
+    <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl border border-white/10 bg-navy">
+      <Image
+        src="/members/abhinav-gunda.jpg"
+        alt="Abhinav Gunda, President"
+        fill
+        sizes="(min-width: 1024px) 34vw, 100vw"
+        className="object-cover object-top"
+        priority
+      />
       {/* gold corner accent */}
       <div
         aria-hidden
@@ -71,13 +67,13 @@ export default function PresidentLetter() {
       <div className="relative mx-auto grid max-w-6xl gap-12 px-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-start lg:gap-16 lg:px-8">
         {/* Portrait */}
         <Reveal className="lg:sticky lg:top-28">
-          <PortraitPlaceholder />
+          <Portrait />
           <div className="mt-6 text-center lg:text-left">
             <p className="font-display text-2xl text-white">
               Abhinav Gunda
             </p>
             <p className="mt-1 text-sm text-white/55">
-              President &middot; Second Founding President
+              President
             </p>
           </div>
         </Reveal>

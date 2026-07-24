@@ -27,7 +27,7 @@ export interface Member {
  */
 const rawMembers: Omit<Member, "slug">[] = [
   // ---------------- BOARD (E-Board) ----------------
-  { id: "b1", name: "Abhinav Gunda", position: "President", group: "board", cohort: "Alpha Founding", classYear: "2027" },
+  { id: "b1", name: "Abhinav Gunda", position: "President", group: "board", cohort: "Alpha Founding", classYear: "2027", photo: "/members/abhinav-gunda.jpg" },
   { id: "b2", name: "Akhil Jonnalagadda", position: "Executive Vice President", group: "board", cohort: "Beta Founding", classYear: "2028" },
   { id: "b3", name: "Prakruti Ankem", position: "Vice President of Operations", group: "board", cohort: "Beta Founding", classYear: "2028" },
   { id: "b4", name: "Marvin Patel", position: "Vice President of Finance", group: "board", cohort: "Beta Founding", classYear: "2028" },
