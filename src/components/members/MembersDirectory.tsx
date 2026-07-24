@@ -131,10 +131,6 @@ export default function MembersDirectory() {
         </select>
       </div>
 
-      <p className="mt-5 text-center text-sm text-muted">
-        {visible.length} member{visible.length === 1 ? "" : "s"}
-      </p>
-
       {/* Actives: divided into founding-class sections */}
       {tab === "actives" ? (
         <div className="mt-8 space-y-14">

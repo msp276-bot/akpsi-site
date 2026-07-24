@@ -14,6 +14,8 @@ import {
   ArrowRight,
 } from "lucide-react";
 import PortalShell from "@/components/portal/PortalShell";
+import InstallPrompt from "@/components/pwa/InstallPrompt";
+import NotificationsToggle from "@/components/pwa/NotificationsToggle";
 import { useAuth } from "@/context/AuthContext";
 import { events, EVENT_TYPE_META } from "@/data/events";
 import { members } from "@/data/members";
@@ -94,6 +96,11 @@ function DashboardContent() {
           ? "Your pledge resources, chapter events, and cohort updates - all in one place."
           : "Here’s what’s happening in the Omicron Tau chapter this week."}
       </p>
+
+      {/* Install-to-home-screen (hidden once installed/dismissed) */}
+      <div className="mt-6">
+        <InstallPrompt />
+      </div>
 
       {/* Stat row */}
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -210,6 +217,10 @@ function DashboardContent() {
                 </div>
               </Link>
             ))}
+          </div>
+
+          <div className="mt-6">
+            <NotificationsToggle />
           </div>
         </section>
       </div>

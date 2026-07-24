@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Bodoni_Moda, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import ServiceWorkerRegister from "@/components/pwa/ServiceWorkerRegister";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -60,7 +61,20 @@ export const metadata: Metadata = {
     title: SITE_TITLE,
     description: SITE_DESC,
   },
-  icons: { icon: "/favicon.ico" },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-icon.png",
+  },
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "AKΨ Omicron Tau",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1a2744",
 };
 
 export default function RootLayout({
@@ -75,6 +89,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-white text-ink">
         <AuthProvider>{children}</AuthProvider>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

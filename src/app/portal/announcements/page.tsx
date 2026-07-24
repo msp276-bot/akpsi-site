@@ -6,6 +6,7 @@ import PortalShell from "@/components/portal/PortalShell";
 import { useAuth } from "@/context/AuthContext";
 import { getInitials } from "@/data/members";
 import { canAccessVisibility, isEboardOrAdmin, portalRole, visibilityLabel, type Visibility } from "@/lib/access";
+import { sendPushToChapter } from "@/lib/push";
 
 interface Post {
   id: string;
@@ -115,6 +116,12 @@ function Announcements() {
       ...current,
     ]);
     setShowComposer(false);
+    // Notify subscribed brothers (no-op until push is configured & live).
+    void sendPushToChapter({
+      title: post.title,
+      body: post.body,
+      url: "/portal/announcements/",
+    });
   }
 
   return (
