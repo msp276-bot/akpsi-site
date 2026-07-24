@@ -126,9 +126,9 @@ export default function Testimonials() {
   const t = TESTIMONIALS[active];
 
   return (
-    <section className="bg-white">
+    <section className="flex min-h-svh snap-start items-center bg-white">
       <div
-        className="mx-auto max-w-5xl px-6 py-24 sm:py-28"
+        className="mx-auto w-full max-w-5xl px-6 py-24 sm:py-28"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onFocusCapture={() => setPaused(true)}

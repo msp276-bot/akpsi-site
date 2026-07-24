@@ -36,6 +36,29 @@ html {
   scroll-behavior: smooth;
 }
 
+/*
+ * Home page reads as a deck of full-height panels rather than one long scroll.
+ * Scoped with :has(#home) so only the home route snaps - #home is the Hero and
+ * exists nowhere else. Browsers without :has() simply scroll normally.
+ *
+ * "proximity", not "mandatory", on purpose: PresidentLetter expands to well
+ * past one viewport when the full letter is opened, and mandatory snapping
+ * fights the user on any panel taller than the screen, making the middle of
+ * that content unreachable. Proximity still snaps decisively between panels
+ * that fit, which is every panel in its default state.
+ */
+html:has(#home) {
+  scroll-snap-type: y proximity;
+  /* Navbar is fixed at h-16; keep a snapped panel's top clear of it. */
+  scroll-padding-top: 4rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:has(#home) {
+    scroll-snap-type: none;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

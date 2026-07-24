@@ -44,7 +44,7 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="relative flex h-svh min-h-[640px] flex-col items-center justify-center overflow-hidden bg-[#0f172a]"
+      className="relative flex h-svh min-h-[640px] snap-start flex-col items-center justify-center overflow-hidden bg-[#0f172a]"
     >
       {/* Fullscreen video backdrop */}
       <video

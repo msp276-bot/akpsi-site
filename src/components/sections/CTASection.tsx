@@ -4,12 +4,12 @@ import Button from "@/components/ui/Button";
 
 export default function CTASection() {
   return (
-    <section className="relative overflow-hidden bg-navy py-24 sm:py-32">
+    <section className="relative flex min-h-svh snap-start items-center overflow-hidden bg-navy py-24 sm:py-32">
       <div className="pointer-events-none absolute -left-32 top-0 h-80 w-80 rounded-full bg-gold/20 blur-3xl" />
       <div className="pointer-events-none absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-blue/25 blur-3xl" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/70 to-transparent" />
 
-      <div className="relative mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:px-8">
+      <div className="relative mx-auto grid w-full max-w-7xl gap-12 px-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:px-8">
         <div>
           <Reveal>
             <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-gold/35 bg-gold/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gold">

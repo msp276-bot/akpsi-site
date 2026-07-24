@@ -30,7 +30,7 @@ export default function AboutSection() {
   return (
     <section
       id="about"
-      className="relative overflow-hidden bg-white py-24 sm:py-32"
+      className="relative flex min-h-svh snap-start items-center overflow-hidden bg-white py-24 sm:py-32"
     >
       {/* Chapter photo backdrop. Sits behind a white scrim so the copy and the
           stat cards keep their contrast at every viewport width. */}
@@ -99,7 +99,7 @@ export default function AboutSection() {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-navy/10 to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-navy/10 to-transparent" />
 
-      <div className="relative mx-auto max-w-6xl px-6 text-center">
+      <div className="relative mx-auto w-full max-w-6xl px-6 text-center">
         <Reveal>
           <span className="inline-block rounded-full border border-gold/60 bg-gold/10 px-5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#a97e2b] backdrop-blur-sm">
             Who We Are
