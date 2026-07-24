@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import GoldParticles from "@/components/backgrounds/GoldParticles";
@@ -9,14 +10,34 @@ import { staggerContainer, fadeUp } from "@/lib/motion";
 export default function RushHero() {
   return (
     <section className="relative flex h-svh min-h-[620px] items-center justify-center overflow-hidden bg-navy">
-      <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_50%_0%,#2d3e5f_0%,#1a2744_60%,#131d33_100%)]" />
+      {/* Chapter photo backdrop behind a navy scrim - the headline and both
+          buttons sit on top, so the wash has to stay heavy enough for white
+          type to hold up over the brightest part of the staircase. */}
+      <Image
+        src="/chapter/stairs-candid.jpg"
+        alt=""
+        aria-hidden
+        fill
+        priority
+        sizes="100vw"
+        className="pointer-events-none select-none object-cover object-center"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-navy/50"
+      />
+      {/* Vignette keeps the edges dark for the navbar and scroll cue while
+          leaving the centre light enough to read as a photograph. */}
+      <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_50%_35%,rgba(45,62,95,0.30)_0%,rgba(26,39,68,0.62)_55%,rgba(19,29,51,0.88)_100%)]" />
       <GoldParticles density={70} />
 
+      {/* text-shadow keeps the eyebrow and headline readable over the brightest
+          part of the staircase behind them. */}
       <motion.div
         variants={staggerContainer(0.15, 0.1)}
         initial="hidden"
         animate="visible"
-        className="relative z-10 mx-auto max-w-3xl px-6 text-center"
+        className="relative z-10 mx-auto max-w-3xl px-6 text-center [text-shadow:0_2px_12px_rgba(10,16,30,0.55)]"
       >
         <motion.p
           variants={fadeUp}

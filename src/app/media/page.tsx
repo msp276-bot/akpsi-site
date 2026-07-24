@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { ArrowUpRight, PlayCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -43,8 +44,22 @@ export default function MediaPage() {
       <Navbar />
       <main className="flex-1 bg-slate-50">
         {/* Hero */}
-        <section className="bg-navy px-5 pb-16 pt-32 sm:px-8">
-          <div className="mx-auto max-w-3xl text-center">
+        <section className="relative overflow-hidden bg-navy px-5 pb-16 pt-32 sm:px-8">
+          {/* Chapter photo backdrop behind a navy scrim, matching the rush hero. */}
+          <Image
+            src="/chapter/lecture-hall.jpg"
+            alt=""
+            aria-hidden
+            fill
+            priority
+            sizes="100vw"
+            className="pointer-events-none select-none object-cover object-center"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-navy/[0.78]"
+          />
+          <div className="relative mx-auto max-w-3xl text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gold">
               Omicron Tau • Highlights
             </p>

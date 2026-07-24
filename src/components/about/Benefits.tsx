@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Users, Compass, Globe2, TrendingUp, type LucideIcon } from "lucide-react";
 import SectionHeader from "@/components/ui/SectionHeader";
@@ -10,6 +11,9 @@ interface Pillar {
   body: string;
   imageSide: "left" | "right";
   Icon: LucideIcon;
+  /** Real chapter photo. Alt text describes the scene, not the pillar. */
+  photo: string;
+  alt: string;
 }
 
 const PILLARS: Pillar[] = [
@@ -17,40 +21,60 @@ const PILLARS: Pillar[] = [
     title: "Community",
     imageSide: "left",
     Icon: Users,
+    photo: "/chapter/hoodies.jpg",
+    alt: "Omicron Tau members in chapter hoodies at a chapter event",
     body: "The people you meet will go on to be your closest friends, roommates, study buddies, and everything in between. The lifelong friendships you make will be the most valuable assets you take away from AKPsi.",
   },
   {
     title: "Leadership",
     imageSide: "right",
     Icon: Compass,
+    photo: "/chapter/suits-seated.jpg",
+    alt: "Omicron Tau members in business attire at a chapter meeting",
     body: "From pledging to brotherhood, the opportunities to lead and grow as a leader are endless. From running events to leading committees, there is always a way to get involved and make a difference.",
   },
   {
     title: "Network",
     imageSide: "left",
     Icon: Globe2,
+    photo: "/chapter/stairs-formal.jpg",
+    alt: "The Omicron Tau chapter gathered on the staircase in business attire",
     body: "The Alpha Kappa Psi network is one of the largest and most diverse networks in the world. We have access to a large alumni network spanning top companies and career paths across the globe.",
   },
   {
     title: "Development",
     imageSide: "right",
     Icon: TrendingUp,
+    photo: "/chapter/auditorium.jpg",
+    alt: "Omicron Tau members at a chapter session in a Rutgers lecture hall",
     body: "From professional development to personal growth, the opportunities to grow are endless. The brotherhood will always be here to help you grow as a student, professional, and person.",
   },
 ];
 
-function PlaceholderImage({ title, Icon }: { title: string; Icon: LucideIcon }) {
+/** Real chapter photo with the pillar title plated over the bottom edge. */
+function PillarImage({ pillar }: { pillar: Pillar }) {
+  const { title, Icon, photo, alt } = pillar;
   return (
-    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl bg-gradient-to-br from-navy via-navy-2 to-navy-3 shadow-lg saturate-[0.9] transition-all duration-500 group-hover:saturate-100">
-      {/* soft gold glow */}
-      <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-gold/20 blur-3xl" />
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white/90">
-        <Icon size={40} className="text-gold" />
-        <span className="headline text-3xl uppercase tracking-tight">{title}</span>
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl bg-navy shadow-lg">
+      <Image
+        src={photo}
+        alt={alt}
+        fill
+        sizes="(min-width: 768px) 45vw, 100vw"
+        className="object-cover saturate-[0.92] transition-all duration-500 group-hover:scale-[1.03] group-hover:saturate-100"
+      />
+      {/* Bottom scrim carries the label; without it the title sits on whatever
+          happens to be in frame. */}
+      <div
+        aria-hidden
+        className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-navy/90 via-navy/45 to-transparent"
+      />
+      <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 p-5 text-white">
+        <Icon size={22} className="shrink-0 text-gold" aria-hidden />
+        <span className="headline text-2xl uppercase tracking-tight">
+          {title}
+        </span>
       </div>
-      <span className="absolute bottom-3 right-4 text-[10px] uppercase tracking-widest text-white/30">
-        Chapter photo
-      </span>
     </div>
   );
 }
@@ -66,7 +90,7 @@ function Row({ pillar }: { pillar: Pillar }) {
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.7, ease: EASE_OUT_EXPO }}
     >
-      <PlaceholderImage title={pillar.title} Icon={pillar.Icon} />
+      <PillarImage pillar={pillar} />
     </motion.div>
   );
 
