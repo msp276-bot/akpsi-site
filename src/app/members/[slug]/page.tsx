@@ -25,7 +25,7 @@ export async function generateMetadata({
   if (!member) return { title: "Member not found" };
   return {
     title: member.name,
-    description: `${member.name} — ${member.position}${member.major ? `, ${member.major}` : ""}. Alpha Kappa Psi, Omicron Tau chapter at Rutgers University.`,
+    description: `${member.name} - ${member.position}${member.major ? `, ${member.major}` : ""}. Alpha Kappa Psi, Omicron Tau chapter at Rutgers University.`,
   };
 }
 
@@ -121,7 +121,7 @@ export default async function MemberProfilePage({
               )}
 
               {/* Contact details (email, LinkedIn) are intentionally NOT shown
-                  on this public page — they live only in the authenticated
+                  on this public page - they live only in the authenticated
                   /portal/ member directory. See build spec §5.4. */}
             </div>
           </div>

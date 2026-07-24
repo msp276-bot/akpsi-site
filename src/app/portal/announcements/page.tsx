@@ -33,7 +33,7 @@ const POSTS: Post[] = [
   },
   {
     id: "p2",
-    title: "Resume Workshop — Bring a Printed Copy",
+    title: "Resume Workshop - Bring a Printed Copy",
     body: "Reminder that Wednesday's alumni resume workshop is hands-on. Bring a printed copy of your resume (or two) so our alumni mentors can mark it up with you directly.",
     author: "Marcus Lee",
     posted: "Yesterday",
@@ -227,7 +227,7 @@ function AnnouncementComposer({
         <div>
           <h2 className="font-semibold text-ink">Create announcement</h2>
           <p className="text-xs text-muted">
-            Mock write flow — ready to connect to POST /api/announcements.
+            Mock write flow - ready to connect to POST /api/announcements.
           </p>
         </div>
         <button

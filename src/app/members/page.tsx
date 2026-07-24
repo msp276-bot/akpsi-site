@@ -7,7 +7,7 @@ import MembersDirectory from "@/components/members/MembersDirectory";
 export const metadata: Metadata = {
   title: "Our Members",
   description:
-    "Meet the brothers of the Omicron Tau chapter — the e-board, active brothers, and alumni across the Alpha Founding, Beta Founding, and Alpha Tau classes.",
+    "Meet the brothers of the Omicron Tau chapter - the e-board, active brothers, and alumni across the Alpha Founding, Beta Founding, and Alpha Tau classes.",
 };
 
 export default function MembersPage() {

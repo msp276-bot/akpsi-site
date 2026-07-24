@@ -22,7 +22,7 @@ export interface Member {
 
 /**
  * Omicron Tau chapter roster (real members). Imported from the chapter roster
- * spreadsheet — board holds their e-board titles; actives and alumni are grouped
+ * spreadsheet - board holds their e-board titles; actives and alumni are grouped
  * by founding cohort. Majors/bios/photos can be layered in later per person.
  */
 const rawMembers: Omit<Member, "slug">[] = [

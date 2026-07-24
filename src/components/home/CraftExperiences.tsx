@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 /**
  * GroundAI-style three-card feature band, recolored to the AKPsi system:
  *  1. Rotating "track" pill carousel over a navy backdrop
- *  2. Dark chat card — a brother asking for interview help
+ *  2. Dark chat card - a brother asking for interview help
  *  3. Gold "completely personal" card with a rising benefits list
  */
 
@@ -197,7 +197,7 @@ function MorphBubble() {
               <span className="text-base leading-none text-navy">Me</span>
             </div>
             <p className="ml-[56px] mt-[-9px] text-[15px] leading-snug text-navy">
-              Superday at Goldman on Friday — can a brother run a mock
+              Superday at Goldman on Friday - can a brother run a mock
               interview with me tonight?
             </p>
           </motion.div>
@@ -287,7 +287,7 @@ const LIST_ITEMS: { label: string; color: string }[] = [
 
 function AdaptableCard() {
   const words =
-    "Tailor your AKPsi journey — professional development, social events, service, and leadership that fit your goals.".split(
+    "Tailor your AKPsi journey - professional development, social events, service, and leadership that fit your goals.".split(
       " "
     );
   return (

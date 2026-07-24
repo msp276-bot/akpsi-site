@@ -2,7 +2,7 @@
  * Renders an official Instagram post / reel embed.
  *
  * Uses Instagram's public `/embed` iframe endpoint, so it needs no API key,
- * access token, or third-party script — it works fine in a static export.
+ * access token, or third-party script - it works fine in a static export.
  * Accepts a full permalink (…/p/CODE/, …/reel/CODE/, …/tv/CODE/) or a bare
  * shortcode.
  */

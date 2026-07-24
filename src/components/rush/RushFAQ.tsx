@@ -8,7 +8,7 @@ import SectionHeader from "@/components/ui/SectionHeader";
 const FAQS = [
   {
     q: "Do I need to be a business major?",
-    a: "Not at all. AKPsi is open to students of all majors — we pride ourselves on diversity. Many of our members study computer science, the humanities, engineering, and the sciences alongside business.",
+    a: "Not at all. AKPsi is open to students of all majors - we pride ourselves on diversity. Many of our members study computer science, the humanities, engineering, and the sciences alongside business.",
   },
   {
     q: "What is the time commitment?",
@@ -16,7 +16,7 @@ const FAQS = [
   },
   {
     q: "Is there a fee to join?",
-    a: "Yes — there are national and chapter dues that fund events, professional programming, and chapter operations. We offer payment plans and never want cost to be a barrier, so reach out if you have concerns.",
+    a: "Yes - there are national and chapter dues that fund events, professional programming, and chapter operations. We offer payment plans and never want cost to be a barrier, so reach out if you have concerns.",
   },
   {
     q: "What if I can't attend every event?",

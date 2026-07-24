@@ -64,7 +64,7 @@ function DashboardContent() {
     ? QUICK_LINKS.filter(({ href }) => href !== "/portal/directory")
     : QUICK_LINKS;
 
-  // Local RSVP state (mock) — tracks which events the member is going to.
+  // Local RSVP state (mock) - tracks which events the member is going to.
   const [rsvps, setRsvps] = useState<Record<string, boolean>>({});
   const toggle = (id: string) =>
     setRsvps((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -91,7 +91,7 @@ function DashboardContent() {
       </h1>
       <p className="mt-1 text-sm text-muted">
         {isPledge
-          ? "Your pledge resources, chapter events, and cohort updates — all in one place."
+          ? "Your pledge resources, chapter events, and cohort updates - all in one place."
           : "Here’s what’s happening in the Omicron Tau chapter this week."}
       </p>
 

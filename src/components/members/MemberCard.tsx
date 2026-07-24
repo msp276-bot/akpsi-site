@@ -7,7 +7,7 @@ import { getInitials, type Member } from "@/data/members";
 import { cardIn } from "@/lib/motion";
 
 /**
- * Large vertical member card — a tall portrait tile with an overlaid name plate.
+ * Large vertical member card - a tall portrait tile with an overlaid name plate.
  * Drop a headshot on `member.photo` (portrait / 3:4 works best) and it fills the
  * tile via object-cover; without one it falls back to a monogram.
  */

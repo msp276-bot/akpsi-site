@@ -19,7 +19,7 @@ export default function SilkBackground({
       {/* Base wash */}
       <div className="absolute inset-0 bg-[radial-gradient(120%_120%_at_50%_0%,#2d3e5f_0%,#1a2744_55%,#131d33_100%)]" />
 
-      {/* Soft drifting folds — no blur filter, just gentle translate */}
+      {/* Soft drifting folds - no blur filter, just gentle translate */}
       <div
         className="absolute -inset-[20%] animate-silk opacity-70"
         style={{

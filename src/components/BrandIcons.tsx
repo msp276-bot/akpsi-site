@@ -1,5 +1,5 @@
 /**
- * Minimal brand glyphs — lucide-react no longer ships LinkedIn / Instagram
+ * Minimal brand glyphs - lucide-react no longer ships LinkedIn / Instagram
  * marks (trademark policy), so we provide our own simple versions.
  * `size` and `className` mirror the lucide API for drop-in use.
  */

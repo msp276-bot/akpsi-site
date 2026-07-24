@@ -8,7 +8,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
  *
  * Both vars are safe to expose to the browser: the anon key only grants what
  * Row-Level Security allows, and "president-only" writes are enforced server
- * side by RLS — never by this client.
+ * side by RLS - never by this client.
  */
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();

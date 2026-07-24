@@ -1,5 +1,5 @@
 /**
- * Chapter social links — single source of truth for header + Media page.
+ * Chapter social links - single source of truth for header + Media page.
  * The existing footer links are intentionally left untouched (build spec §5.3);
  * update those separately if desired.
  */

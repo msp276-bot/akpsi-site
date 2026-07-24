@@ -5,7 +5,7 @@ import { EASE_OUT_EXPO } from "@/lib/motion";
 
 interface SectionHeaderProps {
   title: string;
-  /** @deprecated No longer rendered — the lowercase blue accent was removed. */
+  /** @deprecated No longer rendered - the lowercase blue accent was removed. */
   subtitle?: string;
   tone?: "light" | "dark";
   align?: "left" | "center";

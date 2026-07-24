@@ -13,16 +13,16 @@ import {
 } from "@/data/members";
 import { staggerContainer } from "@/lib/motion";
 
-type Tab = "all" | MemberGroup;
+type Tab = MemberGroup;
 type Sort = "az" | "year";
 
-const TABS: Tab[] = ["all", "board", "actives", "alumni"];
+const TABS: Tab[] = ["actives", "board", "alumni"];
 const TAB_LABELS: Record<Tab, string> = {
-  all: "All",
   ...GROUP_LABELS,
+  actives: "Members",
 };
 
-/** Founding classes, oldest first — used to divide the Actives view. */
+/** Founding classes, oldest first - used to divide the Actives view. */
 const COHORT_ORDER: Cohort[] = ["Alpha Founding", "Beta Founding", "Alpha Tau"];
 
 // Stable board hierarchy: order board members by their position in the roster
@@ -33,7 +33,7 @@ const GRID =
   "grid grid-cols-2 gap-5 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4";
 
 export default function MembersDirectory() {
-  const [tab, setTab] = useState<Tab>("all");
+  const [tab, setTab] = useState<Tab>("actives");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("az");
 
@@ -41,8 +41,7 @@ export default function MembersDirectory() {
     const q = query.trim().toLowerCase();
 
     const inTab = (m: Member) => {
-      if (tab === "all") return true;
-      // Board members are active brothers too — include them under Actives.
+      // Board members are active brothers too - include them under Members.
       if (tab === "actives")
         return m.group === "actives" || m.group === "board";
       return m.group === tab;

@@ -55,7 +55,7 @@ export default function MembersSection() {
           </div>
         </div>
 
-        {/* Grid — crossfades between tabs, cards stagger in */}
+        {/* Grid - crossfades between tabs, cards stagger in */}
         <AnimatePresence mode="wait">
           <motion.div
             key={active}

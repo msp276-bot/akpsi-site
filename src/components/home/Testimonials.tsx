@@ -8,7 +8,7 @@ import { EASE_OUT_EXPO } from "@/lib/motion";
 /**
  * Rotating brother testimonials with a portrait on the side. Weighted toward the
  * social / brotherhood side of the chapter (community, belonging, service) with
- * one professional voice — membership is more than a résumé line.
+ * one professional voice - membership is more than a résumé line.
  *
  * To use real photos, drop them in `public/testimonials/` and set `image` on the
  * matching entry (e.g. image: "/testimonials/zoe-martinez.jpg"). Entries without
@@ -32,7 +32,7 @@ const TESTIMONIALS: Testimonial[] = [
   },
   {
     quote:
-      "Bowling nights, chapter retreats, spontaneous diner runs at 2am — Omicron Tau gave me a home at Rutgers before I even realized I needed one.",
+      "Bowling nights, chapter retreats, spontaneous diner runs at 2am - Omicron Tau gave me a home at Rutgers before I even realized I needed one.",
     name: "Aiden Park",
     context: "Active Brother · Management",
     tag: "Community",
@@ -46,7 +46,7 @@ const TESTIMONIALS: Testimonial[] = [
   },
   {
     quote:
-      "Some of my favorite memories are from our service events — packing meals and fundraising for RUDM, laughing the whole way through. Giving back hits different when you do it with your brothers.",
+      "Some of my favorite memories are from our service events - packing meals and fundraising for RUDM, laughing the whole way through. Giving back hits different when you do it with your brothers.",
     name: "Leila Ahmadi",
     context: "Active Brother · Marketing",
     tag: "Service",
@@ -154,7 +154,7 @@ export default function Testimonials() {
           </motion.h2>
         </div>
 
-        {/* Carousel — portrait on the side, quote alongside */}
+        {/* Carousel - portrait on the side, quote alongside */}
         <div className="mt-14 grid items-center gap-8 sm:gap-12 md:grid-cols-[minmax(0,300px)_1fr]">
           {/* Portrait */}
           <div className="mx-auto w-full max-w-[300px]">

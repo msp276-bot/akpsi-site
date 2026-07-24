@@ -31,7 +31,7 @@ export default function AboutSection() {
       id="about"
       className="relative overflow-hidden bg-white py-24 sm:py-32"
     >
-      {/* Starlight — the gold particle field from the rush hero, tuned to read
+      {/* Starlight - the gold particle field from the rush hero, tuned to read
           on white. */}
       <GoldParticles
         density={150}
@@ -78,7 +78,7 @@ export default function AboutSection() {
             Alpha Kappa Psi is a co-ed professional business fraternity with
             access to a large alumni network spanning top companies and career
             paths across the globe. We pride ourselves on diversity and
-            uniqueness — balancing professional development with genuine social
+            uniqueness - balancing professional development with genuine social
             bonding. The benefits of AKPsi don&rsquo;t stop after pledging or
             even graduation.{" "}
             <em className="font-cinematic text-gold not-italic sm:italic">

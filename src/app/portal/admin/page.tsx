@@ -556,7 +556,7 @@ function RolesPanel({ actorEmail }: { actorEmail: string | null }) {
     }
   }, []);
 
-  // Initial fetch — state is only touched after the await, so we don't flip
+  // Initial fetch - state is only touched after the await, so we don't flip
   // state synchronously inside the effect body.
   useEffect(() => {
     let cancelled = false;
@@ -607,7 +607,7 @@ function RolesPanel({ actorEmail }: { actorEmail: string | null }) {
     <section>
       <PanelHeader
         title="Roles & access"
-        desc="Add a member's @rutgers.edu email to grant them a login and set their role. Only emails on this roster can sign in — anyone else is turned away. Only the president (and tech admin) can make changes here."
+        desc="Add a member's @rutgers.edu email to grant them a login and set their role. Only emails on this roster can sign in - anyone else is turned away. Only the president (and tech admin) can make changes here."
         endpoint="GET /members · POST /members (upsert) · DELETE /members/[email]"
       />
 
@@ -718,7 +718,7 @@ function RolesPanel({ actorEmail }: { actorEmail: string | null }) {
                 return (
                   <tr key={m.email}>
                     <td className="px-4 py-3">
-                      <p className="font-medium text-ink">{m.fullName || "—"}</p>
+                      <p className="font-medium text-ink">{m.fullName || "-"}</p>
                       <p className="text-xs text-muted">{m.email}</p>
                     </td>
                     <td className="px-4 py-3">
@@ -746,7 +746,7 @@ function RolesPanel({ actorEmail }: { actorEmail: string | null }) {
                       </select>
                     </td>
                     <td className="px-4 py-3 hidden text-xs text-muted sm:table-cell">
-                      {m.addedBy ?? "—"}
+                      {m.addedBy ?? "-"}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button

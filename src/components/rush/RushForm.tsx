@@ -136,7 +136,7 @@ export default function RushForm() {
           <p className="mt-3 text-muted">
             Thanks for applying to AKΨ Omicron Tau. Check your{" "}
             <span className="font-medium text-ink">@rutgers.edu</span> email for
-            next steps — we&rsquo;ll be in touch about info sessions and
+            next steps - we&rsquo;ll be in touch about info sessions and
             interviews.
           </p>
           <button

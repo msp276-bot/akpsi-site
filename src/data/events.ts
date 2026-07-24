@@ -79,12 +79,12 @@ export const events: ChapterEvent[] = [
   },
   {
     id: "e3",
-    title: "Chapter Social — Bowling Night",
+    title: "Chapter Social - Bowling Night",
     start: "2026-07-25T20:00:00",
     location: "New Brunswick Bowl",
     type: "social",
     description:
-      "Wind down the week with the chapter. Shoes on us — friendly competition encouraged.",
+      "Wind down the week with the chapter. Shoes on us - friendly competition encouraged.",
     going: 42,
     end: "2026-07-25T22:00:00",
     requiresRsvp: true,
@@ -152,7 +152,7 @@ export const events: ChapterEvent[] = [
     id: "e8",
     title: "E-Board Recruitment Strategy Sync",
     start: "2026-08-06T20:00:00",
-    location: "Virtual — Board Zoom",
+    location: "Virtual - Board Zoom",
     type: "general",
     description:
       "Board-only planning session for rush logistics, interview coverage, attendance review, and committee ownership.",

@@ -1,7 +1,7 @@
 import SectionHeader from "@/components/ui/SectionHeader";
 
 /**
- * "Our Network" — an infinite two-row marquee of companies where AKPsi members
+ * "Our Network" - an infinite two-row marquee of companies where AKPsi members
  * and alumni have landed. Rendered as styled wordmark placeholders (grayscale →
  * color on hover); drop real SVG/PNG brand assets into /public/logos and swap
  * the chip for an <img> when placement data is collected.

@@ -7,7 +7,7 @@ import Reveal from "@/components/anim/Reveal";
 import { EASE_OUT_EXPO } from "@/lib/motion";
 
 /**
- * "From the President" — Abhinav Gunda's welcome letter. Verbatim chapter
+ * "From the President" - Abhinav Gunda's welcome letter. Verbatim chapter
  * copy (see §9 of the project handoff), broken into paragraphs for readability.
  * The greeting + opening paragraph are always shown; the remainder expands.
  */
@@ -62,7 +62,7 @@ export default function PresidentLetter() {
       id="president"
       className="relative overflow-hidden bg-navy py-24 sm:py-32"
     >
-      {/* Atmosphere — matches AboutSection / CTASection */}
+      {/* Atmosphere - matches AboutSection / CTASection */}
       <div className="pointer-events-none absolute -left-24 top-0 h-96 w-96 rounded-full bg-gold/15 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 bottom-0 h-[28rem] w-[28rem] rounded-full bg-blue/20 blur-3xl" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent" />

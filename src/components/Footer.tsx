@@ -26,7 +26,7 @@ export default function Footer() {
           <div className="max-w-sm">
             <Logo tone="light" withWordmark />
             <p className="mt-4 text-sm leading-relaxed text-white/60">
-              The Omicron Tau chapter of Alpha Kappa Psi — a co-ed professional
+              The Omicron Tau chapter of Alpha Kappa Psi - a co-ed professional
               business fraternity at Rutgers University–New Brunswick.
             </p>
           </div>
@@ -72,7 +72,7 @@ export default function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 sm:flex-row">
           <p className="text-xs text-white/50">
-            © 2026 Alpha Kappa Psi — Omicron Tau Chapter, Rutgers University
+            © 2026 Alpha Kappa Psi - Omicron Tau Chapter, Rutgers University
           </p>
           <p className="text-xs text-white/40">
             Omicron Tau Chapter ·{" "}

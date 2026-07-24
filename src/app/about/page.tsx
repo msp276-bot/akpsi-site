@@ -11,7 +11,7 @@ import { cardIn } from "@/lib/motion";
 export const metadata: Metadata = {
   title: "About Us",
   description:
-    "The story of the Omicron Tau chapter of Alpha Kappa Psi at Rutgers University — our history, the companies we feed into, and the benefits of membership.",
+    "The story of the Omicron Tau chapter of Alpha Kappa Psi at Rutgers University - our history, the companies we feed into, and the benefits of membership.",
 };
 
 const STATS = [
@@ -67,7 +67,7 @@ export default function AboutPage() {
                   </p>
                   <p>
                     Each semester, our members recruit and develop a new pledge
-                    class through workshops, mentorship, and hands-on projects —
+                    class through workshops, mentorship, and hands-on projects -
                     building the skills that translate directly into internships
                     and full-time roles across industries.
                   </p>

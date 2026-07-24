@@ -27,9 +27,9 @@ const instrument = Instrument_Serif({
 });
 
 
-const SITE_TITLE = "Alpha Kappa Psi — Omicron Tau Chapter | Rutgers University";
+const SITE_TITLE = "Alpha Kappa Psi - Omicron Tau Chapter | Rutgers University";
 const SITE_DESC =
-  "The Omicron Tau chapter of Alpha Kappa Psi at Rutgers University — a co-ed professional business fraternity balancing professional development and lifelong brotherhood.";
+  "The Omicron Tau chapter of Alpha Kappa Psi at Rutgers University - a co-ed professional business fraternity balancing professional development and lifelong brotherhood.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://rutgersakpsi.com"),

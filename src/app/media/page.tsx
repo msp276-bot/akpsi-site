@@ -9,16 +9,16 @@ import { SOCIAL, hasSocialUrl } from "@/data/social";
 export const metadata: Metadata = {
   title: "Media",
   description:
-    "Highlights from the Omicron Tau chapter of Alpha Kappa Psi — the rush video, event recaps, and featured Instagram posts.",
+    "Highlights from the Omicron Tau chapter of Alpha Kappa Psi - the rush video, event recaps, and featured Instagram posts.",
 };
 
 /* ==========================================================================
-   EDIT ME — curated media. No backend / live Instagram feed (static export),
+   EDIT ME - curated media. No backend / live Instagram feed (static export),
    so this is a hand-maintained list. Update the constants below; the page
    handles empty/placeholder states on its own.
    ========================================================================== */
 
-// Featured Instagram posts — permalinks, embedded in order. Add or remove URLs.
+// Featured Instagram posts - permalinks, embedded in order. Add or remove URLs.
 const INSTAGRAM_POSTS: string[] = [
   "https://www.instagram.com/p/DY-mUFRmlPX/",
   "https://www.instagram.com/p/DYLeAhOEf-M/",

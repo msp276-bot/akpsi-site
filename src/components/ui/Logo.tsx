@@ -9,9 +9,9 @@ interface LogoProps {
 }
 
 /**
- * Chapter lockup matching the brand reference: the Rutgers block "R"
- * (official mark, /public/rutgers-r.svg), the "ALPHA KAPPA PSI" wordmark in
- * the display serif, and a gold "OMICRON TAU | RUTGERS UNIVERSITY" subtitle.
+ * Chapter lockup: the Alpha Kappa Psi badge mark
+ * (/public/akpsi-logo.png), the "ALPHA KAPPA PSI" wordmark in the display
+ * serif, and a gold "OMICRON TAU | RUTGERS UNIVERSITY" subtitle.
  */
 export default function Logo({
   tone = "light",
@@ -23,17 +23,17 @@ export default function Logo({
   return (
     <Link
       href="/"
-      aria-label="Alpha Kappa Psi — Omicron Tau, home"
+      aria-label="Alpha Kappa Psi - Omicron Tau, home"
       className={`group inline-flex items-center gap-3 ${className}`}
     >
       <Image
-        src="/rutgers-r.svg"
+        src="/akpsi-logo.png"
         alt=""
         aria-hidden
         width={40}
-        height={35}
+        height={40}
         priority
-        className="h-9 w-auto shrink-0"
+        className="h-9 w-9 shrink-0"
       />
 
       {withWordmark && (

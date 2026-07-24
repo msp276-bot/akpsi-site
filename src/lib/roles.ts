@@ -118,7 +118,7 @@ export async function listMembers(): Promise<MemberRecord[]> {
 
 /**
  * Look up a single roster entry by email. Returns null when the address is not
- * on the roster — which, in Supabase mode, is the signal that an authenticated
+ * on the roster - which, in Supabase mode, is the signal that an authenticated
  * user is not (or no longer) an allowed member and should be signed out.
  */
 export async function lookupMember(email: string): Promise<MemberRecord | null> {

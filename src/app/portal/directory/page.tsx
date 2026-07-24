@@ -259,7 +259,7 @@ function AddMemberForm({
         <div>
           <h2 className="font-semibold text-ink">Add member</h2>
           <p className="text-xs text-muted">
-            Mock create flow — ready for POST /api/members and invite emails.
+            Mock create flow - ready for POST /api/members and invite emails.
           </p>
         </div>
         <button

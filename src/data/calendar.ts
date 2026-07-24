@@ -36,7 +36,7 @@ function gcalStamp(date: Date): string {
 
 /**
  * A "one-click add to Google Calendar" link for a single event. Works with no
- * calendar ID — it just prefills Google's event-creation form from the event.
+ * calendar ID - it just prefills Google's event-creation form from the event.
  */
 export function addToGoogleCalendarUrl(event: {
   title: string;

@@ -148,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
       }
       // Allowlist: only emails on the roster (added by a president / tech /
-      // admin) may sign in — this mirrors the server-side Supabase enforcement
+      // admin) may sign in - this mirrors the server-side Supabase enforcement
       // so the preview behaves like production. Role also comes from the roster.
       const member = await lookupMember(address);
       if (!member) {

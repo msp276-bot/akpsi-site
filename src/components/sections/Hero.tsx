@@ -12,7 +12,7 @@ const VIDEO_SRC =
 /**
  * Cinematic hero: fullscreen looping background video, Instrument Serif
  * headline with fade-rise entrances, liquid-glass CTA. The video is the only
- * visual layer — no decorative gradients — with a whisper of vignette for
+ * visual layer - no decorative gradients - with a whisper of vignette for
  * legibility. Pause pill (bottom-right) halts the video; reduced-motion
  * starts it paused.
  */

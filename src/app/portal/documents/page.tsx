@@ -34,9 +34,9 @@ const FOLDERS: { name: string; visibility: Visibility; files: Doc[] }[] = [
     name: "Meeting Minutes",
     visibility: "active",
     files: [
-      { name: "Chapter Meeting — Jul 13.docx", kind: "doc", uploaded: "Jul 13, 2026", by: "Priya Nair", visibility: "active" },
-      { name: "Chapter Meeting — Jul 6.docx", kind: "doc", uploaded: "Jul 6, 2026", by: "Priya Nair", visibility: "active" },
-      { name: "Board Sync — Jul 1.docx", kind: "doc", uploaded: "Jul 1, 2026", by: "Priya Nair", visibility: "eboard" },
+      { name: "Chapter Meeting - Jul 13.docx", kind: "doc", uploaded: "Jul 13, 2026", by: "Priya Nair", visibility: "active" },
+      { name: "Chapter Meeting - Jul 6.docx", kind: "doc", uploaded: "Jul 6, 2026", by: "Priya Nair", visibility: "active" },
+      { name: "Board Sync - Jul 1.docx", kind: "doc", uploaded: "Jul 1, 2026", by: "Priya Nair", visibility: "eboard" },
     ],
   },
   {

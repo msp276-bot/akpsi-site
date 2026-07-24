@@ -16,7 +16,7 @@ export default function GoldParticles({
   density?: number;
   /** Particle color as an "r,g,b" string. Defaults to brand gold. */
   color?: string;
-  /** Alpha multiplier — bump above 1 to read on light backgrounds. */
+  /** Alpha multiplier - bump above 1 to read on light backgrounds. */
   intensity?: number;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
