@@ -266,8 +266,27 @@ columns, applications, audit logs). NOT the live model - a header note points to
   that exists (`AboutSection`, §5.4) is scoped to that single section on purpose.
   It is NOT permission to glass/flatten Hero, PresidentLetter, Testimonials or
   CTASection - see the reverted redesign above.
+- **`AKΨ` must NOT appear in on-page copy.** Hanken Grotesk ships no greek
+  subset (`cyrillic-ext, latin, latin-ext, vietnamese`), and neither Bodoni Moda
+  nor Instrument Serif has one either, so U+03A8 falls back to a system font and
+  visibly mismatches its neighbours. Page copy uses **`AKPsi`**. Ψ survives ONLY
+  where the OS or browser chrome renders it: `manifest.short_name`,
+  `appleWebApp.title`, the `<title>` template, `og:site_name`, the
+  `opengraph-image` (Satori), and code comments. There is no subset to add.
+- **Two home-page "flow" experiments were built and FULLY REVERTED.** Do not
+  redo either without being asked:
+  1. `SectionFade`, a gradient ramp dissolving each section into the next. Read
+     as odd, and measurably hurt contrast: the CTA eyebrow fell 6.72:1 → 3.90:1
+     and the Testimonials eyebrow 3.42:1 → 2.44:1 under a 17% wash on mobile.
+  2. Full-height scroll-snap panels (`html:has(#home)` + `min-h-svh` +
+     `snap-start`). On a phone four of five panels overflow the viewport by
+     271-600px, so snapping fought the content.
+  Both reverted to `3bb8aee` exactly; `git diff 3bb8aee HEAD -- src/` was empty
+  after each. The underlying complaint (dark→light→dark→light→dark reads blocky)
+  is still open. Untried ideas: make Testimonials navy so there are two long
+  tonal runs instead of a checkerboard, or tint the pure whites toward navy.
 
-**Open bug (pre-existing, UNFIXED)**
+**Open bugs (pre-existing, UNFIXED)**
 - **Every `SectionHeader` title on the site renders INVISIBLE.** Confirmed live
   on `/rush` (all 4) and `/about` ("Our Network", "Benefits"); also affects
   "Our Members" on `/members`. Root cause in
@@ -279,6 +298,11 @@ columns, applications, audit logs). NOT the live model - a header note points to
   trigger to the wrapper and animate the child via variants, rather than
   observing the clipped element. Left unfixed because it changes headings on
   every page and was never scoped.
+- **"Our Network" blue band fails WCAG AA for its small text.** White on the
+  brand blue `#5b8ec6` measures **3.43:1** - fine for the large heading, short
+  of the 4.5:1 the 18px wordmarks and 12px caption need. Solid white is the best
+  available on this blue (navy would be 4.32:1, also short). A deeper blue is
+  the real fix; `#3a6ca8` measures 5.4:1 and still reads as blue.
 
 ---
 
@@ -363,7 +387,7 @@ export const dynamic = "force-static";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Alpha Kappa Psi - Omicron Tau",
-    short_name: "AKΨ Omicron Tau",
+    short_name: "AKΨ - Rutgers",   // Android home-screen label
     description:
       "The members app for Alpha Kappa Psi, Omicron Tau at Rutgers University - events, directory, documents, and announcements.",
     id: "/", start_url: "/", scope: "/",
@@ -394,7 +418,7 @@ export const metadata: Metadata = {
   /* …title/desc/openGraph/twitter unchanged… */
   icons: { icon: "/favicon.ico", apple: "/apple-icon.png" },
   manifest: "/manifest.webmanifest",
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "AKΨ Omicron Tau" },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "AKΨ - Rutgers" },  // iOS home-screen label
 };
 export const viewport: Viewport = { themeColor: "#1a2744" };
 
@@ -606,6 +630,71 @@ Composition, in order: navy hero → "Our Story" + "National AKΨ" card →
   wordmarks and 12px caption. Solid white is the best available on this blue
   (navy would be 4.32:1, also short). Fixing it properly means a deeper blue
   for the band; `#3a6ca8` measures 5.4:1 and still reads as blue.
+- **`Benefits`** renders 4 pillars, each with a REAL chapter photo (§5.12). The
+  old `PlaceholderImage` (navy gradient + "Chapter photo" label) is gone,
+  replaced by `PillarImage`: `next/image` `fill` `object-cover` with the pillar
+  title plated over a `from-navy/90 via-navy/45 to-transparent` bottom scrim, so
+  the label never sits on bare photo. Alt text describes the SCENE, not the
+  pillar.
+
+### 5.11 Portal shell on mobile (`src/components/portal/PortalShell.tsx`)
+The portal was unusable on a phone; all three of these are load-bearing.
+- **Header used to overflow its container by ~104px.** The `Logo` lockup is
+  `whitespace-nowrap` and measures 287px, so it cannot shrink; with the 172px
+  icon cluster it blew past a 375px viewport and pushed the avatar and sign-out
+  off-screen. Fixes: `Logo` gained an optional **`wordmarkClassName`** prop and
+  the portal passes `"hidden sm:flex"` to drop the wordmark below `sm`; the
+  sign-out label collapses to its icon (`<span className="hidden sm:inline">`);
+  name/email and the role chip move to `lg:block`; gaps tighten to `gap-2`.
+  Header overflow now measures 0.
+- **There was NO mobile navigation at all.** The sidebar is `hidden lg:block`,
+  so Events / Directory / Documents / Announcements / Applications / Admin were
+  unreachable on a phone. A sticky horizontally scrollable pill strip now sits
+  under the header (`sticky top-16 z-30 … lg:hidden`, scrollbar hidden via
+  `[scrollbar-width:none] [&::-webkit-scrollbar]:hidden`). Verified all 7 items
+  render for an admin and the strip scrolls (871px of content in 375px).
+- **No nav item ever highlighted, mobile OR desktop.** `trailingSlash: true`
+  makes `usePathname()` return `/portal/events/` while the `NAV` hrefs omit the
+  slash, so `pathname === href` never matched. Both navs now use:
+```ts
+const currentPath = pathname.replace(/\/+$/, "");
+const isActive = (href: string) => currentPath === href.replace(/\/+$/, "");
+```
+- **Dashboard event rows** were truncating titles ("Resume Workshop with Alu…").
+  The row is now `flex flex-wrap` with the content column on `basis-48`, so the
+  RSVP button wraps to its own full-width line on a phone; `truncate` removed
+  from the `<h3>`. All 5 seeded titles render in full.
+
+### 5.12 Chapter photography (`public/chapter/`)
+Six real chapter photos, resized to ≤1600px wide (2000px for the rush hero) and
+re-encoded q82 progressive - `output:"export"` disables Next's image
+optimisation, so anything dropped in `public/` ships at whatever size it is.
+Total 1.4MB across six files.
+
+| File | Used by |
+|---|---|
+| `stairs-candid.jpg` (2000px) | RushHero backdrop |
+| `lecture-hall.jpg` | Media page hero backdrop |
+| `hoodies.jpg` | Benefits → Community |
+| `suits-seated.jpg` | Benefits → Leadership |
+| `stairs-formal.jpg` | Benefits → Network |
+| `auditorium.jpg` | Benefits → Development |
+
+Plus `public/chapter-group.jpg` (2000×1065), the AboutSection backdrop (§5.4).
+
+**RushHero backdrop, exact:** `next/image` `fill` + `priority`, behind
+`bg-navy/50` and a centre-light vignette
+`radial-gradient(120%_100%_at_50%_35%, rgba(45,62,95,0.30) 0%, rgba(26,39,68,0.62) 55%, rgba(19,29,51,0.88) 100%)`.
+The copy block carries `[text-shadow:0_2px_12px_rgba(10,16,30,0.55)]` so the
+gold eyebrow survives the bright staircase behind it.
+⚠️ **Positioning it needs `scale`, not `object-position`.** At a 1440×900 hero
+the container aspect (1.6) is wider than the photo (1.5), so `object-cover`
+scales by width and horizontal overflow is exactly **0** - there is no slack to
+pan into sideways, and only 60px vertically. Current fix:
+`scale-[1.15] translate-x-[4%] translate-y-[3.5%]`. The 1.15 zoom buys 7.5% of
+slack per side, so both translates stay inside it and the photo still fully
+covers the section (verified at 1440×900 and at mobile, where the aspect
+mismatch is far larger).
 
 ---
 
@@ -635,24 +724,42 @@ Composition, in order: navy hero → "Our Story" + "National AKΨ" card →
     home `AboutSection` backed by the chapter group photo behind a white scrim
     (§5.4, §5.10). Commit `23b207b`.
 
+17. **Portal made usable on mobile** (§5.11): header overflow fixed, mobile nav
+    strip added, `trailingSlash` active-state bug fixed, dashboard event rows
+    wrap instead of truncating. Commit `3bb8aee`.
+18. **PWA home-screen label = `AKΨ - Rutgers`** (`manifest.short_name` +
+    `appleWebApp.title`). Same commit.
+19. **`AKΨ` → `AKPsi` in all on-page copy** (§4 greek-subset constraint). Same commit.
+20. **Recruiting cycle is Fall '26**, not Spring '27 - all 10 user-facing refs
+    updated (hero + CTA buttons, rush metadata + hero, rush form heading, About
+    recruitment line, media page, seeded rush event, portal announcement and
+    document names). `ARCHIVED_FILES`' "Spring 2026 Rush Applications.csv" is
+    deliberately untouched: a genuinely past semester. Commit `d2c56c8`.
+21. **"the second founding" removed** from the president letter's closing line;
+    it now reads "As the President of Alpha Kappa Psi Omicron Tau, …". Same commit.
+22. **Six real chapter photos placed** (§5.12) across RushHero, the Media hero,
+    and all four Benefits pillars. Commits `37bb94d`, `11d7a16`.
+
 **Pending ⏳ (in the codebase)**
-17. **`SectionHeader` reveal never fires** - every section title on the site is
+23. **`SectionHeader` reveal never fires** - every section title on the site is
     invisible. Root cause + fix sketched in §4 "Open bug". Touches every page,
     so it needs a deliberate go-ahead.
-18. **"Our Network" blue fails contrast** at 3.43:1 for its small text (§5.10).
+24. **"Our Network" blue fails contrast** at 3.43:1 for its small text (§5.10).
     One-line fix is a deeper blue for the band.
+25. **Home section transitions still read blocky** - the original complaint that
+    prompted two reverted experiments (§4). Untried ideas listed there.
 
 **Pending ⏳ (require action outside the codebase)**
-19. **Make the Google Calendar PUBLIC** (Google Calendar settings) so the portal
+26. **Make the Google Calendar PUBLIC** (Google Calendar settings) so the portal
     embed shows events instead of the sign-in wall.
-20. **Rush video** - drop an mp4/YouTube URL into `RUSH_VIDEO` on the Media page.
-21. **Supabase go-live** (`docs/supabase-setup.md`) + seed the real roster. Until
+27. **Rush video** - drop an mp4/YouTube URL into `RUSH_VIDEO` on the Media page.
+28. **Supabase go-live** (`docs/supabase-setup.md`) + seed the real roster. Until
     then the whole portal runs in mock mode.
-22. **Activate push** (needs #21 first), per `docs/pwa-push-setup.md`:
+29. **Activate push** (needs #28 first), per `docs/pwa-push-setup.md`:
     run `db/push-subscriptions.sql` → `web-push generate-vapid-keys` → set
     `NEXT_PUBLIC_VAPID_PUBLIC_KEY` + redeploy → `supabase functions deploy
     send-push` + `supabase secrets set VAPID_*`.
-23. Optional: real majors for the testimonial brothers; photos for the other ~59
+30. Optional: real majors for the testimonial brothers; photos for the other ~59
     members (drop files in `public/members/` and set `photo` in `members.ts`).
 
 ---
@@ -699,14 +806,18 @@ Composition, in order: navy hero → "Our Story" + "National AKΨ" card →
 | `src/app/about/page.tsx` | About page; stats bar removed (§5.10) |
 | `src/components/about/LogoMarquee.tsx` | "Our Network" blue marquee, height-constrained (§5.10) |
 | `public/chapter-group.jpg` | Chapter group photo, 2000×1065; backdrop for `AboutSection` |
+| `public/chapter/*.jpg` | Six chapter photos (§5.12) - rush hero, media hero, 4 Benefits pillars |
+| `src/components/about/Benefits.tsx` | 4 pillars with real photos via `PillarImage` (§5.10) |
+| `src/components/rush/RushHero.tsx` | "Join the Omicron Tau Chapter" + photo backdrop, scrim, scale/translate (§5.12) |
+| `src/app/portal/dashboard/page.tsx` | Dashboard; event rows wrap on mobile (§5.11) |
 | `src/components/members/MembersDirectory.tsx` | 3-tab directory ("Members" first, no count) |
 | `src/data/members.ts` | Public roster (president = Abhinav Gunda, has `photo`) |
 | `src/app/members/[slug]/page.tsx` | Public profile (no contact info) |
-| `src/components/ui/Logo.tsx` | AKPsi badge lockup (navbar/footer/portal) |
+| `src/components/ui/Logo.tsx` | AKPsi badge lockup; `wordmarkClassName` drops the wordmark on tight bars (§5.11) |
 | `src/app/portal/admin/page.tsx` | Admin center incl. `RolesPanel` + Archive |
-| `src/components/portal/PortalShell.tsx` | Portal chrome; Admin nav gated by `manage:roles` |
+| `src/components/portal/PortalShell.tsx` | Portal chrome; mobile nav strip + normalised active state (§5.11); Admin nav gated by `manage:roles` |
 | `src/app/portal/events/page.tsx` + `src/data/calendar.ts` | Calendar embed + add-to-gcal links |
-| `src/app/media/page.tsx` + `src/components/media/InstagramEmbed.tsx` | Media page + IG embeds |
+| `src/app/media/page.tsx` + `src/components/media/InstagramEmbed.tsx` | Media page (photo hero, §5.12) + IG embeds |
 | `src/data/social.ts` | Social URLs |
 | `src/app/offline/page.tsx` | PWA offline fallback |
 | `docs/supabase-setup.md` / `docs/pwa-push-setup.md` | Setup runbooks |
@@ -715,13 +826,37 @@ Composition, in order: navy hero → "Our Story" + "National AKΨ" card →
 
 ## Git state
 
-Remote `github.com/msp276-bot/akpsi-site`, branch `main`. Recent history (newest
-first): About stats bar removed + blue marquee + chapter photo backdrop
-(`23b207b`) → Hanken Grotesk font + dead-file deletion → PWA + dormant push →
-president headshot → homepage trim + real testimonial names → AKPsi logo, em dash
-removal, Members tab. Nothing about the reverted homepage glass redesign exists
-in the tree.
+Remote `github.com/msp276-bot/akpsi-site`, branch `main`, **working tree clean
+and fully pushed** (`main` == `origin/main`).
 
-`main` is **ahead of `origin/main` and NOT pushed**. There is also a merged local
-branch `about-page-refresh` pointing at the same commit, safe to delete.
-**Commit only when asked.**
+Recent history (newest first):
+```
+11d7a16  Reposition the rush hero photo down and to the right
+37bb94d  Add real chapter photos across the site
+d2c56c8  Recruit for Fall '26; drop "second founding" from the president letter
+20a0712  Revert "Make the home page a deck of full-height snap panels"
+15727d0  Make the home page a deck of full-height snap panels      <- reverted, see §4
+3bb8aee  Fix portal mobile layout; set app name; stop psi glyph falling back
+a1d2834  Refresh PROJECT_STATE spec; finish em dash sweep
+23b207b  Drop About stats bar, shrink network marquee, add chapter photo backdrop
+4f67fa7  Switch body font to Hanken Grotesk; remove unused files
+```
+Neither reverted experiment (the homepage glass redesign, `SectionFade`, or the
+snap panels) survives in the tree. **Commit only when asked.**
+
+---
+
+## Deployment (IMPORTANT)
+
+**There is NO CI/CD.** No `.github/workflows`, no `vercel.json`, no `.vercel`,
+no `netlify.toml`. Pushing to GitHub updates the repo and **nothing else** -
+`rutgersakpsi.com` does not change.
+
+Per `README.md`, hosting is manual: build, then upload `out/` to S3 behind
+CloudFront. Wiring up GitHub Actions or AWS Amplify is an explicit open task,
+not something already in place. Do not tell the user a push has deployed.
+
+```bash
+npm run build   # emits out/
+# then sync out/ to the S3 bucket and invalidate CloudFront
+```
