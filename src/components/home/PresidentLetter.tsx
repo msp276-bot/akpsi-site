@@ -56,7 +56,7 @@ export default function PresidentLetter() {
   return (
     <section
       id="president"
-      className="relative flex min-h-svh snap-start items-center overflow-hidden bg-navy py-24 sm:py-32"
+      className="relative overflow-hidden bg-navy py-24 sm:py-32"
     >
       {/* Atmosphere - matches AboutSection / CTASection */}
       <div className="pointer-events-none absolute -left-24 top-0 h-96 w-96 rounded-full bg-gold/15 blur-3xl" />
@@ -64,7 +64,7 @@ export default function PresidentLetter() {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
-      <div className="relative mx-auto grid w-full max-w-6xl gap-12 px-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-start lg:gap-16 lg:px-8">
+      <div className="relative mx-auto grid max-w-6xl gap-12 px-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-start lg:gap-16 lg:px-8">
         {/* Portrait */}
         <Reveal className="lg:sticky lg:top-28">
           <Portrait />
