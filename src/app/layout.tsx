@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Bodoni_Moda, Instrument_Serif } from "next/font/google";
+import { Hanken_Grotesk, Bodoni_Moda, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import ServiceWorkerRegister from "@/components/pwa/ServiceWorkerRegister";
 
-const inter = Inter({
-  variable: "--font-inter",
+// Neutral geometric grotesk (a free Söhne / Neue Haas Grotesk stand-in) - the
+// professional-finance body voice that doesn't compete with the display serif.
+const hanken = Hanken_Grotesk({
+  variable: "--font-hanken",
   subsets: ["latin"],
   display: "swap",
 });
@@ -85,7 +87,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${bodoni.variable} ${instrument.variable} h-full`}
+      className={`${hanken.variable} ${bodoni.variable} ${instrument.variable} h-full`}
     >
       <body className="min-h-full flex flex-col bg-white text-ink">
         <AuthProvider>{children}</AuthProvider>
