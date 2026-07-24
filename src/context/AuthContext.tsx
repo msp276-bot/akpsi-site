@@ -48,10 +48,6 @@ const STORAGE_KEY = "akpsi.ot.user";
 const AuthContext = createContext<AuthState | null>(null);
 
 const RUTGERS_DOMAIN = "@rutgers.edu";
-// Mock-mode role mapping only. In Supabase mode the role always comes from the
-// members roster (the allowlist), never from these hardcoded sets.
-const ADMIN_EMAILS = new Set(["admin@rutgers.edu", "tech@rutgers.edu"]);
-const PRESIDENT_EMAILS = new Set(["president@rutgers.edu"]);
 
 function deriveName(email: string): string {
   const local = email.split("@")[0].replace(/[._-]+/g, " ").trim();
@@ -143,7 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [mode]);
 
   const mockSignIn = useCallback(
-    async (email?: string, membership: "active" | "pledge" = "active") => {
+    async (email?: string, _membership: "active" | "pledge" = "active") => {
       await new Promise((r) => setTimeout(r, 700));
       const address = (email ?? "member@rutgers.edu").trim().toLowerCase();
       if (!address.endsWith(RUTGERS_DOMAIN)) {
@@ -151,14 +147,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           "That account isn't a @rutgers.edu address. The member portal is limited to Rutgers accounts."
         );
       }
+      // Allowlist: only emails on the roster (added by a president / tech /
+      // admin) may sign in — this mirrors the server-side Supabase enforcement
+      // so the preview behaves like production. Role also comes from the roster.
+      const member = await lookupMember(address);
+      if (!member) {
+        throw new Error(
+          "This email isn't on the chapter roster yet. A president, tech chair, or admin needs to add you before you can sign in."
+        );
+      }
       const nextUser: ChapterUser = {
-        email: address,
-        name: deriveName(address),
-        role: ADMIN_EMAILS.has(address)
-          ? "admin"
-          : PRESIDENT_EMAILS.has(address)
-            ? "president"
-            : membership,
+        email: member.email,
+        name: member.fullName || deriveName(member.email),
+        role: member.role,
       };
       setUser(nextUser);
       try {

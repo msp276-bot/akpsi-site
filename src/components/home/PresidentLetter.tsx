@@ -7,7 +7,7 @@ import Reveal from "@/components/anim/Reveal";
 import { EASE_OUT_EXPO } from "@/lib/motion";
 
 /**
- * "From the President" — Olivia Occhipinti's welcome letter. Verbatim chapter
+ * "From the President" — Abhinav Gunda's welcome letter. Verbatim chapter
  * copy (see §9 of the project handoff), broken into paragraphs for readability.
  * The greeting + opening paragraph are always shown; the remainder expands.
  */
@@ -74,7 +74,7 @@ export default function PresidentLetter() {
           <PortraitPlaceholder />
           <div className="mt-6 text-center lg:text-left">
             <p className="font-display text-2xl text-white">
-              Olivia Occhipinti
+              Abhinav Gunda
             </p>
             <p className="mt-1 text-sm text-white/55">
               President &middot; Second Founding President
@@ -137,7 +137,7 @@ export default function PresidentLetter() {
                       In U&hellip;and I&hellip;,
                     </p>
                     <p className="mt-2 font-cinematic text-2xl italic text-gold">
-                      Olivia Occhipinti
+                      Abhinav Gunda
                     </p>
                     <p className="mt-1 text-sm uppercase tracking-[0.2em] text-white/45">
                       President, Omicron Tau

@@ -4,8 +4,6 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, GraduationCap, Briefcase } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { LinkedinIcon } from "@/components/BrandIcons";
-import RevealEmail from "@/components/members/RevealEmail";
 import {
   members,
   getMemberBySlug,
@@ -39,8 +37,6 @@ export default async function MemberProfilePage({
   const { slug } = await params;
   const member = getMemberBySlug(slug);
   if (!member) notFound();
-
-  const emailUser = member.name.toLowerCase().replace(/ /g, ".");
 
   return (
     <>
@@ -124,17 +120,9 @@ export default async function MemberProfilePage({
                 </p>
               )}
 
-              <div className="mt-8 flex flex-wrap gap-3">
-                {member.linkedin && (
-                  <a
-                    href={member.linkedin}
-                    className="inline-flex items-center gap-2 rounded-full bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#141d34]"
-                  >
-                    <LinkedinIcon size={15} /> LinkedIn
-                  </a>
-                )}
-                <RevealEmail user={emailUser} />
-              </div>
+              {/* Contact details (email, LinkedIn) are intentionally NOT shown
+                  on this public page — they live only in the authenticated
+                  /portal/ member directory. See build spec §5.4. */}
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { EASE_OUT_EXPO } from "@/lib/motion";
 
 interface SectionHeaderProps {
   title: string;
+  /** @deprecated No longer rendered — the lowercase blue accent was removed. */
   subtitle?: string;
   tone?: "light" | "dark";
   align?: "left" | "center";
@@ -12,12 +13,10 @@ interface SectionHeaderProps {
 }
 
 /**
- * Section title with a clip-reveal-from-bottom animation on scroll-in,
- * plus an optional lowercase accent-blue subtitle (e.g. "consultants").
+ * Section title with a clip-reveal-from-bottom animation on scroll-in.
  */
 export default function SectionHeader({
   title,
-  subtitle,
   tone = "dark",
   align = "center",
   className = "",
@@ -38,17 +37,6 @@ export default function SectionHeader({
           {title}
         </motion.h2>
       </div>
-      {subtitle && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.5, delay: 0.15 }}
-          className="mt-2 text-lg lowercase tracking-wide text-blue font-medium"
-        >
-          {subtitle}
-        </motion.p>
-      )}
     </div>
   );
 }

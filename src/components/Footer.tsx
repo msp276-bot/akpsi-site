@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Mail } from "lucide-react";
 import { LinkedinIcon, InstagramIcon } from "@/components/BrandIcons";
 import Logo from "@/components/ui/Logo";
+import { SOCIAL } from "@/data/social";
 
 const QUICK_LINKS = [
   { label: "Home", href: "/" },
@@ -12,8 +13,8 @@ const QUICK_LINKS = [
 ];
 
 const SOCIALS = [
-  { label: "LinkedIn", href: "#", Icon: LinkedinIcon },
-  { label: "Instagram", href: "#", Icon: InstagramIcon },
+  { label: "LinkedIn", href: SOCIAL.linkedin, Icon: LinkedinIcon },
+  { label: "Instagram", href: SOCIAL.instagram, Icon: InstagramIcon },
   { label: "Email", href: "mailto:omicrontau@rutgers.edu", Icon: Mail },
 ];
 
@@ -50,16 +51,21 @@ export default function Footer() {
               Connect
             </h3>
             <div className="flex gap-3">
-              {SOCIALS.map(({ label, href, Icon }) => (
-                <a
-                  key={label}
-                  href={href}
-                  aria-label={label}
-                  className="grid h-10 w-10 place-items-center rounded-full border border-white/15 text-white/80 transition-all hover:border-gold hover:text-gold"
-                >
-                  <Icon size={18} />
-                </a>
-              ))}
+              {SOCIALS.map(({ label, href, Icon }) => {
+                const external = !href.startsWith("mailto:");
+                return (
+                  <a
+                    key={label}
+                    href={href}
+                    aria-label={label}
+                    target={external ? "_blank" : undefined}
+                    rel={external ? "noopener noreferrer" : undefined}
+                    className="grid h-10 w-10 place-items-center rounded-full border border-white/15 text-white/80 transition-all hover:border-gold hover:text-gold"
+                  >
+                    <Icon size={18} />
+                  </a>
+                );
+              })}
             </div>
           </div>
         </div>

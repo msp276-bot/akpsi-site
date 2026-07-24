@@ -6,12 +6,20 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import Logo from "@/components/ui/Logo";
 import Button from "@/components/ui/Button";
+import { LinkedinIcon, InstagramIcon } from "@/components/BrandIcons";
+import { SOCIAL } from "@/data/social";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "About Us", href: "/about" },
   { label: "Our Members", href: "/members" },
+  { label: "Media", href: "/media" },
   { label: "Rush", href: "/rush" },
+];
+
+const SOCIALS = [
+  { label: "Instagram", href: SOCIAL.instagram, Icon: InstagramIcon },
+  { label: "LinkedIn", href: SOCIAL.linkedin, Icon: LinkedinIcon },
 ];
 
 export default function Navbar() {
@@ -42,7 +50,7 @@ export default function Navbar() {
       {/* Board accent: scarlet rule across the very top edge */}
       <div className="h-[3px] w-full bg-gradient-to-r from-scarlet via-[#e11d48] to-scarlet" />
 
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8">
+      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-8 px-5 sm:px-8">
         <Logo tone="light" withWordmark />
 
         <div className="hidden items-center gap-1 lg:flex">
@@ -55,7 +63,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                className={`whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium transition-colors ${
                   active
                     ? "text-gold"
                     : "text-white/85 hover:text-white hover:bg-white/10"
@@ -65,7 +73,21 @@ export default function Navbar() {
               </Link>
             );
           })}
-          <Button href="/portal" variant="white" size="sm" className="ml-2">
+          <div className="ml-1.5 mr-1 flex items-center gap-0.5 border-l border-white/15 pl-2">
+            {SOCIALS.map(({ label, href, Icon }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={label}
+                className="grid h-8 w-8 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-gold"
+              >
+                <Icon size={16} />
+              </a>
+            ))}
+          </div>
+          <Button href="/portal" variant="white" size="sm" className="whitespace-nowrap">
             Sign In
           </Button>
         </div>
@@ -103,6 +125,21 @@ export default function Navbar() {
             >
               Sign In
             </Button>
+
+            <div className="mt-3 flex items-center gap-2 border-t border-white/10 pt-4">
+              {SOCIALS.map(({ label, href, Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="grid h-11 w-11 place-items-center rounded-full bg-white/5 text-white/85 transition-colors hover:bg-white/10 hover:text-gold"
+                >
+                  <Icon size={18} />
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       )}
