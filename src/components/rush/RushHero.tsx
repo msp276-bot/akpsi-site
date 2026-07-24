@@ -22,7 +22,7 @@ export default function RushHero() {
           variants={fadeUp}
           className="mb-4 text-xs font-semibold uppercase tracking-[0.35em] text-gold"
         >
-          Rush AKΨ · Spring &rsquo;27
+          Rush AKPsi · Spring &rsquo;27
         </motion.p>
         <motion.h1
           variants={fadeUp}

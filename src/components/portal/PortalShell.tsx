@@ -70,51 +70,87 @@ export default function PortalShell({
     ({ permission }) => !permission || hasPermission(user.role, permission)
   );
 
+  // `trailingSlash: true` means usePathname() returns "/portal/events/" while
+  // the NAV hrefs are written without the slash, so a raw === comparison never
+  // matches and no nav item ever highlights. Compare them normalised.
+  const currentPath = pathname.replace(/\/+$/, "");
+  const isActive = (href: string) => currentPath === href.replace(/\/+$/, "");
+
   return (
     <div className="min-h-svh bg-slate-50">
       {/* Top bar */}
       <header className="sticky top-0 z-40 border-b border-line bg-navy text-white">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8">
-          <div className="flex items-center gap-3">
-            <Logo tone="light" />
-            <span className="hidden text-xs uppercase tracking-widest text-white/50 sm:block">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:gap-3 sm:px-8">
+          {/* The wordmark is ~250px and never wraps, so it is dropped below sm
+              to stop the header overflowing on a phone. */}
+          <div className="flex min-w-0 items-center gap-3">
+            <Logo tone="light" wordmarkClassName="hidden sm:flex" />
+            <span className="hidden text-xs uppercase tracking-widest text-white/50 lg:block">
               {roleLabel(user.role)}
             </span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-4">
             <button
-              className="relative grid h-9 w-9 place-items-center rounded-full border border-white/15 text-white/80 transition-colors hover:bg-white/10"
+              className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/15 text-white/80 transition-colors hover:bg-white/10"
               aria-label="Notifications"
             >
               <Bell size={16} />
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-scarlet" />
             </button>
-            <div className="hidden text-right sm:block">
+            <div className="hidden text-right lg:block">
               <p className="text-sm font-medium leading-tight">{user.name}</p>
               <p className="text-xs text-white/50">{user.email}</p>
             </div>
-            <div className="grid h-9 w-9 place-items-center rounded-full bg-gold text-sm font-bold text-navy">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold text-sm font-bold text-navy">
               {getInitials(user.name)}
             </div>
+            {/* Icon-only below sm; the label costs ~70px the phone cannot spare. */}
             <button
               onClick={() => {
                 signOut();
                 router.replace("/portal");
               }}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3 py-1.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/10"
+              aria-label="Sign out"
+              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-white/20 px-2.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 sm:px-3"
             >
-              <LogOut size={14} /> Sign out
+              <LogOut size={14} />
+              <span className="hidden sm:inline">Sign out</span>
             </button>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto flex max-w-7xl gap-8 px-5 py-8 sm:px-8">
+      {/* Mobile nav. The sidebar below is desktop-only, so without this strip
+          there is no way to reach Events / Directory / Documents / etc. on a
+          phone. Scrolls horizontally to absorb the 7th item for admins. */}
+      <nav className="sticky top-16 z-30 border-b border-line bg-white lg:hidden">
+        <div className="flex gap-1.5 overflow-x-auto px-4 py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {visibleNav.map(({ label, href, Icon }) => {
+            const active = isActive(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                aria-current={active ? "page" : undefined}
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium transition-colors ${
+                  active
+                    ? "bg-navy text-white"
+                    : "bg-slate-100 text-ink hover:bg-slate-200"
+                }`}
+              >
+                <Icon size={15} /> {label}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+
+      <div className="mx-auto flex max-w-7xl gap-8 px-4 py-6 sm:px-8 sm:py-8">
         {/* Sidebar nav */}
         <aside className="hidden w-56 shrink-0 lg:block">
           <nav className="sticky top-24 flex flex-col gap-1">
             {visibleNav.map(({ label, href, Icon }) => {
-              const active = pathname === href;
+              const active = isActive(href);
               return (
                 <Link
                   key={href}

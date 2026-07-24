@@ -78,7 +78,7 @@ function DashboardContent() {
 
   return (
     <div>
-      <h1 className="flex items-center gap-2 text-2xl font-bold text-ink">
+      <h1 className="flex flex-wrap items-center gap-2 text-xl font-bold text-ink sm:text-2xl">
         {isPledge ? (
           <>
             Welcome to pledge season, {firstName}
@@ -112,10 +112,10 @@ function DashboardContent() {
         ].map((s) => (
           <div
             key={s.label}
-            className="rounded-xl border border-line bg-white p-4"
+            className="rounded-xl border border-line bg-white p-3.5 sm:p-4"
           >
-            <div className="headline text-3xl text-navy">{s.value}</div>
-            <div className="mt-1 text-xs font-medium uppercase tracking-wide text-muted">
+            <div className="headline text-2xl text-navy sm:text-3xl">{s.value}</div>
+            <div className="mt-1 text-[11px] font-medium uppercase tracking-wide text-muted sm:text-xs">
               {s.label}
             </div>
           </div>
@@ -147,7 +147,7 @@ function DashboardContent() {
               return (
                 <div
                   key={ev.id}
-                  className="flex items-center gap-4 rounded-xl border border-line bg-white p-4 transition-shadow hover:shadow-sm"
+                  className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-line bg-white p-4 transition-shadow hover:shadow-sm"
                 >
                   <div className="flex w-14 shrink-0 flex-col items-center rounded-lg bg-slate-50 py-2">
                     <span className="text-lg font-bold leading-none text-navy">
@@ -158,9 +158,11 @@ function DashboardContent() {
                     </span>
                   </div>
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className={`h-2 w-2 rounded-full ${meta.dot}`} />
+                  {/* basis-48 makes the RSVP button wrap to its own full-width
+                      row on a phone instead of crushing the title. */}
+                  <div className="min-w-0 flex-1 basis-48">
+                    <div className="flex flex-wrap items-center gap-x-2">
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${meta.dot}`} />
                       <span className={`text-[11px] font-semibold uppercase tracking-wide ${meta.text}`}>
                         {meta.label}
                       </span>
@@ -168,17 +170,20 @@ function DashboardContent() {
                         · {countdownLabel(ev.start)}
                       </span>
                     </div>
-                    <h3 className="mt-0.5 truncate font-semibold text-ink">
+                    <h3 className="mt-0.5 font-semibold text-ink">
                       {ev.title}
                     </h3>
-                    <p className="flex items-center gap-1 text-xs text-muted">
-                      <MapPin size={12} /> {ev.location} · {formatEventTime(ev.start)}
+                    <p className="flex items-start gap-1 text-xs text-muted">
+                      <MapPin size={12} className="mt-0.5 shrink-0" />
+                      <span>
+                        {ev.location} · {formatEventTime(ev.start)}
+                      </span>
                     </p>
                   </div>
 
                   <button
                     onClick={() => toggle(ev.id)}
-                    className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-all ${
+                    className={`w-full shrink-0 rounded-full px-4 py-2.5 text-xs font-semibold transition-all sm:ml-auto sm:w-auto sm:py-2 ${
                       going
                         ? "bg-navy text-white"
                         : "border border-line text-navy hover:border-navy"

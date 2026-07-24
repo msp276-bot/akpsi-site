@@ -71,7 +71,8 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "AKΨ Omicron Tau",
+    // Home-screen label on iOS. Keep in sync with short_name in manifest.ts.
+    title: "AKΨ - Rutgers",
   },
 };
 

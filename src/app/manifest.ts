@@ -10,7 +10,9 @@ export const dynamic = "force-static";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Alpha Kappa Psi - Omicron Tau",
-    short_name: "AKΨ Omicron Tau",
+    // Home-screen label on Android. Keep in sync with appleWebApp.title in
+    // layout.tsx, which is the iOS equivalent.
+    short_name: "AKΨ - Rutgers",
     description:
       "The members app for Alpha Kappa Psi, Omicron Tau at Rutgers University - events, directory, documents, and announcements.",
     id: "/",

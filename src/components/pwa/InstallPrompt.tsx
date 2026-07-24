@@ -72,7 +72,9 @@ export default function InstallPrompt() {
           <Download size={18} />
         </span>
         <div>
-          <p className="font-semibold">Install the AKΨ app</p>
+          {/* "AKPsi" not "AKΨ": Hanken Grotesk has no greek subset, so U+03A8
+              falls back to a system font and visibly mismatches the label. */}
+          <p className="font-semibold">Install the AKPsi app</p>
           {isIOS ? (
             <p className="mt-1 text-sm text-white/70">
               Tap the Share icon{" "}

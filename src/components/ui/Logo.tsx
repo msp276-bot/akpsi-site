@@ -6,6 +6,12 @@ interface LogoProps {
   tone?: "light" | "dark";
   withWordmark?: boolean;
   className?: string;
+  /**
+   * Extra classes on the wordmark block. The wordmark is `whitespace-nowrap`
+   * and runs ~250px wide, so tight bars (the portal header on a phone) pass
+   * "hidden sm:flex" to drop it and keep just the badge.
+   */
+  wordmarkClassName?: string;
 }
 
 /**
@@ -17,6 +23,7 @@ export default function Logo({
   tone = "light",
   withWordmark = true,
   className = "",
+  wordmarkClassName = "",
 }: LogoProps) {
   const wordmark = tone === "light" ? "text-white" : "text-navy";
 
@@ -37,7 +44,7 @@ export default function Logo({
       />
 
       {withWordmark && (
-        <span className="flex flex-col leading-none">
+        <span className={`flex flex-col leading-none ${wordmarkClassName}`}>
           <span
             className={`whitespace-nowrap font-display text-xl font-extrabold uppercase tracking-tight ${wordmark}`}
           >

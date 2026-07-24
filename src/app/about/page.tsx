@@ -74,7 +74,7 @@ export default function AboutPage() {
             <Reveal delay={0.1}>
               <div className="rounded-2xl border border-line bg-slate-50 p-8">
                 <h3 className="headline text-xl uppercase text-navy">
-                  National AKΨ
+                  National AKPsi
                 </h3>
                 <p className="mt-3 text-sm leading-relaxed text-muted">
                   Alpha Kappa Psi was founded in 1904 and has since initiated

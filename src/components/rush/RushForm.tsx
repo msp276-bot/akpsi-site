@@ -134,7 +134,7 @@ export default function RushForm() {
             Application received!
           </h2>
           <p className="mt-3 text-muted">
-            Thanks for applying to AKΨ Omicron Tau. Check your{" "}
+            Thanks for applying to AKPsi Omicron Tau. Check your{" "}
             <span className="font-medium text-ink">@rutgers.edu</span> email for
             next steps - we&rsquo;ll be in touch about info sessions and
             interviews.
