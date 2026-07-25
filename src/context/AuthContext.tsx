@@ -45,9 +45,12 @@ interface AuthState {
 }
 
 const STORAGE_KEY = "akpsi.ot.user";
+const AUTH_ERROR_KEY = "akpsi.ot.auth-error";
 const AuthContext = createContext<AuthState | null>(null);
 
 const RUTGERS_DOMAIN = "@rutgers.edu";
+const NOT_ON_ROSTER_MESSAGE =
+  "This email isn't on the chapter roster yet. A president, tech chair, or admin needs to add you before you can sign in.";
 
 function deriveName(email: string): string {
   const local = email.split("@")[0].replace(/[._-]+/g, " ").trim();
@@ -63,6 +66,15 @@ function deriveName(email: string): string {
 function redirectTarget(): string | undefined {
   if (typeof window === "undefined") return undefined;
   return `${window.location.origin}/portal/`;
+}
+
+function rememberAuthError(message: string) {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(AUTH_ERROR_KEY, message);
+  } catch {
+    /* storage may be unavailable */
+  }
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -92,6 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!member) {
           // Authenticated but not on the roster → revoke the session. The
           // signup trigger should prevent this, but we fail closed anyway.
+          rememberAuthError(NOT_ON_ROSTER_MESSAGE);
           await supabaseRef.current?.auth.signOut();
           setUser(null);
         } else {
@@ -139,7 +152,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [mode]);
 
   const mockSignIn = useCallback(
-    async (email?: string, _membership: "active" | "pledge" = "active") => {
+    async (email?: string, membership: "active" | "pledge" = "active") => {
+      void membership;
       await new Promise((r) => setTimeout(r, 700));
       const address = (email ?? "member@rutgers.edu").trim().toLowerCase();
       if (!address.endsWith(RUTGERS_DOMAIN)) {
@@ -152,9 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // so the preview behaves like production. Role also comes from the roster.
       const member = await lookupMember(address);
       if (!member) {
-        throw new Error(
-          "This email isn't on the chapter roster yet. A president, tech chair, or admin needs to add you before you can sign in."
-        );
+        throw new Error(NOT_ON_ROSTER_MESSAGE);
       }
       const nextUser: ChapterUser = {
         email: member.email,

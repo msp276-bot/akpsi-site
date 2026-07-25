@@ -2,51 +2,71 @@ import SectionHeader from "@/components/ui/SectionHeader";
 
 /**
  * "Our Network" - an infinite two-row marquee of companies where AKPsi members
- * and alumni have landed. Rendered as styled wordmark placeholders (grayscale →
- * color on hover); drop real SVG/PNG brand assets into /public/logos and swap
- * the chip for an <img> when placement data is collected.
+ * and alumni have landed. Each company shows its real logo on a white chip so
+ * the marks stay legible over the brand-blue band.
  *
  * Rows scroll in opposite directions, pause on hover, and collapse to a static
  * centered grid under prefers-reduced-motion (handled in globals.css).
+ *
+ * Logos live in /public/logos and were sourced from each company's Wikipedia
+ * infobox (Wikimedia Commons / fair-use brand files). To add a firm, drop its
+ * logo in /public/logos and add a `{ name, logo }` entry below. The `logo`
+ * field is optional - a company with no logo renders its name as text - but we
+ * only list firms whose logo we actually have so the wall stays clean.
  */
 
-const ROW_ONE = [
-  "JPMorgan Chase",
-  "Goldman Sachs",
-  "Morgan Stanley",
-  "Deloitte",
-  "McKinsey & Co.",
-  "BCG",
-  "Bain & Co.",
-  "KKR",
-  "Blackstone",
-  "Lazard",
-  "Evercore",
-  "Centerview",
+interface Company {
+  name: string;
+  logo?: string; // path under /public; omit to render the name as text
+}
+
+const ROW_ONE: Company[] = [
+  { name: "Sanofi", logo: "/logos/sanofi.svg" },
+  { name: "Accenture", logo: "/logos/accenture.svg" },
+  { name: "Bristol Myers Squibb", logo: "/logos/bristol-myers-squibb.svg" },
+  { name: "Oracle", logo: "/logos/oracle.svg" },
+  { name: "bp", logo: "/logos/bp.svg" },
+  { name: "Johnson & Johnson", logo: "/logos/johnson-and-johnson.svg" },
+  { name: "BlackRock", logo: "/logos/blackrock.svg" },
+  { name: "Solar Turbines", logo: "/logos/solar-turbines.svg" },
+  { name: "Berkshire Hathaway", logo: "/logos/berkshire-hathaway.svg" },
+  { name: "Bank of America Merrill Lynch", logo: "/logos/bank-of-america.svg" },
+  { name: "Standard Chartered", logo: "/logos/standard-chartered.svg" },
+  { name: "GEICO", logo: "/logos/geico.svg" },
 ];
 
-const ROW_TWO = [
-  "Amazon",
-  "Google",
-  "Microsoft",
-  "Apple",
-  "Meta",
-  "Tesla",
-  "Netflix",
-  "Spotify",
-  "Uber",
-  "Airbnb",
-  "PwC",
-  "EY",
-  "KPMG",
-  "Accenture",
-  "Salesforce",
+const ROW_TWO: Company[] = [
+  { name: "Coinbase", logo: "/logos/coinbase.svg" },
+  { name: "UBS", logo: "/logos/ubs.svg" },
+  { name: "Scotiabank", logo: "/logos/scotiabank.svg" },
+  { name: "Newmark", logo: "/logos/newmark.svg" },
+  { name: "Kenvue", logo: "/logos/kenvue.svg" },
+  { name: "Capital One", logo: "/logos/capital-one.svg" },
+  { name: "Sun Pharma", logo: "/logos/sun-pharma.svg" },
+  { name: "NJM", logo: "/logos/njm.svg" },
+  { name: "Symrise", logo: "/logos/symrise.svg" },
+  { name: "Rutgers Cancer Institute", logo: "/logos/rutgers-cancer-institute.svg" },
+  { name: "U.S. Bank", logo: "/logos/us-bank.svg" },
+  { name: "Cartier", logo: "/logos/cartier.svg" },
 ];
 
-function Chip({ name }: { name: string }) {
+function Chip({ company }: { company: Company }) {
   return (
-    <span className="shrink-0 whitespace-nowrap font-display text-base font-bold text-white transition-all duration-300 hover:scale-110 hover:text-navy sm:text-lg">
-      {name}
+    <span className="flex h-14 shrink-0 items-center justify-center rounded-2xl bg-white px-6 shadow-sm ring-1 ring-black/5 transition-transform duration-300 hover:scale-105 sm:h-16 sm:px-7">
+      {company.logo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={company.logo}
+          alt={company.name}
+          loading="lazy"
+          decoding="async"
+          className="h-8 w-auto max-w-[160px] object-contain sm:max-w-[185px]"
+        />
+      ) : (
+        <span className="whitespace-nowrap font-display text-sm font-bold text-navy sm:text-base">
+          {company.name}
+        </span>
+      )}
     </span>
   );
 }
@@ -55,14 +75,14 @@ function Row({
   items,
   track,
 }: {
-  items: string[];
+  items: Company[];
   track: "marquee-track-1" | "marquee-track-2";
 }) {
   return (
     <div className="marquee-band overflow-hidden py-2">
-      <div className={`marquee-track ${track} flex w-max items-center gap-12`}>
-        {[...items, ...items].map((name, i) => (
-          <Chip key={`${name}-${i}`} name={name} />
+      <div className={`marquee-track ${track} flex w-max items-center gap-5 sm:gap-6`}>
+        {[...items, ...items].map((company, i) => (
+          <Chip key={`${company.name}-${i}`} company={company} />
         ))}
       </div>
     </div>
@@ -77,7 +97,7 @@ export default function LogoMarquee() {
       </div>
 
       <div
-        className="mt-7 space-y-1"
+        className="mt-7 space-y-3"
         style={{
           maskImage:
             "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
@@ -91,7 +111,7 @@ export default function LogoMarquee() {
 
       <p className="mx-auto mt-6 max-w-xl px-5 text-center text-xs leading-relaxed text-white">
         Representative of where Omicron Tau members and alumni have interned and
-        worked. Placeholder wordmarks shown pending official brand assets.
+        worked.
       </p>
     </section>
   );

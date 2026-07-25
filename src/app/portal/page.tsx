@@ -19,6 +19,16 @@ import GoogleIcon from "@/components/GoogleIcon";
 import Logo from "@/components/ui/Logo";
 import { EASE_OUT } from "@/lib/motion";
 
+const AUTH_ERROR_KEY = "akpsi.ot.auth-error";
+
+function friendlyAuthError(message: string) {
+  const decoded = decodeURIComponent(message.replace(/\+/g, " "));
+  if (decoded.toLowerCase().includes("chapter roster")) {
+    return "This email isn't on the chapter roster yet. A president, tech chair, or admin needs to add you before you can sign in.";
+  }
+  return decoded;
+}
+
 export default function PortalSignInPage() {
   const { user, loading, mode } = useAuth();
   const router = useRouter();
@@ -76,6 +86,24 @@ function RealSignIn() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const stored = window.sessionStorage.getItem(AUTH_ERROR_KEY);
+    const oauthError =
+      params.get("error_description") ??
+      params.get("error") ??
+      hashParams.get("error_description") ??
+      hashParams.get("error") ??
+      stored;
+
+    if (oauthError) {
+      window.sessionStorage.removeItem(AUTH_ERROR_KEY);
+      window.history.replaceState(null, "", window.location.pathname);
+      queueMicrotask(() => setError(friendlyAuthError(oauthError)));
+    }
+  }, []);
 
   async function google() {
     setBusy("google");

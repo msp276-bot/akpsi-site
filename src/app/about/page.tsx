@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Reveal from "@/components/anim/Reveal";
@@ -18,8 +19,33 @@ export default function AboutPage() {
       <Navbar />
       <main className="flex-1">
         {/* Hero */}
-        <section className="bg-navy px-5 pb-20 pt-32 sm:px-8">
-          <div className="mx-auto max-w-3xl text-center">
+        <section className="relative overflow-hidden bg-navy px-5 pb-20 pt-32 sm:px-8">
+          {/* Chapter photo backdrop behind the hero copy. */}
+          <Image
+            src="/about-chapter.jpg"
+            alt=""
+            aria-hidden
+            fill
+            priority
+            sizes="100vw"
+            className="pointer-events-none select-none object-cover object-center"
+          />
+          {/* Navy scrim keeps the white hero copy legible over the photo, and
+              the gradient stays darkest at the top (under the navbar) and the
+              bottom so the section blends into the white story block below. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-navy/45"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(to bottom, rgba(26,39,68,0.78) 0%, rgba(26,39,68,0.4) 45%, rgba(26,39,68,0.88) 100%)",
+            }}
+          />
+          <div className="relative z-10 mx-auto max-w-3xl text-center [text-shadow:0_2px_14px_rgba(10,16,30,0.55)]">
             <Reveal>
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gold">
                 Omicron Tau • Rutgers University
@@ -31,7 +57,7 @@ export default function AboutPage() {
               </h1>
             </Reveal>
             <Reveal delay={0.2}>
-              <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/75">
+              <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/85">
                 Alpha Kappa Psi is the oldest and largest professional business
                 fraternity in the world. The Omicron Tau chapter brings that
                 legacy to Rutgers University–New Brunswick, developing principled
