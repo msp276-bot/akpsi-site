@@ -16,7 +16,7 @@ import { staggerContainer } from "@/lib/motion";
 type Tab = MemberGroup;
 type Sort = "az" | "year";
 
-const TABS: Tab[] = ["actives", "board", "alumni"];
+const TABS: Tab[] = ["board", "actives", "alumni"];
 const TAB_LABELS: Record<Tab, string> = {
   ...GROUP_LABELS,
   actives: "Members",
@@ -33,7 +33,7 @@ const GRID =
   "grid grid-cols-2 gap-5 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4";
 
 export default function MembersDirectory() {
-  const [tab, setTab] = useState<Tab>("actives");
+  const [tab, setTab] = useState<Tab>("board");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("az");
 

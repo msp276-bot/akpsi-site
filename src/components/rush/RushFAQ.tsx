@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
-import SectionHeader from "@/components/ui/SectionHeader";
+import { Plus } from "lucide-react";
 
 const FAQS = [
   {
@@ -28,9 +27,11 @@ export default function RushFAQ() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section className="bg-white py-24 sm:py-32">
+    <section className="bg-white py-16 sm:py-20">
       <div className="mx-auto max-w-3xl px-6">
-        <SectionHeader title="Frequently Asked" subtitle="questions" />
+        <h2 className="headline text-center text-3xl uppercase text-navy sm:text-4xl">
+          FAQ
+        </h2>
 
         <div className="mt-12 space-y-3">
           {FAQS.map((item, i) => {
@@ -46,10 +47,10 @@ export default function RushFAQ() {
                   aria-expanded={isOpen}
                 >
                   <span className="font-semibold text-navy">{item.q}</span>
-                  <ChevronDown
+                  <Plus
                     size={18}
-                    className={`shrink-0 text-muted transition-transform duration-300 ${
-                      isOpen ? "rotate-180" : ""
+                    className={`shrink-0 text-blue transition-transform duration-300 ${
+                      isOpen ? "rotate-45" : ""
                     }`}
                   />
                 </button>

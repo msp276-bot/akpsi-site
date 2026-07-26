@@ -52,7 +52,6 @@ const rawMembers: Omit<Member, "slug">[] = [
   { id: "a12", name: "David Fordjour", position: "Active Brother", group: "actives", cohort: "Alpha Tau", classYear: "2028" },
   { id: "a13", name: "Emmett Glennon", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027" },
   { id: "a14", name: "Sweemit Goswami", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027" },
-  { id: "a15", name: "Abhinav Gunda", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027" },
   { id: "a16", name: "Ashwin Harikumar", position: "Active Brother", group: "actives", cohort: "Alpha Tau", classYear: "2029" },
   { id: "a17", name: "Ashritha Janyavula", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027" },
   { id: "a18", name: "Neha Jillella", position: "Active Brother", group: "actives", cohort: "Alpha Tau", classYear: "2029" },

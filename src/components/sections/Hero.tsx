@@ -81,9 +81,8 @@ export default function Hero() {
         </h1>
 
         <p className="animate-fade-rise-delay mt-8 max-w-2xl text-base leading-relaxed text-white/70 sm:text-lg">
-          The Omicron Tau Chapter is the premier developer of business talent at
-          Rutgers University. We bridge the gap between academic theory and
-          corporate reality.
+          We pride ourselves on diversity and uniqueness - balancing
+          professional and social development across all disciplines
         </p>
 
         <div className="animate-fade-rise-delay-2 mt-12 flex flex-col items-center gap-3 sm:flex-row">

@@ -17,7 +17,7 @@ export default function MembersPage() {
       <main className="flex-1">
         <section className="bg-white px-5 pb-24 pt-28 sm:px-8 sm:pt-32">
           <div className="mx-auto max-w-7xl">
-            <SectionHeader title="Our Members" subtitle="consultants" />
+            <SectionHeader title="Our Members" subtitle="The Chapter" />
             <div className="mt-12">
               <MembersDirectory />
             </div>

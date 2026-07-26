@@ -1,12 +1,11 @@
-import SectionHeader from "@/components/ui/SectionHeader";
-
 /**
  * "Our Network" - an infinite two-row marquee of companies where AKPsi members
  * and alumni have landed. Each company shows its real logo on a white chip so
  * the marks stay legible over the brand-blue band.
  *
  * Rows scroll in opposite directions, pause on hover, and collapse to a static
- * centered grid under prefers-reduced-motion (handled in globals.css).
+ * centered grid under prefers-reduced-motion (handled in globals.css). The two
+ * rows hold DISJOINT company sets - no name repeats across rows.
  *
  * Logos live in /public/logos and were sourced from each company's Wikipedia
  * infobox (Wikimedia Commons / fair-use brand files). To add a firm, drop its
@@ -33,21 +32,43 @@ const ROW_ONE: Company[] = [
   { name: "Bank of America Merrill Lynch", logo: "/logos/bank-of-america.svg" },
   { name: "Standard Chartered", logo: "/logos/standard-chartered.svg" },
   { name: "GEICO", logo: "/logos/geico.svg" },
-];
-
-const ROW_TWO: Company[] = [
   { name: "Coinbase", logo: "/logos/coinbase.svg" },
   { name: "UBS", logo: "/logos/ubs.svg" },
+];
+
+// The chapter's requested middle row.
+const ROW_TWO: Company[] = [
+  { name: "Crowe", logo: "/logos/crowe.png" },
+  { name: "Kirkland & Ellis", logo: "/logos/kirkland-ellis.svg" },
+  { name: "State Street", logo: "/logos/state-street.svg" },
+  { name: "Strategy&", logo: "/logos/strategy-and.svg" },
+  { name: "Cursor", logo: "/logos/cursor.svg" },
+  { name: "Pfizer", logo: "/logos/pfizer.svg" },
+  { name: "Meta", logo: "/logos/meta.svg" },
+  { name: "Blackstone", logo: "/logos/blackstone.svg" },
+  { name: "Bloomberg", logo: "/logos/bloomberg.svg" },
+  { name: "Google", logo: "/logos/google.svg" },
+  { name: "Uber", logo: "/logos/uber.svg" },
+  { name: "Stripe", logo: "/logos/stripe.svg" },
+  { name: "Waymo", logo: "/logos/waymo.svg" },
+  { name: "Spotify", logo: "/logos/spotify.svg" },
+  { name: "Amazon", logo: "/logos/amazon.svg" },
+];
+
+const ROW_THREE: Company[] = [
   { name: "Scotiabank", logo: "/logos/scotiabank.svg" },
   { name: "Newmark", logo: "/logos/newmark.svg" },
   { name: "Kenvue", logo: "/logos/kenvue.svg" },
   { name: "Capital One", logo: "/logos/capital-one.svg" },
-  { name: "Sun Pharma", logo: "/logos/sun-pharma.svg" },
-  { name: "NJM", logo: "/logos/njm.svg" },
-  { name: "Symrise", logo: "/logos/symrise.svg" },
   { name: "Rutgers Cancer Institute", logo: "/logos/rutgers-cancer-institute.svg" },
   { name: "U.S. Bank", logo: "/logos/us-bank.svg" },
   { name: "Cartier", logo: "/logos/cartier.svg" },
+  { name: "JPMorgan Chase", logo: "/logos/jpmorgan.svg" },
+  { name: "OpenAI", logo: "/logos/openai.svg" },
+  { name: "Evercore", logo: "/logos/evercore.svg" },
+  { name: "Citibank", logo: "/logos/citi.svg" },
+  { name: "Mizuho", logo: "/logos/mizuho.svg" },
+  { name: "Wells Fargo", logo: "/logos/wells-fargo.svg" },
 ];
 
 function Chip({ company }: { company: Company }) {
@@ -76,7 +97,7 @@ function Row({
   track,
 }: {
   items: Company[];
-  track: "marquee-track-1" | "marquee-track-2";
+  track: "marquee-track-1" | "marquee-track-2" | "marquee-track-3";
 }) {
   return (
     <div className="marquee-band overflow-hidden py-2">
@@ -91,13 +112,15 @@ function Row({
 
 export default function LogoMarquee() {
   return (
-    <section className="bg-blue py-12 sm:py-14">
+    <section className="bg-blue pb-12 pt-8 sm:pb-14 sm:pt-9">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <SectionHeader title="Our Network" subtitle="where we land" tone="light" />
+        <h2 className="headline text-center text-2xl uppercase text-white sm:text-3xl">
+          Our Network
+        </h2>
       </div>
 
       <div
-        className="mt-7 space-y-3"
+        className="mt-6 space-y-3"
         style={{
           maskImage:
             "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
@@ -107,6 +130,7 @@ export default function LogoMarquee() {
       >
         <Row items={ROW_ONE} track="marquee-track-1" />
         <Row items={ROW_TWO} track="marquee-track-2" />
+        <Row items={ROW_THREE} track="marquee-track-3" />
       </div>
 
       <p className="mx-auto mt-6 max-w-xl px-5 text-center text-xs leading-relaxed text-white">

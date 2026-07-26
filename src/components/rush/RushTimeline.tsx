@@ -51,11 +51,11 @@ export default function RushTimeline() {
   });
 
   return (
-    <section id="process" className="bg-white py-24 sm:py-32">
+    <section id="process" className="bg-white pb-16 pt-10 sm:pb-20 sm:pt-12">
       <div className="mx-auto max-w-5xl px-6">
         <SectionHeader title="Our Rush Process" subtitle="how to join" />
 
-        <div ref={ref} className="relative mt-16">
+        <div ref={ref} className="relative mt-10">
           {/* Center line (static track + animated draw) */}
           <div className="absolute left-6 top-0 h-full w-px bg-line md:left-1/2 md:-translate-x-1/2" />
           <motion.div

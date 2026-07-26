@@ -119,7 +119,7 @@ function Row({ pillar }: { pillar: Pillar }) {
 
 export default function Benefits() {
   return (
-    <section className="bg-white py-24 sm:py-28">
+    <section className="bg-white py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <SectionHeader title="Benefits" subtitle="why it matters" />
         <div className="mt-16 space-y-12 md:space-y-20">

@@ -117,8 +117,9 @@ export default function AboutSection() {
             Alpha Kappa Psi is a co-ed professional business fraternity with
             access to a large alumni network spanning top companies and career
             paths across the globe. We pride ourselves on diversity and
-            uniqueness - balancing professional development with genuine social
-            bonding. The benefits of AKPsi don&rsquo;t stop after pledging or
+            uniqueness - balancing professional and social development across
+            all disciplines. The benefits of AKPsi don&rsquo;t stop after
+            pledging or
             even graduation.{" "}
             <em className="font-cinematic text-gold not-italic sm:italic">
               It is truly a lifelong organization.

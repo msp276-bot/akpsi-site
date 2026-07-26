@@ -56,7 +56,7 @@ export default function OpengraphImage() {
             fontFamily: "sans-serif",
           }}
         >
-          60+ members · 200+ alumni · 10+ industries
+          60+ members · 700+ alumni · 10+ industries
         </div>
       </div>
     ),

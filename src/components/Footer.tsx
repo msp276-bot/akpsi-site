@@ -6,8 +6,8 @@ import { SOCIAL } from "@/data/social";
 
 const QUICK_LINKS = [
   { label: "Home", href: "/" },
-  { label: "About", href: "/#about" },
-  { label: "Members", href: "/#members" },
+  { label: "About", href: "/about" },
+  { label: "Members", href: "/members" },
   { label: "Rush", href: "/rush" },
   { label: "Sign In", href: "/portal" },
 ];
@@ -15,7 +15,7 @@ const QUICK_LINKS = [
 const SOCIALS = [
   { label: "LinkedIn", href: SOCIAL.linkedin, Icon: LinkedinIcon },
   { label: "Instagram", href: SOCIAL.instagram, Icon: InstagramIcon },
-  { label: "Email", href: "mailto:omicrontau@rutgers.edu", Icon: Mail },
+  { label: "Email", href: "mailto:rutgersakpsi2024@gmail.com", Icon: Mail },
 ];
 
 export default function Footer() {

@@ -239,6 +239,21 @@ columns, applications, audit logs). NOT the live model - a header note points to
   iOS ignores transparency). The source badge was center-cropped off a larger
   canvas by detecting the **gold ring** bbox; a naive alpha-bbox trim leaves it
   off-center because faint shadow specks span the whole artboard.
+- **Company logos (`public/logos/*.svg`, §5.10) were sourced from Wikipedia
+  infoboxes**, NOT Clearbit/Simple Icons. In this environment Clearbit's logo API
+  is unreachable and Simple Icons has dropped most commercial brand marks (only
+  Accenture / Coinbase / Bank of America resolved). The working path: query the
+  MediaWiki API for a company page's wikitext, regex the `| logo =` file, resolve
+  it via `prop=imageinfo`, download from `upload.wikimedia.org` with a real
+  `User-Agent` (it 429s / 403s without one; space the requests out). Static export
+  ⇒ logos MUST be downloaded into `public/`, never hotlinked.
+- **An `<img>` SVG with only a `viewBox` (no width/height attrs) collapses to
+  height 0 under `max-height` alone.** Chrome reports such a sizeless SVG's
+  `naturalWidth` as the 300px default; with CSS `height:auto` + only a
+  `max-height`, layout resolves the height to **0** and the chip renders blank.
+  Fix = give the `<img>` a **definite height** (`h-8`) so the browser derives
+  width from the viewBox ratio; keep `w-auto max-w-[…] object-contain`. This bit
+  9 of the 24 network logos (Sanofi, Oracle, Coinbase, Kenvue, …) until fixed.
 
 **Content / style conventions**
 - **NO EM DASHES anywhere in the codebase.** All 64 were removed site-wide
@@ -298,11 +313,13 @@ columns, applications, audit logs). NOT the live model - a header note points to
   trigger to the wrapper and animate the child via variants, rather than
   observing the clipped element. Left unfixed because it changes headings on
   every page and was never scoped.
-- **"Our Network" blue band fails WCAG AA for its small text.** White on the
-  brand blue `#5b8ec6` measures **3.43:1** - fine for the large heading, short
-  of the 4.5:1 the 18px wordmarks and 12px caption need. Solid white is the best
-  available on this blue (navy would be 4.32:1, also short). A deeper blue is
-  the real fix; `#3a6ca8` measures 5.4:1 and still reads as blue.
+- **"Our Network" caption still fails WCAG AA on the blue band.** The old white
+  *wordmarks* are gone (they are now real logos on white chips, §5.10), so the
+  main contrast problem is resolved. What remains is the single 12px caption
+  ("Representative of where…") in white on brand blue `#5b8ec6` = **3.43:1**,
+  under the 4.5:1 small-text bar. The large "Our Network" heading (white on the
+  same blue) is fine at that size. A deeper band blue (`#3a6ca8` ≈ 5.4:1, still
+  reads blue) would fix the caption; unfixed because it is one small line.
 
 ---
 
@@ -335,7 +352,8 @@ export interface MemberRecord { email:string; fullName:string; role:MemberRole; 
   ALSO enforces the allowlist (mirrors production). Exact mock sign-in:
 ```ts
 const mockSignIn = useCallback(
-  async (email?: string, _membership: "active" | "pledge" = "active") => {
+  async (email?: string, membership: "active" | "pledge" = "active") => {
+    void membership;
     await new Promise((r) => setTimeout(r, 700));
     const address = (email ?? "member@rutgers.edu").trim().toLowerCase();
     if (!address.endsWith(RUTGERS_DOMAIN)) {
@@ -356,6 +374,16 @@ const mockSignIn = useCallback(
 // requestMagicLink: mock→mockSignIn+{sent:false}; supabase→signInWithOtp({email})+{sent:true}
 // useAuth() throws outside an AuthProvider.
 ```
+
+- **Auth-error surfacing.** The roster message is a shared constant
+  `NOT_ON_ROSTER_MESSAGE`. On a fail-closed Supabase sign-out (authed but not on
+  the roster), AuthContext stashes it via `rememberAuthError()` into
+  `sessionStorage["akpsi.ot.auth-error"]`. The sign-in page (`RealSignIn`, in
+  `portal/page.tsx`) reads that key plus any OAuth `error`/`error_description`
+  from the URL query **and** hash on mount, maps it through `friendlyAuthError()`,
+  shows it, then clears the key and strips the params with `history.replaceState`.
+  So a rejected Google/magic-link attempt lands back on the sign-in page with a
+  readable reason instead of a silent bounce.
 
 - **`src/lib/access.ts`** - `Permission` union incl. `"manage:roles"` and
   `"admin:*"`; `ROLE_PERMISSIONS` maps each role; `hasPermission(role,perm)`
@@ -549,6 +577,10 @@ Publishing an announcement calls `sendPushToChapter(...)` (no-op while dormant).
 - **`PresidentLetter`** uses a `Portrait()` component: `next/image` `fill` +
   `object-cover object-top` inside an `aspect-[4/5]` rounded frame, pointing at
   `/members/abhinav-gunda.jpg`, with the gold radial corner accent retained.
+  The `REST` copy's placed-brothers sentence now names **Sanofi, Accenture,
+  Bristol Myers Squibb, Oracle, bp, Johnson & Johnson, BlackRock** (was Wells
+  Fargo / TD Bank / Capital One / J&J / Accenture / UBS), aligning the prose with
+  the "Our Network" logo wall (§5.10).
 - **`Testimonials`** - 5 entries, real brothers, no invented majors:
   Rayyan Ahmed / Justin Arnoldi / John Baylock / Anika Batki (all "Active Brother")
   and Ashna Narielwala ("VP of Alumni Relations · Class of ’28").
@@ -614,22 +646,71 @@ into a grid, plus a `RUSH_VIDEO` slot (mp4 or iframeSrc; placeholder until set).
 `overflow-x-auto` `min-w-[760px]` table (mobile-safe), restore/delete (UI-only).
 
 ### 5.10 About page (`src/app/about/page.tsx`)
-Composition, in order: navy hero → "Our Story" + "National AKΨ" card →
-`<LogoMarquee />` → `<Benefits />` → CTA.
+Composition, in order: hero (**photo backdrop**) → "Our Story" + "National AKΨ"
+card → `<LogoMarquee />` → `<Benefits />` → CTA.
 - **The navy stats bar (60+ / 200+ / 10+ / 10+) was REMOVED**, along with its
   `STATS` array and the `CountUp` / `cardIn` imports. Do not re-add it. The
   "60+ active members … 200+" figures still appear as prose inside "Our Story",
   which is deliberate: that is body copy, not the stat section.
-- **`LogoMarquee`** ("Our Network") sits on the **brand blue** (`bg-blue`,
-  `#5b8ec6`) with **solid white** wordmarks and a light-tone `SectionHeader`.
-  It was deliberately compressed from ~550px to ~340px tall: `py-12 sm:py-14`,
-  `mt-7` header gap, `py-2` rows, `gap-12`, `text-base sm:text-lg` wordmarks.
-  Keep it short if you touch it.
-  ⚠️ **Known contrast shortfall:** white on `#5b8ec6` measures **3.43:1**. That
-  passes AA for the large heading but is under the 4.5:1 needed for the 18px
-  wordmarks and 12px caption. Solid white is the best available on this blue
-  (navy would be 4.32:1, also short). Fixing it properly means a deeper blue
-  for the band; `#3a6ca8` measures 5.4:1 and still reads as blue.
+- **Hero photo backdrop.** The "About Our Chapter" hero is `relative
+  overflow-hidden bg-navy` with a `next/image` `fill` `object-cover object-center`
+  backdrop at **`/about-chapter.jpg`** (2000×1500, a 5-brother atrium shot). Two
+  navy scrims keep the white copy legible over the bright/backlit photo: a flat
+  `bg-navy/45` wash and a vertical gradient darkest top+bottom
+  (`linear-gradient(to bottom, rgba(26,39,68,0.78) 0%, rgba(26,39,68,0.4) 45%,
+  rgba(26,39,68,0.88) 100%)`); the copy block is `relative z-10` with
+  `[text-shadow:0_2px_14px_rgba(10,16,30,0.55)]`. This is the ONLY page hero with
+  a photo. (The home `AboutSection` still uses `/chapter-group.jpg`, §5.4 - a
+  brief mix-up put this photo there first; it was reverted.)
+- **`LogoMarquee`** ("Our Network") is a two-row infinite marquee on the **brand
+  blue** (`bg-blue`, `#5b8ec6`) showing **real company logos, each on its own
+  white rounded chip** (was flat white wordmarks). 24 logos live in
+  `public/logos/*.svg` (sourced from Wikipedia infoboxes, §4). Full current code:
+```tsx
+interface Company { name: string; logo?: string; } // logo path under /public
+
+const ROW_ONE: Company[] = [ // Sanofi, Accenture, Bristol Myers Squibb, Oracle,
+  // bp, Johnson & Johnson, BlackRock, Solar Turbines, Berkshire Hathaway,
+  // Bank of America Merrill Lynch, Standard Chartered, GEICO  (each { name, logo })
+];
+const ROW_TWO: Company[] = [ // Coinbase, UBS, Scotiabank, Newmark, Kenvue,
+  // Capital One, Sun Pharma, NJM, Symrise, Rutgers Cancer Institute, U.S. Bank,
+  // Cartier  (each { name, logo })
+];
+
+function Chip({ company }: { company: Company }) {
+  return (
+    <span className="flex h-14 shrink-0 items-center justify-center rounded-2xl bg-white px-6 shadow-sm ring-1 ring-black/5 transition-transform duration-300 hover:scale-105 sm:h-16 sm:px-7">
+      {company.logo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={company.logo} alt={company.name} loading="lazy" decoding="async"
+          className="h-8 w-auto max-w-[160px] object-contain sm:max-w-[185px]" />
+      ) : (
+        <span className="whitespace-nowrap font-display text-sm font-bold text-navy sm:text-base">{company.name}</span>
+      )}
+    </span>
+  );
+}
+// Row: <div className="marquee-band overflow-hidden py-2"><div className={`marquee-track ${track} flex w-max items-center gap-5 sm:gap-6`}>{[...items, ...items].map(Chip)}</div></div>
+// Section: bg-blue py-12 sm:py-14; SectionHeader tone="light"; rows wrapper mt-7 space-y-3
+//   with a horizontal mask-image fade; 12px white caption under it (§4 open bug).
+```
+  Load-bearing details:
+  - **`h-8` on the `<img>` is mandatory, not `max-h-8`** - 9 of the logos are
+    viewBox-only SVGs that collapse to height 0 under `max-height` alone (§4).
+    `h-8 w-auto max-w-[…] object-contain` gives a definite height; wide wordmarks
+    (Bank of America, Berkshire) letterbox shorter inside the 32px box, which is
+    fine and keeps chip baselines aligned.
+  - **Plain `<img>`, not `next/image`** (with an eslint-disable for
+    `@next/next/no-img-element`): simplest for a duplicated marquee under static
+    export; the pre-existing `<img>` precedent already exists in 3 files.
+  - **`logo` is optional** - a company with no `logo` renders its name as a text
+    chip - but we only list firms whose logo we actually have, so the wall has NO
+    empty/text chips. Four originally-listed firms with no Commons logo (R&T,
+    Forest Hills Financial Group, MidCap Advisors, Macleods) were dropped for
+    exactly this reason; re-add them only if real logo files arrive.
+  - White chips fixed the old white-wordmark contrast problem; only the 12px
+    caption remains a (minor) AA shortfall (§4).
 - **`Benefits`** renders 4 pillars, each with a REAL chapter photo (§5.12). The
   old `PlaceholderImage` (navy gradient + "Chapter photo" label) is gone,
   replaced by `PillarImage`: `next/image` `fill` `object-cover` with the pillar
@@ -680,7 +761,9 @@ Total 1.4MB across six files.
 | `stairs-formal.jpg` | Benefits → Network |
 | `auditorium.jpg` | Benefits → Development |
 
-Plus `public/chapter-group.jpg` (2000×1065), the AboutSection backdrop (§5.4).
+Plus `public/chapter-group.jpg` (2000×1065), the home `AboutSection` backdrop
+(§5.4), and `public/about-chapter.jpg` (2000×1500), the `/about` page hero
+backdrop (§5.10). Logos are separate: `public/logos/*.svg` (§5.10, sourced §4).
 
 **RushHero backdrop, exact:** `next/image` `fill` + `priority`, behind
 `bg-navy/50` and a centre-light vignette
@@ -739,27 +822,34 @@ mismatch is far larger).
     it now reads "As the President of Alpha Kappa Psi Omicron Tau, …". Same commit.
 22. **Six real chapter photos placed** (§5.12) across RushHero, the Media hero,
     and all four Benefits pillars. Commits `37bb94d`, `11d7a16`.
+23. **"Our Network" is now a real-logo wall** (§5.10): 24 brand logos in
+    `public/logos/`, each on a white chip over the blue band, replacing the flat
+    white wordmarks; empty/text chips removed; `h-8` fixes the viewBox-only-SVG
+    zero-height bug (§4). Same commit also: `/about` hero gets the
+    `about-chapter.jpg` photo backdrop; president-letter company list realigned;
+    portal sign-in surfaces roster-rejection auth errors. Commit `5a8a08f`.
 
 **Pending ⏳ (in the codebase)**
-23. **`SectionHeader` reveal never fires** - every section title on the site is
+24. **`SectionHeader` reveal never fires** - every section title on the site is
     invisible. Root cause + fix sketched in §4 "Open bug". Touches every page,
     so it needs a deliberate go-ahead.
-24. **"Our Network" blue fails contrast** at 3.43:1 for its small text (§5.10).
-    One-line fix is a deeper blue for the band.
-25. **Home section transitions still read blocky** - the original complaint that
+25. **"Our Network" 12px caption still ~3.43:1** on the blue band (§4). The
+    wordmark contrast issue is resolved by the white chips; only the one caption
+    line remains, fixable with a deeper band blue.
+26. **Home section transitions still read blocky** - the original complaint that
     prompted two reverted experiments (§4). Untried ideas listed there.
 
 **Pending ⏳ (require action outside the codebase)**
-26. **Make the Google Calendar PUBLIC** (Google Calendar settings) so the portal
+27. **Make the Google Calendar PUBLIC** (Google Calendar settings) so the portal
     embed shows events instead of the sign-in wall.
-27. **Rush video** - drop an mp4/YouTube URL into `RUSH_VIDEO` on the Media page.
-28. **Supabase go-live** (`docs/supabase-setup.md`) + seed the real roster. Until
+28. **Rush video** - drop an mp4/YouTube URL into `RUSH_VIDEO` on the Media page.
+29. **Supabase go-live** (`docs/supabase-setup.md`) + seed the real roster. Until
     then the whole portal runs in mock mode.
-29. **Activate push** (needs #28 first), per `docs/pwa-push-setup.md`:
+30. **Activate push** (needs #29 first), per `docs/pwa-push-setup.md`:
     run `db/push-subscriptions.sql` → `web-push generate-vapid-keys` → set
     `NEXT_PUBLIC_VAPID_PUBLIC_KEY` + redeploy → `supabase functions deploy
     send-push` + `supabase secrets set VAPID_*`.
-30. Optional: real majors for the testimonial brothers; photos for the other ~59
+31. Optional: real majors for the testimonial brothers; photos for the other ~59
     members (drop files in `public/members/` and set `photo` in `members.ts`).
 
 ---
@@ -803,9 +893,11 @@ mismatch is far larger).
 | `src/app/page.tsx` | Home composition (Hero→About→President→Testimonials→CTA) |
 | `src/components/home/PresidentLetter.tsx` / `Testimonials.tsx` | President portrait + real-name testimonials |
 | `src/components/sections/AboutSection.tsx` | "We Are A Lifelong Family" + chapter photo backdrop / white scrims (§5.4) |
-| `src/app/about/page.tsx` | About page; stats bar removed (§5.10) |
-| `src/components/about/LogoMarquee.tsx` | "Our Network" blue marquee, height-constrained (§5.10) |
-| `public/chapter-group.jpg` | Chapter group photo, 2000×1065; backdrop for `AboutSection` |
+| `src/app/about/page.tsx` | About page; stats bar removed; hero now has `about-chapter.jpg` photo backdrop (§5.10) |
+| `src/components/about/LogoMarquee.tsx` | "Our Network" - real logos on white chips over blue (§5.10); `h-8` fixes viewBox-only SVG collapse (§4) |
+| `public/logos/*.svg` | 24 company logos for the network wall (§5.10); Wikipedia-sourced (§4) |
+| `public/chapter-group.jpg` | Chapter group photo, 2000×1065; backdrop for home `AboutSection` |
+| `public/about-chapter.jpg` | Atrium 5-brother photo, 2000×1500; backdrop for the `/about` hero |
 | `public/chapter/*.jpg` | Six chapter photos (§5.12) - rush hero, media hero, 4 Benefits pillars |
 | `src/components/about/Benefits.tsx` | 4 pillars with real photos via `PillarImage` (§5.10) |
 | `src/components/rush/RushHero.tsx` | "Join the Omicron Tau Chapter" + photo backdrop, scrim, scale/translate (§5.12) |
@@ -831,6 +923,8 @@ and fully pushed** (`main` == `origin/main`).
 
 Recent history (newest first):
 ```
+5a8a08f  Add real company logos to Our Network; put chapter photo behind About hero
+1c1f5f2  Bring PROJECT_STATE current through 11d7a16
 11d7a16  Reposition the rush hero photo down and to the right
 37bb94d  Add real chapter photos across the site
 d2c56c8  Recruit for Fall '26; drop "second founding" from the president letter
@@ -839,8 +933,10 @@ d2c56c8  Recruit for Fall '26; drop "second founding" from the president letter
 3bb8aee  Fix portal mobile layout; set app name; stop psi glyph falling back
 a1d2834  Refresh PROJECT_STATE spec; finish em dash sweep
 23b207b  Drop About stats bar, shrink network marquee, add chapter photo backdrop
-4f67fa7  Switch body font to Hanken Grotesk; remove unused files
 ```
+`5a8a08f` also carried two edits already in the working tree at the time: the
+president-letter company realignment (§5.4) and the portal auth-error surfacing
+(§5.1). Working tree is clean; **commit only when asked.**
 Neither reverted experiment (the homepage glass redesign, `SectionFade`, or the
 snap panels) survives in the tree. **Commit only when asked.**
 

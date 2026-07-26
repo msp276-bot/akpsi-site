@@ -5,7 +5,7 @@ import RushHero from "@/components/rush/RushHero";
 import RushTimeline from "@/components/rush/RushTimeline";
 import WhyAkpsi from "@/components/rush/WhyAkpsi";
 import RushFAQ from "@/components/rush/RushFAQ";
-import RushForm from "@/components/rush/RushForm";
+import RushApply from "@/components/rush/RushApply";
 
 export const metadata: Metadata = {
   title: "Rush",
@@ -22,7 +22,7 @@ export default function RushPage() {
         <RushTimeline />
         <WhyAkpsi />
         <RushFAQ />
-        <RushForm />
+        <RushApply />
       </main>
       <Footer />
     </>

@@ -8,7 +8,7 @@ import { EASE_OUT_EXPO } from "@/lib/motion";
 /**
  * Rotating brother testimonials with a portrait on the side. Weighted toward the
  * social / brotherhood side of the chapter (community, belonging, service) with
- * one professional voice - membership is more than a résumé line.
+ * one professional voice - membership is more than a resume line.
  *
  * To use real photos, drop them in `public/testimonials/` and set `image` on the
  * matching entry (e.g. image: "/testimonials/zoe-martinez.jpg"). Entries without
@@ -26,7 +26,7 @@ const TESTIMONIALS: Testimonial[] = [
   {
     quote:
       "I joined for the professional side, but what kept me here were the late-night study sessions that turned into lifelong friendships. These are the people I'll be standing next to at weddings.",
-    name: "Rayyan Ahmed",
+    name: "Olivia K",
     context: "Active Brother",
     tag: "Brotherhood",
   },
@@ -40,22 +40,22 @@ const TESTIMONIALS: Testimonial[] = [
   {
     quote:
       "As a transfer student I thought I'd missed my chance to find my people. One rush event later, I had thirty new friends who actually showed up for me.",
-    name: "John Baylock",
+    name: "Jayden Arya",
     context: "Active Brother",
     tag: "Belonging",
   },
   {
     quote:
       "Some of my favorite memories are from our service events - packing meals and fundraising for RUDM, laughing the whole way through. Giving back hits different when you do it with your brothers.",
-    name: "Anika Batki",
+    name: "Judy Ku",
     context: "Active Brother",
     tag: "Service",
   },
   {
     quote:
       "AKPsi completely changed how I approached recruiting. Instead of feeling overwhelmed by the process, it felt like having a mentor by my side 24/7.",
-    name: "Ashna Narielwala",
-    context: "VP of Alumni Relations · Class of ’28",
+    name: "David Fordjour",
+    context: "Active Brother · Class of ’28",
     tag: "Professional",
   },
 ];
@@ -150,7 +150,7 @@ export default function Testimonials() {
             transition={{ delay: 0.08 }}
             className="headline mt-4 text-3xl uppercase text-navy sm:text-4xl md:text-5xl"
           >
-            More Than a <span className="text-gold">Résumé Line</span>
+            More Than a <span className="text-gold">resume Line</span>
           </motion.h2>
         </div>
 

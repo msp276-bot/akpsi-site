@@ -90,7 +90,7 @@ export default function AboutPage() {
                   </p>
                   <p>
                     Today the chapter counts 60+ active members and a growing
-                    alumni network of 200+ spanning consulting, finance,
+                    alumni network of 700+ spanning consulting, finance,
                     technology, marketing, and beyond.
                   </p>
                 </div>

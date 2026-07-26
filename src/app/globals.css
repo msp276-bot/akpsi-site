@@ -185,13 +185,18 @@ body {
 .marquee-track-2 {
   animation: marquee-right 35s linear infinite;
 }
+.marquee-track-3 {
+  animation: marquee-left 45s linear infinite;
+}
 .marquee-band:hover .marquee-track-1,
-.marquee-band:hover .marquee-track-2 {
+.marquee-band:hover .marquee-track-2,
+.marquee-band:hover .marquee-track-3 {
   animation-play-state: paused;
 }
 @media (prefers-reduced-motion: reduce) {
   .marquee-track-1,
-  .marquee-track-2 {
+  .marquee-track-2,
+  .marquee-track-3 {
     animation: none;
     flex-wrap: wrap;
     width: 100%;

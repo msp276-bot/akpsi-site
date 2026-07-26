@@ -4,7 +4,7 @@ import Button from "@/components/ui/Button";
 
 export default function CTASection() {
   return (
-    <section className="relative overflow-hidden bg-navy py-24 sm:py-32">
+    <section className="relative overflow-hidden bg-navy py-16 sm:py-20">
       <div className="pointer-events-none absolute -left-32 top-0 h-80 w-80 rounded-full bg-gold/20 blur-3xl" />
       <div className="pointer-events-none absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-blue/25 blur-3xl" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/70 to-transparent" />

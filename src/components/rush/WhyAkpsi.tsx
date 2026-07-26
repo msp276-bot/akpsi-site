@@ -12,7 +12,7 @@ const VALUES = [
   {
     Icon: Network,
     title: "Alumni Network",
-    desc: "200+ alumni across 10+ industries, from consulting and finance to tech and marketing.",
+    desc: "700+ alumni across 10+ industries, from consulting and finance to tech and marketing.",
   },
   {
     Icon: Users,
@@ -23,7 +23,7 @@ const VALUES = [
 
 export default function WhyAkpsi() {
   return (
-    <section className="bg-navy py-24 sm:py-32">
+    <section className="bg-navy py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-6">
         <SectionHeader
           title="What Sets Us Apart"

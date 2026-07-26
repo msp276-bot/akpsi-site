@@ -26,7 +26,7 @@ export default function MembersSection() {
   return (
     <section id="members" className="bg-white py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <SectionHeader title="Our Members" subtitle="consultants" />
+        <SectionHeader title="Our Members" subtitle="The Chapter" />
 
         {/* Filter tabs with sliding active pill */}
         <div className="mt-10 flex justify-center">
