@@ -403,9 +403,10 @@ VAPID private key). Push is built but **dormant** until `NEXT_PUBLIC_VAPID_PUBLI
 ### 7a. Supabase — LIVE locally; remaining = production + accounts + numbers
 Project `iagcpczxmfwrezrllewn` is created, all SQL is run, and the portal works
 against it locally (`.env.local`). **Remaining to fully launch:**
-- **Production env**: add `NEXT_PUBLIC_SUPABASE_URL` + `..._ANON_KEY` to the host
-  (S3/CloudFront build) and the real domain to Supabase redirect URLs; rebuild +
-  redeploy. `.env.local` only affects local.
+- **Production env**: add `NEXT_PUBLIC_SUPABASE_URL` + `..._ANON_KEY` in **Vercel**
+  (Settings → Environment Variables, all envs) and redeploy with a FRESH build
+  (no cache) — they're build-time inlined. Add the Vercel origin to Supabase
+  redirect URLs. `.env.local` only affects local. (See §8 Deployment.)
 - **Confirm requirement numbers** in `src/lib/points.ts` (points + service hours).
 - **Provision accounts**: VP-Ops `ops@rutgersakpsi.org` (Auth user w/ password +
   `members` row role `board`) — or give Prak a gmail on the roster; pledges as
@@ -460,11 +461,22 @@ the same pipeline: `sips -s format jpeg -s formatOptions 82 -Z 900 "<file>"
 **hard-reload** (Cmd+Shift+R) to beat the service-worker cache; bump
 `CACHE_VERSION` in `public/sw.js` on real releases.
 
-**Deployment (IMPORTANT):** there is **NO CI/CD** (no workflows/vercel/netlify
-config). `rutgersakpsi.com` is served from **S3 + CloudFront** and deploys are
-**manual**: `npm run build`, then sync `out/` to the bucket and invalidate the
-CDN. **Pushing to GitHub does NOT change the live site.** No AWS creds are in the
-repo. Wiring GitHub Actions → S3/CloudFront is an open task.
+**Deployment (IMPORTANT):** the live site is on **Vercel**
+(`akpsi-site.vercel.app`, project auto-deploys from GitHub `main`). Pushing to
+`main` **does** trigger a production deploy. Because `next.config.ts` sets
+`output:"export"`, Vercel serves the static `out/`, and **all `NEXT_PUBLIC_*`
+env vars are inlined at BUILD time** — so:
+- Set `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` in **Vercel →
+  Settings → Environment Variables** (Production + Preview + Development). Without
+  them the deploy runs in **mock mode** ("Choose your portal" / demo accounts).
+- After adding/changing any env var, **redeploy with a fresh build** (Deployments
+  → Redeploy, "Use existing Build Cache" **off**) — saving a var does not rebuild.
+- Add the Vercel origin(s) to **Supabase → Auth → URL Configuration → Redirect
+  URLs** (e.g. `https://akpsi-site.vercel.app/portal/`) so Google/magic-link
+  return correctly.
+- `.env.local` (gitignored) only affects local dev. (Legacy note: an older
+  S3/CloudFront + `rutgersakpsi.com` path was the prior plan; Vercel is the
+  target now.)
 
 **Conventions:** no em dashes; `AKPsi` (not `AKΨ`) in copy; commit only when
 asked; history commits directly to `main`; end commit messages with
