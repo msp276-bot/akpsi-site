@@ -121,7 +121,41 @@ website by the president.
 | `admin`     | Full admin command center (tech committee)                    |
 
 Only `president` and `admin` can open **Roles & access** and change who has
-access.
+access. `board` (which includes **VP Ops**) can also open **Review** to
+approve/deny points submissions.
+
+## Step 7 - Submissions / points (service hours + brother points)
+
+1. In the SQL editor, run **`db/submissions.sql`** (after `db/supabase-roles.sql`).
+   It creates the `submissions` table, its Row-Level Security (submitters see
+   only their own rows; board/president/admin see all), and the private
+   **`proofs`** Storage bucket for photo proof.
+2. Confirm the real point rules in **`src/lib/points.ts`** - the categories,
+   their point values, and the pledge/brother requirements are PLACEHOLDERS.
+   Editing that one file updates the submit form and the points math (no backend
+   change needed); rebuild after.
+3. Members submit at **Portal → Points**; VP Ops / e-board approve at
+   **Portal → Review**.
+
+## Step 8 - Pledge & position (password) logins
+
+Brothers use Google / magic link. **Pledges** and **chapter positions** (e.g.
+VP Ops) sign in with a **password**, so each needs both a Supabase Auth user and
+a matching `members` row (see the commented block at the bottom of
+`db/supabase-roles.sql`):
+
+- **Pledge:** create an Auth user `‹username›@pledge.rutgersakpsi.org` with a
+  password (Authentication → Users → Add user), and a `members` row with role
+  `pledge`. On the site the pledge picks **Pledge portal** and logs in with just
+  their **username** + password. Hand each pledge their username/password on day
+  one.
+- **VP Ops (Prak):** Auth user `ops@rutgersakpsi.org` + password, `members` row
+  role `board`. She logs in via **Pledge or position login** with the full email;
+  role `board` gives her the **Review** tab.
+
+(The `@pledge.rutgersakpsi.org` and `@rutgersakpsi.org` domains are allowed by the
+`members` email constraint and by `ALLOWED_ROSTER_DOMAINS` in `src/lib/roles.ts`.
+Change both if you use different domains.)
 
 ## Troubleshooting
 

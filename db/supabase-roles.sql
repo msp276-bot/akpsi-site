@@ -16,9 +16,17 @@
 --  the members table defined here is the one the app actually uses today.)
 
 -- 1) Roster table -----------------------------------------------------------
+-- Allowed addresses: brothers use @rutgers.edu; pledges use a synthetic
+-- username account @pledge.rutgersakpsi.org; chapter positions (e.g. VP Ops)
+-- use @rutgersakpsi.org. Keep these three domains in sync with
+-- ALLOWED_ROSTER_DOMAINS in src/lib/roles.ts.
 create table if not exists public.members (
   email       text primary key
-              check (email = lower(email) and email like '%@rutgers.edu'),
+              check (email = lower(email) and (
+                email like '%@rutgers.edu'
+                or email like '%@pledge.rutgersakpsi.org'
+                or email like '%@rutgersakpsi.org'
+              )),
   full_name   text not null default '',
   role        text not null default 'active'
               check (role in ('pledge','active','board','president','admin')),
@@ -122,3 +130,18 @@ insert into public.members (email, full_name, role, added_by) values
   ('president@rutgers.edu', 'Chapter President', 'president', 'seed'),
   ('tech@rutgers.edu',      'Tech Chair',        'admin',     'seed')
 on conflict (email) do nothing;
+
+-- 6) Pledge & position accounts (username/password logins) ------------------
+-- Brothers sign in with Google / magic link (no password). Pledges and chapter
+-- positions sign in with a PASSWORD, so each needs TWO things:
+--   (a) a Supabase Auth user with that email + password
+--       (Dashboard → Authentication → Users → Add user; or the Admin API), and
+--   (b) a matching public.members row below (the allowlist trigger requires it).
+-- Pledge email = <username>@pledge.rutgersakpsi.org (they log in with just the
+-- username). VP Ops (Prak) = ops@rutgersakpsi.org, role 'board' so she can
+-- review submissions. Example (edit / add rows, then create the Auth users):
+--
+-- insert into public.members (email, full_name, role, added_by) values
+--   ('ops@rutgersakpsi.org',              'Prakruti Ankem', 'board',  'seed'),
+--   ('jsmith@pledge.rutgersakpsi.org',    'Jane Smith',     'pledge', 'seed')
+-- on conflict (email) do nothing;
