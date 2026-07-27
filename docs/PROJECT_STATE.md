@@ -1,9 +1,10 @@
-# AKPsi Omicron Tau Website - Project Spec / State
+# AKPsi Omicron Tau Website — Project State (fresh-session handoff)
 
 Chapter website for **Alpha Kappa Psi, Omicron Tau (Rutgers)**: public marketing
-pages + a members-only portal with a president-managed roster, shipped as an
-**installable PWA** for brothers. Single source of truth for a fresh session.
-Reference material first; the actual task (if any) goes last.
+pages + a members-only portal (roster, submissions/points/approvals), shipped as
+an installable **PWA**. This is the single source of truth for a new session.
+Reference material first; **Next steps** and **How to work in this repo** are at
+the end.
 
 ---
 
@@ -11,143 +12,163 @@ Reference material first; the actual task (if any) goes last.
 
 - **Public site:** home, about, members directory + per-member profiles, `/media`
   (Instagram highlights), rush, `/offline` (PWA fallback).
-  **Portal (`/portal/…`):** dashboard, events, directory, documents,
-  announcements, applications, admin.
-- **Next.js 16** (App Router, **Turbopack**), **React 19**, **TypeScript** - the app.
+- **Portal (`/portal/…`):** dashboard, events, directory, documents,
+  announcements, **points** (submit service hours / brother points), **review**
+  (VP-Ops approval queue), applications, admin (role management).
+- **Next.js 16** (App Router, **Turbopack**), **React 19**, **TypeScript**.
 - **Tailwind CSS v4** (`@theme inline` in `globals.css`; tokens: `navy #1a2744`,
   `gold #d4a853`, `blue`, `scarlet`, `ink`, `muted`, `line`). framer-motion +
   lucide-react.
-- **Static export** - `next.config.ts`: `output:"export"`, `trailingSlash:true`,
+- **Static export** — `next.config.ts`: `output:"export"`, `trailingSlash:true`,
   `images.unoptimized:true`. **No server, no Next API routes, no Server Actions.**
-  Chosen because the site is frontend-first and hosting stays trivial; every
-  "backend" need is met by a browser-callable external service or a build-time
-  constant.
-- **Supabase** (`@supabase/supabase-js`) for real auth + the shared roster +
-  push-subscription storage - called **from the browser**, so the site stays a
-  static export. Security is enforced by Supabase **Row-Level Security**, never
-  by the client. One **Edge Function** (`send-push`) exists for the one job that
-  structurally cannot run in the browser (holding the VAPID private key).
-- **Fonts:** body = **Hanken Grotesk** (`next/font/google`, `--font-hanken` →
-  `--font-sans`); display serif = **Bodoni Moda** (`--font-display`); hero serif =
-  **Instrument Serif** (`--font-instrument`). See §3/§4 on why not Söhne.
-- **Repo:** `/Users/marvinpatel/claude code/akpsi-site` · remote
-  `github.com/msp276-bot/akpsi-site` · branch `main`.
-- Preview: `npm run dev` (or the static export via `python3 -m http.server 3002
-  --directory out` after `npm run build`).
+- **Supabase** (`@supabase/supabase-js`) for auth + roster + submissions +
+  push-subscription storage — called **from the browser**; security is enforced
+  by **Row-Level Security**, never by client code. One **Edge Function**
+  (`send-push`) holds the VAPID private key (the one job that cannot run in the
+  browser).
+- **Fonts:** body = **Hanken Grotesk** (`--font-hanken` → `--font-sans`); display
+  serif = **Bodoni Moda** (`--font-display`); hero serif = **Instrument Serif**
+  (`--font-instrument`).
+- **Repo:** `github.com/msp276-bot/akpsi-site`, branch `main`.
+- Preview: `npm run dev`, or serve the export: `npm run build && python3 -m
+  http.server 3002 --directory out`.
 
-**Repo gotcha:** `AGENTS.md` warns this is a *modified* Next.js with breaking
-changes vs. training data - read `node_modules/next/dist/docs/` before using
-unfamiliar Next APIs.
+**Repo gotcha (`AGENTS.md`):** this is a *modified* Next.js with breaking changes
+vs. training data — read `node_modules/next/dist/docs/` before using unfamiliar
+Next APIs.
 
 ---
 
-## 2. Data model
+## 2. Architecture decisions
 
-### 2a. `members` roster / login allowlist - RUNNABLE, authoritative (`db/supabase-roles.sql`)
-This table is BOTH the role store AND the allowlist: on it ⇒ can sign in with
-that role; off it ⇒ rejected at signup. Paste into Supabase SQL editor.
+| Decision | Reasoning | Forecloses |
+|---|---|---|
+| Static export, no server | Frontend-first, trivial hosting | No server middleware/secrets, **no Server Actions**. Anything needing writes/secrets uses browser-safe Supabase (RLS) or a build-time constant |
+| Supabase from the browser | Keeps static export; anon key limited by RLS | Every "president/VP-only" rule is enforced by **RLS + a signup trigger**, NOT client code — never "fix" a permissions bug client-side |
+| Roster table = allowlist AND role store | One source of truth; add email ⇒ grant login+role | Roles never come from hardcoded lists |
+| Graceful mock fallback (no Supabase env) | Preview works with zero credentials | Mock is localStorage-only, per-browser — a behaviour demo, not real enforcement |
+| Roles: pledge<active<board<president<admin | `president` = board perms + `manage:roles`; `admin` = `admin:*` | Review/submit gated by permissions, not hardcoded emails |
+| **Photo parallax = `background-attachment: fixed`** | The transform-drift approach needed to oversize the image (visible zoom) for only a subtle effect; `bg-fixed` pins the image so it clearly parallaxes with **no zoom**, matching the Squarespace "Fixed" reference | **iOS Safari ignores `bg-fixed`** and falls back to normal scroll — photos are static on iPhone, not broken. Per-hero framing is set with `background-position` |
+| Hero **video** = navy dissolve only (no drift) | Project spec §7 wanted the hero to "dissolve into navy — nothing more"; drift zoomed the video | Video hero does not parallax |
+| **Points/submissions = Supabase table + Storage + RLS** | Cross-user (pledge submits → VP Ops reviews on another device) requires a shared backend | Cannot function in mock mode across devices; needs Supabase live |
+| Pledge login = username→synthetic email + password | Pledges have no @rutgers.edu; Supabase Auth is email-based | Pledge accounts are provisioned (Auth user + roster row); passwords set server-side |
+| PWA, not native | Web reach + app-like UX from one codebase | No App Store; iOS push needs home-screen install |
+| Google Calendar = read-only embed + add-links | No backend to hold OAuth tokens | No RSVP write-back into Google |
+| Instagram = official `/embed/captioned` iframe, hand-curated | Static site can't hold IG tokens | No live feed; a maintained array of permalinks |
 
+---
+
+## 3. Constraints / gotchas discovered
+
+**Platform / build**
+- Static export ⇒ no server code. RLS + the `auth.users` signup trigger are the
+  enforcement points, not middleware.
+- `app/manifest.ts` **requires `export const dynamic = "force-static"`** under
+  `output:"export"` or `npm run build` hard-fails.
+- The Deno Edge Function must be excluded from the app's TS: `tsconfig.json`
+  `"exclude": ["node_modules", "supabase/functions"]`.
+- Lint `react-hooks/set-state-in-effect` (Next 16) is enforced as an **error**.
+  Never `setState` synchronously in an effect, and don't call a `useCallback`
+  that setStates from an effect body either — inline the async work in the effect
+  and setState after `await` (see the `reloadKey` pattern in the points/review
+  pages). `npm run build` still succeeds with these lint errors, but keep clean.
+- Pre-existing lint error in `Hero.tsx` (`setPaused` in the reduced-motion
+  effect) is known and does not block builds.
+
+**Parallax / images**
+- `background-attachment: fixed` sizes to the **viewport**, so a short hero at the
+  top of the page shows the top slice of a viewport-tall image. Frame each hero
+  with `background-position` (About = `center 170%`, Media = `center 220%`;
+  values > 100% are valid and push the crop past bottom to lift faces up).
+- On a **tall/narrow** viewport a wide image covers by height (no vertical slack),
+  so `background-position-Y` has no effect there; it works on wider viewports.
+- iOS ignores `bg-fixed` → no parallax on iPhone (graceful, not broken).
+
+**PWA / service worker**
+- The service worker (`public/sw.js`) caches aggressively. After a rebuild the
+  browser serves the **old** cached page until a hard reload (Cmd+Shift+R) or SW
+  unregister. **Bump `CACHE_VERSION`** on meaningful releases so the SW
+  self-updates and purges old caches. Currently `akpsi-v3`.
+- iOS push requires the app be added to the Home Screen (iOS 16.4+); install +
+  offline need HTTPS (not testable on plain localhost).
+
+**Typography / assets**
+- Söhne / Neue Haas Grotesk are licensed and not on Google Fonts; **Hanken
+  Grotesk** is the free stand-in. Real files → drop `.woff2` in `public/fonts/`
+  and switch `layout.tsx` to `next/font/local`.
+- Company logos in `public/logos/*.svg` were sourced from **Wikipedia infoboxes**
+  (MediaWiki API → `imageinfo` → download from `upload.wikimedia.org` with a real
+  `User-Agent`). Static export ⇒ logos must live in `public/`, never hotlinked.
+- An `<img>` SVG with only a `viewBox` collapses to height 0 under `max-height`;
+  give it a **definite height** (`h-8 w-auto object-contain`).
+- **Member headshots:** originals were multi-MB and included `.heic`/`.pdf`
+  (browsers can't render those). All were converted with `sips` to
+  `<slug>.jpg`, resized to max 900px, ~82 quality (~4MB total for 40). Convention
+  = `/members/<slugify(name)>.jpg`. `Olivia Occhipinti Headshot.jpg` was **skipped
+  — no matching roster member** (add her to `members.ts` if she belongs, then
+  re-run the headshot pipeline).
+
+**Content / style conventions**
+- **NO EM DASHES anywhere** (prose, comments, commits). En dashes (`A–Z`,
+  `Class of ’28`) are fine.
+- **`AKΨ` must NOT appear in on-page copy** — the fonts ship no greek subset, so
+  Ψ falls back and mismatches. Use **`AKPsi`** in copy; Ψ survives only in
+  OS/browser chrome (`manifest.short_name`, `appleWebApp.title`, `<title>`,
+  og:site_name, the Satori og-image, code comments).
+- Do not assert unknown facts about real, named people (majors, class years).
+- **`SectionHeader` reveal was broken** (every title invisible, frozen at
+  `translateY(51.7px)`) and is now **fixed** — see §5.3.
+
+**Open item**
+- **Points rules in `src/lib/points.ts` are PLACEHOLDER** (categories, values,
+  pledge 30 / brother 20). The chapter must confirm the real numbers.
+
+---
+
+## 4. Data model
+
+### 4a. `members` roster / login allowlist — `db/supabase-roles.sql` (authoritative)
+Table is BOTH role store AND allowlist: on it ⇒ can sign in with that role; off
+it ⇒ rejected at signup (a `before insert on auth.users` trigger). RLS: any
+authed member reads; only president/admin write. Roles:
+`pledge|active|board|president|admin`. Email check historically `@rutgers.edu`;
+now also allows pledge + chapter position domains (see §5.1).
+
+### 4b. `submissions` — `db/submissions.sql` (NEW; run after supabase-roles.sql)
+Service-hours / brother-points submissions with photo proof + approvals.
 ```sql
--- 1) Roster table
-create table if not exists public.members (
-  email       text primary key
-              check (email = lower(email) and email like '%@rutgers.edu'),
-  full_name   text not null default '',
-  role        text not null default 'active'
-              check (role in ('pledge','active','board','president','admin')),
-  added_by    text,
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
+create table if not exists public.submissions (
+  id uuid primary key default gen_random_uuid(),
+  submitter_email   text not null references public.members(email) on delete cascade,
+  submitter_name    text not null default '',
+  category_id       text not null,
+  event_description text not null default '',
+  hours             numeric,
+  points            numeric not null default 0,
+  proof_path        text,            -- path in the private `proofs` Storage bucket
+  status            text not null default 'pending'
+                    check (status in ('pending','approved','denied')),
+  reviewed_by       text references public.members(email),
+  reviewed_at       timestamptz,
+  created_at        timestamptz not null default now()
 );
-
--- 2) Helper: does the caller (JWT email) have role-management rights?
-create or replace function public.is_roster_manager()
-returns boolean language sql stable security definer set search_path = public as $$
+-- helper: can the caller review? board/president/admin (VP Ops sits on the e-board)
+create or replace function public.can_review_submissions() returns boolean
+  language sql stable security definer set search_path = public as $$
   select exists (select 1 from public.members m
-    where m.email = lower(auth.jwt() ->> 'email') and m.role in ('president','admin'));
-$$;
-
--- 3) Row-Level Security: any authed member reads; only president/admin write
-alter table public.members enable row level security;
-drop policy if exists "members_select_authenticated" on public.members;
-create policy "members_select_authenticated" on public.members
-  for select to authenticated using (true);
-drop policy if exists "members_insert_managers" on public.members;
-create policy "members_insert_managers" on public.members
-  for insert to authenticated with check (public.is_roster_manager());
-drop policy if exists "members_update_managers" on public.members;
-create policy "members_update_managers" on public.members
-  for update to authenticated using (public.is_roster_manager()) with check (public.is_roster_manager());
-drop policy if exists "members_delete_managers" on public.members;
-create policy "members_delete_managers" on public.members
-  for delete to authenticated using (public.is_roster_manager());
-
--- 4) Login allowlist: reject signups whose email isn't on the roster
-create or replace function public.enforce_member_allowlist()
-returns trigger language plpgsql security definer set search_path = public as $$
-begin
-  if not exists (select 1 from public.members m where m.email = lower(new.email)) then
-    raise exception 'This email is not on the chapter roster. Ask the chapter president to add you.';
-  end if;
-  return new;
-end; $$;
-drop trigger if exists enforce_member_allowlist on auth.users;
-create trigger enforce_member_allowlist before insert on auth.users
-  for each row execute function public.enforce_member_allowlist();
-
--- (+ an updated_at touch trigger, + a seed block: insert at least one
---  president/admin to bootstrap - they add everyone else from the website.)
+    where m.email = lower(auth.jwt() ->> 'email') and m.role in ('board','president','admin')); $$;
+-- RLS: insert as self; select own-or-reviewer; update/delete reviewer-only.
+-- Storage: private bucket `proofs`; upload into own "<email>/" folder; read own or reviewer.
 ```
 
-### 2b. `push_subscriptions` - RUNNABLE (`db/push-subscriptions.sql`)
-One row per browser/device that opted into push. Run AFTER `supabase-roles.sql`
-(reuses `is_roster_manager()` and FKs to `members`).
+### 4c. `push_subscriptions` — `db/push-subscriptions.sql`
+One row per opted-in browser; RLS lets a member manage only their own rows,
+president/admin (or the service-role Edge Function) read all.
 
-```sql
-create table if not exists public.push_subscriptions (
-  endpoint     text primary key,
-  p256dh       text not null,
-  auth         text not null,
-  member_email text not null references public.members(email) on delete cascade,
-  created_at   timestamptz not null default now()
-);
-
-create index if not exists push_subscriptions_member_idx
-  on public.push_subscriptions (member_email);
-
-alter table public.push_subscriptions enable row level security;
-
--- A member may add/update/delete ONLY their own subscriptions.
-drop policy if exists "push_insert_self" on public.push_subscriptions;
-create policy "push_insert_self" on public.push_subscriptions
-  for insert to authenticated
-  with check (member_email = lower(auth.jwt() ->> 'email'));
-
-drop policy if exists "push_update_self" on public.push_subscriptions;
-create policy "push_update_self" on public.push_subscriptions
-  for update to authenticated
-  using (member_email = lower(auth.jwt() ->> 'email'))
-  with check (member_email = lower(auth.jwt() ->> 'email'));
-
-drop policy if exists "push_delete_self" on public.push_subscriptions;
-create policy "push_delete_self" on public.push_subscriptions
-  for delete to authenticated
-  using (member_email = lower(auth.jwt() ->> 'email'));
-
--- Read: own rows, or all rows for president/admin. The Edge Function uses the
--- service role and bypasses RLS to read everyone.
-drop policy if exists "push_select_self_or_manager" on public.push_subscriptions;
-create policy "push_select_self_or_manager" on public.push_subscriptions
-  for select to authenticated
-  using (
-    member_email = lower(auth.jwt() ->> 'email')
-    or public.is_roster_manager()
-  );
-```
-
-### 2c. Member record (public directory) - `src/data/members.ts`
-Real roster loaded (~60 members). **No `email` field exists** (deliberate - §4 privacy).
-
+### 4d. Public member record — `src/data/members.ts`
+No `email` field (privacy). `slug = slugify(name)`; photo path
+`/members/<slug>.jpg`. **~55 members after de-duping**; 40 now have real
+headshots (board fully covered). Board = President → EVP → VPs.
 ```ts
 export interface Member {
   id: string; slug: string; name: string; position: string;
@@ -157,802 +178,252 @@ export interface Member {
   classYear: string; industry?: string; bio?: string;
   photo?: string; linkedin?: string; // linkedin shown ONLY inside /portal
 }
-export const GROUP_LABELS: Record<MemberGroup, string> = {
-  board: "Board", directors: "Directors", actives: "Actives", alumni: "Alumni",
-};
-// slug = slugify(name); getMemberBySlug(slug).
-// President = Abhinav Gunda (id b1), the ONLY member with a real photo so far:
-// { id:"b1", name:"Abhinav Gunda", position:"President", group:"board",
-//   cohort:"Alpha Founding", classYear:"2027", photo:"/members/abhinav-gunda.jpg" }
 ```
-
-### 2d. `db/schema.sql`
-A broader **aspirational** draft (events, announcements, documents w/ archive
-columns, applications, audit logs). NOT the live model - a header note points to
-`supabase-roles.sql` as authoritative. Don't run both `members` defs.
+De-dupes applied: Abhinav Gunda and Oluwatomisin Abiola each existed as both a
+board VP and an "active brother" row — the active duplicates were removed so
+they don't render twice on the Members tab (which includes board).
 
 ---
 
-## 3. Architecture decisions
+## 5. Feature breakdown (load-bearing / new code)
 
-| Decision | Reasoning | Forecloses |
-|---|---|---|
-| Static export, no server | Frontend-first; trivial hosting; nothing forced a server | No server-side middleware/secrets, **no Server Actions**. Anything needing writes/secrets must use a browser-safe external service (Supabase w/ RLS) or a build-time constant |
-| Supabase called from the browser | Keeps static export; anon key limited by RLS | "President-only" and the allowlist are enforced by **RLS + a signup trigger**, NOT client code - never "fix" a permissions bug client-side |
-| Roster table = allowlist AND role store | One source of truth; add email ⇒ grant login+role | Roles never come from hardcoded email lists; they come from the roster |
-| Graceful mock fallback (no Supabase env) | Preview works with zero credentials | Mock is localStorage-only, per-browser, NOT secure - a demo of the behavior, not real enforcement |
-| Roles: pledge<active<board<president<admin | `president`=board perms+`manage:roles`; `admin`=`admin:*`(tech). Only those two manage the roster | `manage:roles` gates the Roles panel AND the Admin nav so the president reaches it without full admin |
-| **PWA, not a native app** | Reach of the web + app-like UX from ONE codebase; instant updates, no store review/fees | No App Store/Play presence. iOS push only works **after** home-screen install (§4) |
-| **Push via Supabase Edge Function + `web-push`**, not Server Actions | Static export can't run Server Actions - the Next PWA guide explicitly says static exports must call an external API instead | The VAPID **private** key lives only in Supabase secrets; it must never enter the client bundle |
-| **Push ships dormant, gated on env** | Lets the PWA ship before Supabase go-live | Toggle renders "not available yet" and `sendPushToChapter()` no-ops until `NEXT_PUBLIC_VAPID_PUBLIC_KEY` **and** Supabase are both set |
-| Push sender restricted to roster managers | Prevents any member from spamming the chapter | The Edge Function re-verifies the caller's JWT against `members.role` server-side; client-side gating is not the control |
-| **Body font = Hanken Grotesk (Google Fonts)** | Söhne / Neue Haas Grotesk are **commercial** and cannot be downloaded or bundled; Hanken is the closest free neutral grotesk | Using the real Söhne/NHG requires purchased `.woff2` files + `next/font/local` (§4) |
-| Google Calendar = read-only iframe embed + per-event "add" links | No backend/OAuth to hold tokens; public embed + template links need neither | No RSVP write-back / creating events INTO Google from the site - that needs a real backend |
-| Instagram = official `/embed/captioned` iframe per post, hand-curated list | Static site can't hold Instagram API tokens; iframe needs no script/key | No live auto-updating feed; posts are a manually maintained array of permalinks |
-| Login = Google OAuth **and** magic link (Supabase); mock demo accounts otherwise | Both wanted; magic link needs no Google Cloud setup | Real login needs the Supabase setup done (`docs/supabase-setup.md`) |
+### 5.1 Auth + logins (SECURITY-CRITICAL)
+Files: `src/lib/supabase.ts`, `src/lib/roles.ts`, `src/lib/access.ts`,
+`src/context/AuthContext.tsx`, `src/app/portal/page.tsx`, `db/supabase-roles.sql`.
 
----
-
-## 4. Constraints / gotchas discovered
-
-**Platform / build**
-- **Static export ⇒ no server code.** All persistence/auth is external
-  (Supabase, browser-side) or build-time. RLS + the `auth.users` trigger are the
-  enforcement points, not middleware.
-- **`app/manifest.ts` REQUIRES `export const dynamic = "force-static"`** under
-  `output:"export"`. Without it `npm run build` hard-fails with
-  *"export const dynamic = 'force-static' … not configured on route
-  /manifest.webmanifest"*. Confirmed, not a guess.
-- **The Deno Edge Function must be excluded from the app's TypeScript.**
-  `tsconfig.json` has `"exclude": ["node_modules", "supabase/functions"]` -
-  otherwise `tsc` fails on `Deno`, `jsr:` and `npm:` specifiers.
-- **`next/font` HMR goes stale when you swap font imports.** The running dev
-  server will keep serving the OLD font and report `--font-sans` as unset.
-  **Verify font changes against a production build** (`npm run build` + serve
-  `out/`), not the dev server. In the built CSS, `--font-sans:var(--font-hanken),…`
-  is emitted correctly and `body{font-family:var(--font-sans)}` resolves.
-- **Google Fonts fetch can fail `npm run build` in a sandbox** - rerun with
-  network access; not a code bug.
-- **Lint `react-hooks/set-state-in-effect` (Next 16) is enforced** - never call
-  `setState` synchronously in an effect body; do it after an `await`, in an event
-  callback, or derive during render. (Pre-existing warnings live only in
-  `FluidCanvas/CountUp/Hero/Button/fluidSimulation`; they don't block builds.)
-
-**PWA / push**
-- **iOS push requires the app be added to the Home Screen and opened from
-  there** (iOS 16.4+). A bookmarked Safari tab gets nothing. Install + offline
-  also require **HTTPS**, so neither is fully testable on plain `localhost`.
-- **Push cannot be verified until Supabase is live** - it depends on real auth,
-  the `push_subscriptions` table, and deployed VAPID secrets. Don't claim push
-  works from a session that can't reach that infra.
-- Service worker is plain `public/sw.js` (no Serwist/webpack plugin) precisely
-  because static export + Turbopack make build-time SW generation awkward.
-
-**Typography / assets**
-- **Söhne and Neue Haas Grotesk are licensed commercial fonts.** They are not on
-  Google Fonts and cannot be fetched or bundled. Hanken Grotesk is the stand-in.
-  If the real files are ever purchased, drop `.woff2` into `public/fonts/` and
-  switch `layout.tsx` to `next/font/local` - that is the only change needed.
-- **App icons are generated from `public/akpsi-logo.png`** (Pillow script):
-  `icon-192`, `icon-512` (transparent, "any"), `icon-maskable-512` (navy bg,
-  badge at 80% for the safe zone), `apple-icon.png` (180px, **opaque navy** -
-  iOS ignores transparency). The source badge was center-cropped off a larger
-  canvas by detecting the **gold ring** bbox; a naive alpha-bbox trim leaves it
-  off-center because faint shadow specks span the whole artboard.
-- **Company logos (`public/logos/*.svg`, §5.10) were sourced from Wikipedia
-  infoboxes**, NOT Clearbit/Simple Icons. In this environment Clearbit's logo API
-  is unreachable and Simple Icons has dropped most commercial brand marks (only
-  Accenture / Coinbase / Bank of America resolved). The working path: query the
-  MediaWiki API for a company page's wikitext, regex the `| logo =` file, resolve
-  it via `prop=imageinfo`, download from `upload.wikimedia.org` with a real
-  `User-Agent` (it 429s / 403s without one; space the requests out). Static export
-  ⇒ logos MUST be downloaded into `public/`, never hotlinked.
-- **An `<img>` SVG with only a `viewBox` (no width/height attrs) collapses to
-  height 0 under `max-height` alone.** Chrome reports such a sizeless SVG's
-  `naturalWidth` as the 300px default; with CSS `height:auto` + only a
-  `max-height`, layout resolves the height to **0** and the chip renders blank.
-  Fix = give the `<img>` a **definite height** (`h-8`) so the browser derives
-  width from the viewBox ratio; keep `w-auto max-w-[…] object-contain`. This bit
-  9 of the 24 network logos (Sanofi, Oracle, Coinbase, Kenvue, …) until fixed.
-
-**Content / style conventions**
-- **NO EM DASHES anywhere in the codebase.** All 64 were removed site-wide
-  (prose ` - ` → ` - `; empty-value placeholders → `-`). En dashes (`A–Z`,
-  `Class of ’28`) are fine and were deliberately preserved. Do not reintroduce
-  em dashes in copy, comments, or commit messages.
-- **Do not assert facts about real, named people that aren't known.** Fabricated
-  majors were removed from the testimonials rather than attached to real
-  brothers' names.
-- **Homepage "all frosted-glass over one flat navy" was built and FULLY REVERTED.**
-  Do NOT re-flatten the homepage. The parked idea, if revisited: keep each
-  section's real colors and let the hero **video bleed downward and dissolve into
-  navy** - nothing more.
-- **Public calendar page was built then removed** - the calendar lives ONLY on
-  the portal (`/portal/events`, "Google" view).
-- **Google Calendar embed requires the calendar be shared PUBLIC.** ID is wired;
-  until it's public the embed shows Google's *"Sign in to your Google Account"*
-  wall (confirmed live). Fix is in Google Calendar settings (Access permissions →
-  "Make available to public"), not code.
-- **Instagram login-walls scrapers**, so post URLs can't be auto-fetched - they
-  must be provided. The `/embed/captioned` iframe DOES render public posts with
-  no login (confirmed live for the 4 chapter posts).
-- **Self-lockout guard:** the Roles panel disables editing/removing your own row.
-- **Homepage sections must keep their own backgrounds.** The one photo backdrop
-  that exists (`AboutSection`, §5.4) is scoped to that single section on purpose.
-  It is NOT permission to glass/flatten Hero, PresidentLetter, Testimonials or
-  CTASection - see the reverted redesign above.
-- **`AKΨ` must NOT appear in on-page copy.** Hanken Grotesk ships no greek
-  subset (`cyrillic-ext, latin, latin-ext, vietnamese`), and neither Bodoni Moda
-  nor Instrument Serif has one either, so U+03A8 falls back to a system font and
-  visibly mismatches its neighbours. Page copy uses **`AKPsi`**. Ψ survives ONLY
-  where the OS or browser chrome renders it: `manifest.short_name`,
-  `appleWebApp.title`, the `<title>` template, `og:site_name`, the
-  `opengraph-image` (Satori), and code comments. There is no subset to add.
-- **Two home-page "flow" experiments were built and FULLY REVERTED.** Do not
-  redo either without being asked:
-  1. `SectionFade`, a gradient ramp dissolving each section into the next. Read
-     as odd, and measurably hurt contrast: the CTA eyebrow fell 6.72:1 → 3.90:1
-     and the Testimonials eyebrow 3.42:1 → 2.44:1 under a 17% wash on mobile.
-  2. Full-height scroll-snap panels (`html:has(#home)` + `min-h-svh` +
-     `snap-start`). On a phone four of five panels overflow the viewport by
-     271-600px, so snapping fought the content.
-  Both reverted to `3bb8aee` exactly; `git diff 3bb8aee HEAD -- src/` was empty
-  after each. The underlying complaint (dark→light→dark→light→dark reads blocky)
-  is still open. Untried ideas: make Testimonials navy so there are two long
-  tonal runs instead of a checkerboard, or tint the pure whites toward navy.
-
-**Open bugs (pre-existing, UNFIXED)**
-- **Every `SectionHeader` title on the site renders INVISIBLE.** Confirmed live
-  on `/rush` (all 4) and `/about` ("Our Network", "Benefits"); also affects
-  "Our Members" on `/members`. Root cause in
-  `src/components/ui/SectionHeader.tsx`: the `motion.h2` starts at `y:"110%"`,
-  which places it entirely outside its own `overflow-hidden` wrapper, so the
-  IntersectionObserver behind `whileInView` sees zero visible area, the
-  `amount:0.4` threshold never trips, and the reveal never fires. The title
-  stays frozen at `translateY(51.743px)` forever. Fix = move the `whileInView`
-  trigger to the wrapper and animate the child via variants, rather than
-  observing the clipped element. Left unfixed because it changes headings on
-  every page and was never scoped.
-- **"Our Network" caption still fails WCAG AA on the blue band.** The old white
-  *wordmarks* are gone (they are now real logos on white chips, §5.10), so the
-  main contrast problem is resolved. What remains is the single 12px caption
-  ("Representative of where…") in white on brand blue `#5b8ec6` = **3.43:1**,
-  under the 4.5:1 small-text bar. The large "Our Network" heading (white on the
-  same blue) is fine at that size. A deeper band blue (`#3a6ca8` ≈ 5.4:1, still
-  reads blue) would fix the caption; unfixed because it is one small line.
-
----
-
-## 5. Feature breakdown (load-bearing code reproduced exactly)
-
-### 5.1 Auth + login allowlist  (SECURITY-CRITICAL)
-Files: `src/lib/supabase.ts`, `src/lib/roles.ts`, `src/context/AuthContext.tsx`,
-`src/lib/access.ts`, `db/supabase-roles.sql`.
-
-- **`src/lib/supabase.ts`** - `isSupabaseConfigured = Boolean(NEXT_PUBLIC_SUPABASE_URL && NEXT_PUBLIC_SUPABASE_ANON_KEY)`;
-  `getSupabase()` returns a memoized client or `null` (mock mode). Anon key is
-  browser-safe (RLS-limited); the `service_role` key must never appear in the app.
-
-- **`src/lib/roles.ts`** - canonical roles + roster data-access, dual impl:
+- **`roles.ts`** — canonical roles + roster data-access (dual Supabase/mock).
+  Added for pledge/position logins:
 ```ts
-export type MemberRole = "pledge" | "active" | "board" | "president" | "admin";
-export const MEMBER_ROLES: MemberRole[] = ["pledge","active","board","president","admin"];
-export function canManageRoles(r?: MemberRole|null){ return r==="president"||r==="admin"; }
-export interface MemberRecord { email:string; fullName:string; role:MemberRole; addedBy:string|null; updatedAt:string|null; }
-// Mock store: localStorage key "akpsi.ot.roster", seeded with president@/admin@/tech@/member@/pledge@ rutgers.edu.
-// listMembers() / lookupMember(email) / upsertMember({email,fullName,role,actorEmail}) / removeMember(email)
-//   → Supabase `members` table when configured, localStorage mock otherwise.
-//   upsertMember enforces the @rutgers.edu check; email is always lowercased.
+export const PLEDGE_EMAIL_DOMAIN = "pledge.rutgersakpsi.org";
+export const CHAPTER_EMAIL_DOMAIN = "rutgersakpsi.org";
+const ALLOWED_ROSTER_DOMAINS = ["rutgers.edu", PLEDGE_EMAIL_DOMAIN, CHAPTER_EMAIL_DOMAIN];
+export function pledgeUsernameToEmail(u: string) { return `${u.trim().toLowerCase()}@${PLEDGE_EMAIL_DOMAIN}`; }
+// upsertMember() now allows any of ALLOWED_ROSTER_DOMAINS (was @rutgers.edu only).
+// MOCK_SEED also seeds a demo pledge (pledge1@pledge.rutgersakpsi.org, role pledge)
+// and a VP-Ops position account (ops@rutgersakpsi.org, role board, "Prakruti Ankem").
 ```
+- **`access.ts`** — `Permission` union adds `"submissions:submit"` and
+  `"submissions:review"`. `submit` → all member roles; `review` → board /
+  president / admin (admin via `admin:*`). `hasPermission(role, perm)` unchanged.
+- **`AuthContext.tsx`** — adds `signInWithPassword(identifier, password)`:
+  a bare username maps to `pledgeUsernameToEmail(username)`, an `@`-address is
+  used as-is (position accounts / brothers). Supabase mode:
+  `supabase.auth.signInWithPassword({email,password})` then `lookupMember` for
+  the role (fails closed if not on roster). Mock mode: password is ignored (real
+  password checks are Supabase's job) — any roster account signs in. Google
+  OAuth + magic link (brothers, @rutgers.edu) unchanged.
+- **`portal/page.tsx`** — `PledgeLogin` is a username/password form embedded in
+  the **"Pledge portal"** chooser button of `MockSignIn`, and behind a "Pledge or
+  position login" toggle in `RealSignIn`. Selecting Pledge portal shows the form
+  instead of Google.
 
-- **`src/context/AuthContext.tsx`** - mode = `supabase` when configured, else
-  `mock`. Exposes `{user,loading,mode,signInWithGoogle,requestMagicLink,signOut}`.
-  Supabase mode resolves the session email → `lookupMember`; **if not on the
-  roster it signs the session out** (fail-closed behind the DB trigger). Mock mode
-  ALSO enforces the allowlist (mirrors production). Exact mock sign-in:
+**Prak's (VP Ops) login:** identifier `ops@rutgersakpsi.org`, role `board`
+(⇒ sees the **Review** tab). *Preview:* choose "Pledge portal" (or the "Pledge or
+position login" toggle), enter `ops@rutgersakpsi.org` + any password. *Production:*
+create that Supabase Auth user with a real password + a `members` row (role
+`board`); she signs in with it. The `ops@` address is a placeholder — any chapter
+position email works as long as it's on the roster with a reviewer role.
+
+### 5.2 Portal: submissions + points + approvals (NEW)
+Files: `src/lib/points.ts`, `src/lib/submissions.ts`, `src/app/portal/points/`,
+`src/app/portal/review/`, `db/submissions.sql`, nav in
+`src/components/portal/PortalShell.tsx`.
+
+- **`points.ts`** — PLACEHOLDER config the chapter must confirm:
 ```ts
-const mockSignIn = useCallback(
-  async (email?: string, membership: "active" | "pledge" = "active") => {
-    void membership;
-    await new Promise((r) => setTimeout(r, 700));
-    const address = (email ?? "member@rutgers.edu").trim().toLowerCase();
-    if (!address.endsWith(RUTGERS_DOMAIN)) {
-      throw new Error("That account isn't a @rutgers.edu address. The member portal is limited to Rutgers accounts.");
-    }
-    // Allowlist: only emails on the roster (added by a president / tech / admin)
-    // may sign in - mirrors the server-side Supabase enforcement.
-    const member = await lookupMember(address);
-    if (!member) {
-      throw new Error("This email isn't on the chapter roster yet. A president, tech chair, or admin needs to add you before you can sign in.");
-    }
-    const nextUser: ChapterUser = { email: member.email, name: member.fullName || deriveName(member.email), role: member.role };
-    setUser(nextUser);
-    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser)); } catch {}
-    return nextUser;
-  }, []);
-// signInWithGoogle: mock→mockSignIn; supabase→signInWithOAuth({provider:'google', options:{queryParams:{hd:'rutgers.edu'}}}) (redirects)
-// requestMagicLink: mock→mockSignIn+{sent:false}; supabase→signInWithOtp({email})+{sent:true}
-// useAuth() throws outside an AuthProvider.
-```
-
-- **Auth-error surfacing.** The roster message is a shared constant
-  `NOT_ON_ROSTER_MESSAGE`. On a fail-closed Supabase sign-out (authed but not on
-  the roster), AuthContext stashes it via `rememberAuthError()` into
-  `sessionStorage["akpsi.ot.auth-error"]`. The sign-in page (`RealSignIn`, in
-  `portal/page.tsx`) reads that key plus any OAuth `error`/`error_description`
-  from the URL query **and** hash on mount, maps it through `friendlyAuthError()`,
-  shows it, then clears the key and strips the params with `history.replaceState`.
-  So a rejected Google/magic-link attempt lands back on the sign-in page with a
-  readable reason instead of a silent bounce.
-
-- **`src/lib/access.ts`** - `Permission` union incl. `"manage:roles"` and
-  `"admin:*"`; `ROLE_PERMISSIONS` maps each role; `hasPermission(role,perm)`
-  (admin:* satisfies all). President's set = board perms + `manage:roles`.
-  **Frontend perms here and the DB RLS in `supabase-roles.sql` encode the same
-  rules - keep them in sync.**
-
-- **Roles UI** - `src/app/portal/admin/page.tsx`: `MODULES[0]` is
-  `{id:"roles", permission:"manage:roles"}` (rest `"admin:*"`); `visibleModules`
-  filters by `hasPermission`; `RolesPanel` (add email+name+role / change role /
-  remove) calls `upsertMember`/`removeMember`, passes `actorEmail`, disables the
-  current user's own row, and shows a Live-vs-Preview banner from
-  `isSupabaseConfigured`. `PortalShell` Admin nav is gated by `manage:roles`.
-
-- **Login page** - `src/app/portal/page.tsx`: `mode==="supabase" ? <RealSignIn>`
-  (Google + magic-link) `: <MockSignIn>` (portal chooser + one-click demo accounts
-  + free-email box).
-
-### 5.2 PWA (LIVE) + Push notifications (BUILT, DORMANT)
-Full setup guide: `docs/pwa-push-setup.md`.
-
-**`src/app/manifest.ts`** - note the `force-static` line is mandatory (§4):
-```ts
-import type { MetadataRoute } from "next";
-
-// Required for `output: "export"` - emit a static /manifest.webmanifest.
-export const dynamic = "force-static";
-
-export default function manifest(): MetadataRoute.Manifest {
-  return {
-    name: "Alpha Kappa Psi - Omicron Tau",
-    short_name: "AKΨ - Rutgers",   // Android home-screen label
-    description:
-      "The members app for Alpha Kappa Psi, Omicron Tau at Rutgers University - events, directory, documents, and announcements.",
-    id: "/", start_url: "/", scope: "/",
-    display: "standalone", orientation: "portrait",
-    background_color: "#1a2744", theme_color: "#1a2744",
-    categories: ["education", "social", "productivity"],
-    icons: [
-      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: "/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
-    ],
-  };
-}
-```
-
-**`src/app/layout.tsx`** - fonts + PWA metadata (`themeColor` lives on the
-separate `viewport` export in Next 16; Next emits `mobile-web-app-capable`):
-```tsx
-import type { Metadata, Viewport } from "next";
-import { Hanken_Grotesk, Bodoni_Moda, Instrument_Serif } from "next/font/google";
-import ServiceWorkerRegister from "@/components/pwa/ServiceWorkerRegister";
-
-const hanken = Hanken_Grotesk({ variable: "--font-hanken", subsets: ["latin"], display: "swap" });
-const bodoni = Bodoni_Moda({ variable: "--font-display", subsets: ["latin"], weight: ["600","700","800","900"], display: "swap" });
-const instrument = Instrument_Serif({ variable: "--font-instrument", subsets: ["latin"], weight: "400", style: ["normal","italic"], display: "swap" });
-
-export const metadata: Metadata = {
-  /* …title/desc/openGraph/twitter unchanged… */
-  icons: { icon: "/favicon.ico", apple: "/apple-icon.png" },
-  manifest: "/manifest.webmanifest",
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "AKΨ - Rutgers" },  // iOS home-screen label
-};
-export const viewport: Viewport = { themeColor: "#1a2744" };
-
-// <html className={`${hanken.variable} ${bodoni.variable} ${instrument.variable} h-full`}>
-//   <body …><AuthProvider>{children}</AuthProvider><ServiceWorkerRegister /></body>
-```
-`globals.css` (inside `@theme inline`): `--font-sans: var(--font-hanken), "Helvetica Neue", Arial, sans-serif;`
-and `body { font-family: var(--font-sans); }`.
-
-**`public/sw.js`** - offline shell + push. Bump `CACHE_VERSION` when `PRECACHE`
-changes. Navigations are network-first → cache → `/offline/`; static assets are
-cache-first. Cross-origin (Supabase/Google/Instagram) is passed straight through.
-```js
-const CACHE_VERSION = "akpsi-v1";
-const PRECACHE = ["/", "/offline/", "/manifest.webmanifest",
-                  "/icon-192.png", "/icon-512.png", "/akpsi-logo.png"];
-// install → cache.addAll(PRECACHE) + skipWaiting()
-// activate → delete stale caches + clients.claim()
-// fetch → GET + same-origin only; navigate: network-first, fallback cache, then "/offline/";
-//         else cache-first, then network (cache res.ok && res.type === "basic")
-self.addEventListener("push", (event) => {
-  let payload = {};
-  try { payload = event.data ? event.data.json() : {}; }
-  catch { payload = { title: "AKΨ Omicron Tau", body: event.data ? event.data.text() : "" }; }
-  const options = {
-    body: payload.body || "", icon: payload.icon || "/icon-192.png",
-    badge: "/icon-192.png", vibrate: [100,50,100], tag: payload.tag || "akpsi",
-    data: { url: payload.url || "/portal/" },
-  };
-  event.waitUntil(self.registration.showNotification(payload.title || "AKΨ Omicron Tau", options));
-});
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  const target = (event.notification.data && event.notification.data.url) || "/portal/";
-  event.waitUntil(self.clients.matchAll({ type:"window", includeUncontrolled:true }).then((list) => {
-    for (const c of list) { if ("focus" in c) { c.navigate(target); return c.focus(); } }
-    return self.clients.openWindow(target);
-  }));
-});
-```
-
-**`src/lib/push.ts`** - client push. `isPushConfigured` is the dormancy gate.
-Note `urlBase64ToUint8Array` must allocate over an explicit `ArrayBuffer` or
-`tsc` rejects `applicationServerKey`.
-```ts
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim();
-export const isPushConfigured = Boolean(VAPID_PUBLIC_KEY) && isSupabaseConfigured;
-
-export function isPushSupported(): boolean {
-  return typeof window !== "undefined" && "serviceWorker" in navigator &&
-    "PushManager" in window && "Notification" in window;
-}
-function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const raw = window.atob(base64);
-  const out = new Uint8Array(new ArrayBuffer(raw.length)); // explicit ArrayBuffer: TS
-  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
-  return out;
-}
-// getExistingSubscription(): reg.pushManager.getSubscription()
-// subscribeToPush(memberEmail): Notification.requestPermission() → pushManager.subscribe
-//   ({userVisibleOnly:true, applicationServerKey}) → supabase.from("push_subscriptions")
-//   .upsert({endpoint,p256dh,auth,member_email}, {onConflict:"endpoint"})
-// unsubscribeFromPush(): sub.unsubscribe() + delete row by endpoint
-export async function sendPushToChapter(payload:{title:string;body:string;url?:string}): Promise<boolean> {
-  if (!isPushConfigured) return false;              // dormant no-op
-  const supabase = getSupabase(); if (!supabase) return false;
-  const { error } = await supabase.functions.invoke("send-push", { body: payload });
-  if (error) { console.error("send-push failed:", error.message); return false; }
-  return true;
-}
-```
-
-**`supabase/functions/send-push/index.ts`** (Deno) - the ONLY server-side piece.
-Verifies the caller is `president`/`admin` against `members`, fans out with
-`web-push`, prunes 404/410 endpoints. Secrets: `VAPID_PUBLIC_KEY`,
-`VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (`SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY`
-are injected). **Private key never leaves Supabase.**
-
-**UI:** `ServiceWorkerRegister.tsx` (registers `/sw.js` on `load`, scope `/`,
-`updateViaCache:"none"`, no UI) mounted in `layout.tsx`;
-`InstallPrompt.tsx` (dismissible via `localStorage["akpsi.pwa.install-dismissed"]`,
-hidden when `display-mode: standalone` or `navigator.standalone`; Android uses
-`beforeinstallprompt`, iOS shows Share → Add to Home Screen) and
-`NotificationsToggle.tsx` (renders "Not available yet…" while `!isPushConfigured`)
-both live on `/portal/dashboard`.
-Publishing an announcement calls `sendPushToChapter(...)` (no-op while dormant).
-
-### 5.3 Branding: logo, icons, fonts
-- **`src/components/ui/Logo.tsx`** renders `/akpsi-logo.png` at `h-9 w-9` (square)
-  plus the serif wordmark and gold "OMICRON TAU | RUTGERS UNIVERSITY" subtitle.
-  One component drives **navbar, footer, portal login, and portal shell**.
-  The old Rutgers block-R (`public/rutgers-r.svg`) was deleted.
-- `public/akpsi-logo.png` is a 376×376 center-cropped square of the badge; the
-  PWA icon set is derived from it (§4).
-
-### 5.4 Home page composition (current, exact)
-```tsx
-// src/app/page.tsx
-<Navbar />
-<main className="flex-1">
-  <Hero />            {/* no eyebrow pill above the headline - removed */}
-  <AboutSection />    {/* "We Are A Lifelong Family" - chapter photo backdrop */}
-  <PresidentLetter /> {/* real photo; caption is just "President" */}
-  <Testimonials />    {/* "More Than a Résumé Line" - real brother names */}
-  <CTASection />
-</main>
-<Footer />
-```
-- **Removed and deleted:** `TrustedBy` ("Our brothers land at the leading firms")
-  and `CraftExperiences` ("Craft an experience you'll carry for life"). Both
-  component files are gone - re-adding means rewriting them.
-- **`AboutSection`** ("Who We Are" / "We Are A Lifelong Family") is backed by the
-  chapter group photo at `public/chapter-group.jpg` (2000×1065), rendered as a
-  `next/image` `fill` `object-cover` backdrop. Legibility comes from THREE
-  stacked scrims, all white, in this order: a flat `bg-white/55` wash, a vertical
-  gradient that reaches full white only at the very top and bottom edges (so the
-  section resolves cleanly against its neighbours), and a radial pool of white
-  behind the headline and body copy. The foreground stays dark-on-light (navy
-  headline, `text-ink/80` body); the stat cards are `bg-white/85` +
-  `backdrop-blur-md` so they hold up over the picture, and `GoldParticles` keeps
-  its light-background tuning (`color="196,150,58"`, `intensity={2.4}`).
-  ⚠️ The scrim opacities are tuned by eye against real screenshots at both
-  desktop and mobile. A first pass at ~82% hid the photo completely; if you
-  change the wash, re-check the picture is still visible AND the copy still
-  reads, at BOTH breakpoints.
-- **`PresidentLetter`** uses a `Portrait()` component: `next/image` `fill` +
-  `object-cover object-top` inside an `aspect-[4/5]` rounded frame, pointing at
-  `/members/abhinav-gunda.jpg`, with the gold radial corner accent retained.
-  The `REST` copy's placed-brothers sentence now names **Sanofi, Accenture,
-  Bristol Myers Squibb, Oracle, bp, Johnson & Johnson, BlackRock** (was Wells
-  Fargo / TD Bank / Capital One / J&J / Accenture / UBS), aligning the prose with
-  the "Our Network" logo wall (§5.10).
-- **`Testimonials`** - 5 entries, real brothers, no invented majors:
-  Rayyan Ahmed / Justin Arnoldi / John Baylock / Anika Batki (all "Active Brother")
-  and Ashna Narielwala ("VP of Alumni Relations · Class of ’28").
-
-### 5.5 Members directory (`src/components/members/MembersDirectory.tsx`)
-Three tabs, "Members" first and default; the "All" tab and the "N members" count
-were both removed.
-```ts
-type Tab = MemberGroup;
-const TABS: Tab[] = ["actives", "board", "alumni"];
-const TAB_LABELS: Record<Tab, string> = { ...GROUP_LABELS, actives: "Members" };
-// ^ overrides ONLY the tab label; GROUP_LABELS.actives stays "Actives" for other consumers.
-
-const [tab, setTab] = useState<Tab>("actives");
-const inTab = (m: Member) => {
-  // Board members are active brothers too - include them under Members.
-  if (tab === "actives") return m.group === "actives" || m.group === "board";
-  return m.group === tab;
-};
-// Sort: board first (roster order = President → EVP → VPs), then A-Z or class year.
-// The "Members" tab renders cohort sections in COHORT_ORDER
-// ["Alpha Founding","Beta Founding","Alpha Tau"]; other tabs render a flat grid.
-```
-
-### 5.6 Portal ↔ Google Calendar  (`/portal/events`, `src/data/calendar.ts`)
-Read-only. `GOOGLE_CALENDAR_ID` =
-`c_c1a79396869cbf6257effd4bf694505c102690ef92a6ebd7617e24ebf2ebb0b8@group.calendar.google.com`
-(the `?cid=` base64 in a Google share link decodes to exactly this).
-```ts
-export function googleCalendarEmbedSrc(id: string): string {
-  const p = new URLSearchParams({ src:id, ctz:"America/New_York", mode:"MONTH", showTitle:"0", showPrint:"0", showTabs:"1", showCalendars:"0" });
-  return `https://calendar.google.com/calendar/embed?${p.toString()}`;
-}
-export function addToGoogleCalendarUrl(e:{title:string;start:string;end?:string;location?:string;description?:string}): string {
-  const start=new Date(e.start); const end=e.end?new Date(e.end):new Date(start.getTime()+3600000);
-  const stamp=(d:Date)=>d.toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,"");
-  const p=new URLSearchParams({ action:"TEMPLATE", text:e.title, dates:`${stamp(start)}/${stamp(end)}`, ctz:"America/New_York" });
-  if(e.location)p.set("location",e.location); if(e.description)p.set("details",e.description);
-  return `https://calendar.google.com/calendar/render?${p.toString()}`;
-}
-```
-Events page has a 4th toggle (Month/Week/List/**Google**) → `<GoogleCalendarPanel>`
-iframe, plus a real `<a href={addToGoogleCalendarUrl(event)}>` per event.
-⚠️ Needs the calendar shared PUBLIC (§4).
-
-### 5.7 Media page + Instagram (`/media`)
-`InstagramEmbed.tsx` parses a permalink/shortcode →
-`https://www.instagram.com/{p|reel|tv}/{code}/embed/captioned` iframe (no key, no
-script). `media/page.tsx` maps `INSTAGRAM_POSTS: string[]` (4 real permalinks)
-into a grid, plus a `RUSH_VIDEO` slot (mp4 or iframeSrc; placeholder until set).
-
-### 5.8 Social + privacy
-- `src/data/social.ts` - single source: `SOCIAL.instagram =
-  "https://www.instagram.com/rutgers.akpsi/"`, `SOCIAL.linkedin =
-  "https://www.linkedin.com/company/rutgers-alphakappapsi"`; `hasSocialUrl()`.
-  Used by `Navbar`, `Footer`, Media page (`target=_blank rel=noopener noreferrer`).
-- **Privacy:** `src/app/members/[slug]/page.tsx` renders only
-  name/position/photo/bio/academics - **no email, no LinkedIn**. The public data
-  model has no `email` field at all.
-
-### 5.9 Admin document archive
-`Archive` module in `admin/page.tsx`: `ARCHIVED_FILES` mock, search/filter,
-`overflow-x-auto` `min-w-[760px]` table (mobile-safe), restore/delete (UI-only).
-
-### 5.10 About page (`src/app/about/page.tsx`)
-Composition, in order: hero (**photo backdrop**) → "Our Story" + "National AKΨ"
-card → `<LogoMarquee />` → `<Benefits />` → CTA.
-- **The navy stats bar (60+ / 200+ / 10+ / 10+) was REMOVED**, along with its
-  `STATS` array and the `CountUp` / `cardIn` imports. Do not re-add it. The
-  "60+ active members … 200+" figures still appear as prose inside "Our Story",
-  which is deliberate: that is body copy, not the stat section.
-- **Hero photo backdrop.** The "About Our Chapter" hero is `relative
-  overflow-hidden bg-navy` with a `next/image` `fill` `object-cover object-center`
-  backdrop at **`/about-chapter.jpg`** (2000×1500, a 5-brother atrium shot). Two
-  navy scrims keep the white copy legible over the bright/backlit photo: a flat
-  `bg-navy/45` wash and a vertical gradient darkest top+bottom
-  (`linear-gradient(to bottom, rgba(26,39,68,0.78) 0%, rgba(26,39,68,0.4) 45%,
-  rgba(26,39,68,0.88) 100%)`); the copy block is `relative z-10` with
-  `[text-shadow:0_2px_14px_rgba(10,16,30,0.55)]`. This is the ONLY page hero with
-  a photo. (The home `AboutSection` still uses `/chapter-group.jpg`, §5.4 - a
-  brief mix-up put this photo there first; it was reverted.)
-- **`LogoMarquee`** ("Our Network") is a two-row infinite marquee on the **brand
-  blue** (`bg-blue`, `#5b8ec6`) showing **real company logos, each on its own
-  white rounded chip** (was flat white wordmarks). 24 logos live in
-  `public/logos/*.svg` (sourced from Wikipedia infoboxes, §4). Full current code:
-```tsx
-interface Company { name: string; logo?: string; } // logo path under /public
-
-const ROW_ONE: Company[] = [ // Sanofi, Accenture, Bristol Myers Squibb, Oracle,
-  // bp, Johnson & Johnson, BlackRock, Solar Turbines, Berkshire Hathaway,
-  // Bank of America Merrill Lynch, Standard Chartered, GEICO  (each { name, logo })
+export const POINT_CATEGORIES = [
+  { id:"service",      label:"Service / Volunteer Hours", kind:"service_hours", pointsPer:1, hint:"…" },
+  { id:"professional", label:"Professional Event",        kind:"points",        pointsPer:2 },
+  { id:"social",       label:"Social / Brotherhood Event",kind:"points",        pointsPer:1 },
+  { id:"fundraising",  label:"Fundraising (RUDM…)",        kind:"points",        pointsPer:2 },
 ];
-const ROW_TWO: Company[] = [ // Coinbase, UBS, Scotiabank, Newmark, Kenvue,
-  // Capital One, Sun Pharma, NJM, Symrise, Rutgers Cancer Institute, U.S. Bank,
-  // Cartier  (each { name, logo })
-];
+export const POINT_REQUIREMENTS = { pledge: 30, brother: 20 } as const;
+export function requirementFor(role){ return role==="pledge"?30:20; }
+export function pointsForSubmission(catId, hours){ /* service = hours*pointsPer, else pointsPer */ }
+```
+- **`submissions.ts`** — dual impl. `createSubmission` (uploads proof to the
+  `proofs` bucket in Supabase mode; stores a data-URL in mock),
+  `listMySubmissions(email)`, `listAllSubmissions()` (RLS-gated to reviewers),
+  `reviewSubmission(id, "approved"|"denied", reviewerEmail)`,
+  `approvedPoints(subs)`, `pendingCount(subs)`. Supabase reads mint short-lived
+  signed URLs for proof photos.
+- **`/portal/points`** (`submissions:submit`, incl. pledges) — points summary
+  (approved / outstanding / progress), a submit form (category, hours if service,
+  event description, photo proof), and "My submissions" with status badges.
+  Content lives in an inner `PointsBody` so it only mounts once `PortalShell` has
+  an authenticated user. Data loads via an inline async effect keyed on a
+  `reloadKey` (bumped after submit) to satisfy the set-state-in-effect lint rule.
+- **`/portal/review`** (`submissions:review`) — Pending/All filter, each row with
+  name / email / category / hours / points / description + proof photo, Approve /
+  Deny buttons; non-reviewers see a "Not authorized" card.
+- **`PortalShell` NAV** adds `Points` (permission `submissions:submit`, also added
+  to `PLEDGE_NAV`) and `Review` (permission `submissions:review`).
 
-function Chip({ company }: { company: Company }) {
+### 5.3 SectionHeader (redesigned + reveal fixed)
+`src/components/ui/SectionHeader.tsx`. Old bug: the title animated from
+`y:"110%"` inside an `overflow-hidden` wrapper, so the IntersectionObserver
+watched an element already outside its clip and the reveal never fired (every
+section title was invisible). Now: a **gold/blue kicker + serif title + gold
+accent bar**, each fading up on scroll-in via `whileInView` with a small offset
+(observed element stays in view). `subtitle` is the kicker (blue on light, gold
+on dark).
+```tsx
+const kickerColor = tone === "light" ? "text-gold" : "text-blue";
+// <motion.span> kicker (subtitle) · <motion.h2> title (initial opacity0 y24 → whileInView) · <motion.span> gold bar (w-14 h-[3px], scaleX 0→1)
+```
+
+### 5.4 Parallax backdrops (NEW)
+`src/components/anim/ParallaxImage.tsx` — decorative full-bleed backdrop using
+`background-attachment: fixed` (no client hooks, no zoom):
+```tsx
+export default function ParallaxImage({ src, className="", position="center" }) {
   return (
-    <span className="flex h-14 shrink-0 items-center justify-center rounded-2xl bg-white px-6 shadow-sm ring-1 ring-black/5 transition-transform duration-300 hover:scale-105 sm:h-16 sm:px-7">
-      {company.logo ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={company.logo} alt={company.name} loading="lazy" decoding="async"
-          className="h-8 w-auto max-w-[160px] object-contain sm:max-w-[185px]" />
-      ) : (
-        <span className="whitespace-nowrap font-display text-sm font-bold text-navy sm:text-base">{company.name}</span>
-      )}
-    </span>
+    <div aria-hidden
+      className={`pointer-events-none absolute inset-0 select-none bg-cover bg-fixed ${className}`}
+      style={{ backgroundImage: `url('${src}')`, backgroundPosition: position }} />
   );
 }
-// Row: <div className="marquee-band overflow-hidden py-2"><div className={`marquee-track ${track} flex w-max items-center gap-5 sm:gap-6`}>{[...items, ...items].map(Chip)}</div></div>
-// Section: bg-blue py-12 sm:py-14; SectionHeader tone="light"; rows wrapper mt-7 space-y-3
-//   with a horizontal mask-image fade; 12px white caption under it (§4 open bug).
 ```
-  Load-bearing details:
-  - **`h-8` on the `<img>` is mandatory, not `max-h-8`** - 9 of the logos are
-    viewBox-only SVGs that collapse to height 0 under `max-height` alone (§4).
-    `h-8 w-auto max-w-[…] object-contain` gives a definite height; wide wordmarks
-    (Bank of America, Berkshire) letterbox shorter inside the 32px box, which is
-    fine and keeps chip baselines aligned.
-  - **Plain `<img>`, not `next/image`** (with an eslint-disable for
-    `@next/next/no-img-element`): simplest for a duplicated marquee under static
-    export; the pre-existing `<img>` precedent already exists in 3 files.
-  - **`logo` is optional** - a company with no `logo` renders its name as a text
-    chip - but we only list firms whose logo we actually have, so the wall has NO
-    empty/text chips. Four originally-listed firms with no Commons logo (R&T,
-    Forest Hills Financial Group, MidCap Advisors, Macleods) were dropped for
-    exactly this reason; re-add them only if real logo files arrive.
-  - White chips fixed the old white-wordmark contrast problem; only the 12px
-    caption remains a (minor) AA shortfall (§4).
-- **`Benefits`** renders 4 pillars, each with a REAL chapter photo (§5.12). The
-  old `PlaceholderImage` (navy gradient + "Chapter photo" label) is gone,
-  replaced by `PillarImage`: `next/image` `fill` `object-cover` with the pillar
-  title plated over a `from-navy/90 via-navy/45 to-transparent` bottom scrim, so
-  the label never sits on bare photo. Alt text describes the SCENE, not the
-  pillar.
+Used on: home `AboutSection` (`/chapter-group.jpg`), `/about` hero
+(`/about-chapter.jpg`, `position="center 170%"`), `RushHero`
+(`/chapter/stairs-candid.jpg`), `/media` hero (`/chapter/lecture-hall.jpg`,
+`position="center 220%"`). Replaced the previous `next/image fill` backdrops
+(their `Image` imports were removed). The **home hero video** (`Hero.tsx`) instead
+uses framer `useScroll`+`useTransform` for a navy-wash overlay that rises as the
+hero scrolls out (dissolve into navy, §7) — no drift, no zoom.
 
-### 5.11 Portal shell on mobile (`src/components/portal/PortalShell.tsx`)
-The portal was unusable on a phone; all three of these are load-bearing.
-- **Header used to overflow its container by ~104px.** The `Logo` lockup is
-  `whitespace-nowrap` and measures 287px, so it cannot shrink; with the 172px
-  icon cluster it blew past a 375px viewport and pushed the avatar and sign-out
-  off-screen. Fixes: `Logo` gained an optional **`wordmarkClassName`** prop and
-  the portal passes `"hidden sm:flex"` to drop the wordmark below `sm`; the
-  sign-out label collapses to its icon (`<span className="hidden sm:inline">`);
-  name/email and the role chip move to `lg:block`; gaps tighten to `gap-2`.
-  Header overflow now measures 0.
-- **There was NO mobile navigation at all.** The sidebar is `hidden lg:block`,
-  so Events / Directory / Documents / Announcements / Applications / Admin were
-  unreachable on a phone. A sticky horizontally scrollable pill strip now sits
-  under the header (`sticky top-16 z-30 … lg:hidden`, scrollbar hidden via
-  `[scrollbar-width:none] [&::-webkit-scrollbar]:hidden`). Verified all 7 items
-  render for an admin and the strip scrolls (871px of content in 375px).
-- **No nav item ever highlighted, mobile OR desktop.** `trailingSlash: true`
-  makes `usePathname()` return `/portal/events/` while the `NAV` hrefs omit the
-  slash, so `pathname === href` never matched. Both navs now use:
-```ts
-const currentPath = pathname.replace(/\/+$/, "");
-const isActive = (href: string) => currentPath === href.replace(/\/+$/, "");
-```
-- **Dashboard event rows** were truncating titles ("Resume Workshop with Alu…").
-  The row is now `flex flex-wrap` with the content column on `basis-48`, so the
-  RSVP button wraps to its own full-width line on a phone; `truncate` removed
-  from the `<h3>`. All 5 seeded titles render in full.
+### 5.5 Members directory + photos
+`src/components/members/{MembersDirectory,MemberCard,MembersSection}.tsx`,
+`src/data/members.ts`. Board is the first/default tab (`TABS=["board","actives",
+"alumni"]`); the "Members" tab includes board members. `MemberCard` renders
+`member.photo` via `object-cover` in an `aspect-[3/4]` tile, monogram fallback
+otherwise. 40 members have `/members/<slug>.jpg` headshots.
 
-### 5.12 Chapter photography (`public/chapter/`)
-Six real chapter photos, resized to ≤1600px wide (2000px for the rush hero) and
-re-encoded q82 progressive - `output:"export"` disables Next's image
-optimisation, so anything dropped in `public/` ships at whatever size it is.
-Total 1.4MB across six files.
+### 5.6 "Our Network" logo wall — `src/components/about/LogoMarquee.tsx`
+Three infinite marquee rows on the brand-blue band, **no company repeated across
+rows** (14 / 15 / 13 = 42): row 1 (`marquee-track-1`, left), row 2
+(`marquee-track-2`, right — the chapter's requested list: Crowe … Amazon), row 3
+(`marquee-track-3`, left). Compact visible "Our Network" heading. Logos are plain
+`<img h-8 w-auto object-contain>` on white chips; 45 SVG/PNG logos in
+`public/logos/`.
 
-| File | Used by |
-|---|---|
-| `stairs-candid.jpg` (2000px) | RushHero backdrop |
-| `lecture-hall.jpg` | Media page hero backdrop |
-| `hoodies.jpg` | Benefits → Community |
-| `suits-seated.jpg` | Benefits → Leadership |
-| `stairs-formal.jpg` | Benefits → Network |
-| `auditorium.jpg` | Benefits → Development |
+### 5.7 Other pages (stable)
+Home = Hero(video) → AboutSection → PresidentLetter → Testimonials → CTASection.
+Testimonials (5 real brothers: Olivia Karanxha, Justin Arnoldi, Jayden Arya,
+Judy Ku, David Fordjour). Rush = RushHero → RushTimeline → WhyAkpsi → RushFAQ
+("FAQ" heading + "+" toggles) → **RushApply** (external "Application Portal" +
+"Interest Form" buttons — URLs are `"#"` placeholders in `RushApply.tsx`, the old
+inline `RushForm.tsx` is now unused). Media = photo hero + 4 Instagram embeds.
+Contact email sitewide = `rutgersakpsi2024@gmail.com`.
 
-Plus `public/chapter-group.jpg` (2000×1065), the home `AboutSection` backdrop
-(§5.4), and `public/about-chapter.jpg` (2000×1500), the `/about` page hero
-backdrop (§5.10). Logos are separate: `public/logos/*.svg` (§5.10, sourced §4).
-
-**RushHero backdrop, exact:** `next/image` `fill` + `priority`, behind
-`bg-navy/50` and a centre-light vignette
-`radial-gradient(120%_100%_at_50%_35%, rgba(45,62,95,0.30) 0%, rgba(26,39,68,0.62) 55%, rgba(19,29,51,0.88) 100%)`.
-The copy block carries `[text-shadow:0_2px_12px_rgba(10,16,30,0.55)]` so the
-gold eyebrow survives the bright staircase behind it.
-⚠️ **Positioning it needs `scale`, not `object-position`.** At a 1440×900 hero
-the container aspect (1.6) is wider than the photo (1.5), so `object-cover`
-scales by width and horizontal overflow is exactly **0** - there is no slack to
-pan into sideways, and only 60px vertically. Current fix:
-`scale-[1.15] translate-x-[4%] translate-y-[3.5%]`. The 1.15 zoom buys 7.5% of
-slack per side, so both translates stay inside it and the photo still fully
-covers the section (verified at 1440×900 and at mobile, where the aspect
-mismatch is far larger).
+### 5.8 PWA + push (LIVE / dormant)
+`app/manifest.ts` (needs `dynamic="force-static"`), icon set, `public/sw.js`
+(offline shell + push; `CACHE_VERSION="akpsi-v3"`), `src/lib/push.ts`
+(`isPushConfigured` gate), `supabase/functions/send-push/index.ts` (Deno; holds
+VAPID private key). Push is built but **dormant** until `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
++ Supabase are set. Setup: `docs/pwa-push-setup.md`.
 
 ---
 
-## 6. Build order / current status
+## 6. Current status — DONE
 
-**Done ✅**
-1. Supabase roles + login allowlist (client + RLS + signup trigger + mock enforcement).
-2. Privacy: no email/LinkedIn on public profiles.
-3. Header/footer social icons wired to real URLs.
-4. Media page + 4 Instagram embeds.
-5. President = **Abhinav Gunda**, with real headshot on the directory card and
-   the president letter; caption is just "President".
-6. Removed lowercase-blue `SectionHeader` subtitles site-wide.
-7. Portal ↔ Google Calendar (embed view + per-event add links).
-8. Branding: AKPsi badge replaces the Rutgers R everywhere.
-9. Em dashes eliminated site-wide (convention, §4).
-10. Members directory: "All" tab and member count removed; "Members" tab first.
-11. Homepage trimmed: `TrustedBy` + `CraftExperiences` sections and the hero
-    eyebrow pill removed; testimonials use real brothers.
-12. Body font → **Hanken Grotesk**.
-13. **PWA live**: manifest, icon set, service worker, offline page, install prompt.
-14. **Push built but dormant**: `push.ts`, toggle UI, `push_subscriptions.sql`,
-    `send-push` Edge Function, announcement trigger, `docs/pwa-push-setup.md`.
-15. Deleted dead files: `TrustedBy.tsx`, `CraftExperiences.tsx`, `rutgers-r.svg`.
-16. About page: navy stats bar (60+/200+/10+/10+) removed; "Our Network" marquee
-    compressed to ~340px and moved onto the brand blue with white wordmarks;
-    home `AboutSection` backed by the chapter group photo behind a white scrim
-    (§5.4, §5.10). Commit `23b207b`.
-
-17. **Portal made usable on mobile** (§5.11): header overflow fixed, mobile nav
-    strip added, `trailingSlash` active-state bug fixed, dashboard event rows
-    wrap instead of truncating. Commit `3bb8aee`.
-18. **PWA home-screen label = `AKΨ - Rutgers`** (`manifest.short_name` +
-    `appleWebApp.title`). Same commit.
-19. **`AKΨ` → `AKPsi` in all on-page copy** (§4 greek-subset constraint). Same commit.
-20. **Recruiting cycle is Fall '26**, not Spring '27 - all 10 user-facing refs
-    updated (hero + CTA buttons, rush metadata + hero, rush form heading, About
-    recruitment line, media page, seeded rush event, portal announcement and
-    document names). `ARCHIVED_FILES`' "Spring 2026 Rush Applications.csv" is
-    deliberately untouched: a genuinely past semester. Commit `d2c56c8`.
-21. **"the second founding" removed** from the president letter's closing line;
-    it now reads "As the President of Alpha Kappa Psi Omicron Tau, …". Same commit.
-22. **Six real chapter photos placed** (§5.12) across RushHero, the Media hero,
-    and all four Benefits pillars. Commits `37bb94d`, `11d7a16`.
-23. **"Our Network" is now a real-logo wall** (§5.10): 24 brand logos in
-    `public/logos/`, each on a white chip over the blue band, replacing the flat
-    white wordmarks; empty/text chips removed; `h-8` fixes the viewBox-only-SVG
-    zero-height bug (§4). Same commit also: `/about` hero gets the
-    `about-chapter.jpg` photo backdrop; president-letter company list realigned;
-    portal sign-in surfaces roster-rejection auth errors. Commit `5a8a08f`.
-
-**Pending ⏳ (in the codebase)**
-24. **`SectionHeader` reveal never fires** - every section title on the site is
-    invisible. Root cause + fix sketched in §4 "Open bug". Touches every page,
-    so it needs a deliberate go-ahead.
-25. **"Our Network" 12px caption still ~3.43:1** on the blue band (§4). The
-    wordmark contrast issue is resolved by the white chips; only the one caption
-    line remains, fixable with a deeper band blue.
-26. **Home section transitions still read blocky** - the original complaint that
-    prompted two reverted experiments (§4). Untried ideas listed there.
-
-**Pending ⏳ (require action outside the codebase)**
-27. **Make the Google Calendar PUBLIC** (Google Calendar settings) so the portal
-    embed shows events instead of the sign-in wall.
-28. **Rush video** - drop an mp4/YouTube URL into `RUSH_VIDEO` on the Media page.
-29. **Supabase go-live** (`docs/supabase-setup.md`) + seed the real roster. Until
-    then the whole portal runs in mock mode.
-30. **Activate push** (needs #29 first), per `docs/pwa-push-setup.md`:
-    run `db/push-subscriptions.sql` → `web-push generate-vapid-keys` → set
-    `NEXT_PUBLIC_VAPID_PUBLIC_KEY` + redeploy → `supabase functions deploy
-    send-push` + `supabase secrets set VAPID_*`.
-31. Optional: real majors for the testimonial brothers; photos for the other ~59
-    members (drop files in `public/members/` and set `photo` in `members.ts`).
+- Public site content complete (home, about, members, media, rush).
+- **Our Network**: 3-row logo wall, no repeats; 45 real logos.
+- **Section headers redesigned + reveal fixed** (kicker + title + gold bar).
+- **Parallax** on all four photo backdrops (`bg-fixed`); About/Media framed
+  higher via `background-position`; hero video dissolves into navy.
+- **Members**: Board-first tab; **40 real headshots** wired; Abhinav +
+  Oluwatomisin de-duped.
+- **Portal submissions/points/approvals** feature built (points/review pages,
+  data lib, RLS SQL, nav) — works in preview (mock), ready for Supabase.
+- **Pledge + VP-Ops logins** (username/password / position email).
+- PWA live; push built but dormant.
+- Build clean: 82 routes + ~55 member pages; tsc + eslint clean (one known
+  pre-existing Hero warning).
 
 ---
 
-## 7. Verify / build
+## 7. NEXT STEPS
 
-- `npx tsc --noEmit --incremental false` - must be clean.
-- `npx eslint <changed files>` - clean (a few pre-existing warnings don't block).
-- `npm run build` - static export (~40 routes + ~60 member pages). Must emit
-  `out/manifest.webmanifest`, `out/sw.js`, `out/icon-192.png`, `out/icon-512.png`,
-  `out/apple-icon.png`, `out/offline/index.html`.
-- Serve the export and test there (NOT the dev server, §4 font staleness):
-  ```bash
-  npm run build && python3 -m http.server 3002 --directory out
-  ```
-  Then check: `/` and `/media` render; navbar/footer show the AKPsi badge;
-  `--font-sans` computes to `"Hanken Grotesk", …` on `<body>`; no member
-  email/LinkedIn anywhere public; a non-roster email is REJECTED at sign-in;
-  service worker registers (`navigator.serviceWorker.getRegistrations()`);
-  manifest fetches with `display:"standalone"` and 3 icons.
-- **Cannot be verified from a sandbox / plain localhost:** real Supabase login,
-  push delivery end-to-end, iOS home-screen install behavior, and the Google
-  Calendar showing events (needs the calendar made public). Say so rather than
-  claiming these work.
+### 7a. Supabase go-live (unblocks the portal + real logins) — REQUIRES USER
+The portal is Supabase-backed but **cannot share data across devices until
+Supabase is live** (currently mock/preview mode). Runbook (`docs/supabase-setup.md`
++ the SQL files):
+1. Create a Supabase project. Copy the URL + anon key into env
+   (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`); rebuild.
+2. SQL editor: run `db/supabase-roles.sql`, then `db/submissions.sql`, then
+   `db/push-subscriptions.sql`. Seed at least one `president`/`admin` roster row.
+3. **Provision accounts** (Auth → Add user, plus a matching `members` row):
+   - Brothers: their `@rutgers.edu` (Google/magic-link, no password needed).
+   - Pledges: create `<username>@pledge.rutgersakpsi.org` Auth users with
+     passwords; `members` row role `pledge`. Hand each pledge their username +
+     password on day one.
+   - VP Ops (Prak): `ops@rutgersakpsi.org` Auth user + password; `members` row
+     role `board`.
+4. Storage: `db/submissions.sql` creates the private `proofs` bucket + policies.
+5. **Confirm the real points rules** and replace the placeholders in
+   `src/lib/points.ts` (categories, values, pledge/brother requirements).
+6. (Optional) Activate push: `web-push generate-vapid-keys`, set
+   `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, deploy `send-push`, set VAPID secrets.
+
+*I cannot run these — they need your Supabase project + credentials. Everything
+in code + SQL is ready; hand me env values or run the runbook and I'll verify.*
+
+### 7b. Member photos — DONE, with follow-ups
+40 headshots wired. Remaining: members without a headshot render a monogram
+(fine). If `Olivia Occhipinti` is a real member, add her to `members.ts` and drop
+`olivia-occhipinti.jpg` (re-run the sips convert). If more headshots arrive, run
+the same pipeline: `sips -s format jpeg -s formatOptions 82 -Z 900 "<file>"
+--out public/members/<slug>.jpg`, then add `photo:"/members/<slug>.jpg"`.
+
+### 7c. Smaller open items
+- Rush **Application Portal / Interest Form** URLs are `"#"` placeholders in
+  `src/components/rush/RushApply.tsx` — drop in the real form links.
+- Google Calendar must be shared **public** for the `/portal/events` embed to
+  show events (Calendar settings, not code).
+- Rush video: set `RUSH_VIDEO` on the Media page.
+- Optional: majors/bios for members; remaining member headshots.
 
 ---
 
-## File map (key files)
+## 8. How to work in this repo
 
+**Verify:** `npx tsc --noEmit --incremental false` (clean) · `npx eslint <files>`
+(clean; one known Hero warning) · `npm run build` (static export to `out/`).
+**Preview the real build** (not `next dev` — fonts/SW go stale there):
+`npm run build && python3 -m http.server 3002 --directory out`, then
+**hard-reload** (Cmd+Shift+R) to beat the service-worker cache; bump
+`CACHE_VERSION` in `public/sw.js` on real releases.
+
+**Deployment (IMPORTANT):** there is **NO CI/CD** (no workflows/vercel/netlify
+config). `rutgersakpsi.com` is served from **S3 + CloudFront** and deploys are
+**manual**: `npm run build`, then sync `out/` to the bucket and invalidate the
+CDN. **Pushing to GitHub does NOT change the live site.** No AWS creds are in the
+repo. Wiring GitHub Actions → S3/CloudFront is an open task.
+
+**Conventions:** no em dashes; `AKPsi` (not `AKΨ`) in copy; commit only when
+asked; history commits directly to `main`; end commit messages with
+`Co-Authored-By: Claude <noreply@anthropic.com>`.
+
+**Key file map**
 | File | Role |
 |---|---|
-| `src/lib/supabase.ts` / `roles.ts` / `access.ts` | Auth client, roster data-access + roles, permissions |
-| `src/context/AuthContext.tsx` | Auth provider (Supabase + mock, allowlist-enforcing) |
-| `src/app/layout.tsx` | Fonts, SEO metadata, PWA manifest/appleWebApp, `viewport.themeColor`, SW mount |
-| `src/app/manifest.ts` | PWA manifest (**needs `dynamic = "force-static"`**) |
-| `public/sw.js` | Service worker: offline cache + push handlers |
-| `src/lib/push.ts` | Client push subscribe/unsubscribe + `sendPushToChapter()` |
-| `src/components/pwa/*` | `ServiceWorkerRegister`, `InstallPrompt`, `NotificationsToggle` |
-| `supabase/functions/send-push/index.ts` | Manager-only push fan-out (Deno; excluded from tsconfig) |
-| `db/supabase-roles.sql` / `push-subscriptions.sql` | Runnable schema + RLS + allowlist trigger |
-| `src/app/page.tsx` | Home composition (Hero→About→President→Testimonials→CTA) |
-| `src/components/home/PresidentLetter.tsx` / `Testimonials.tsx` | President portrait + real-name testimonials |
-| `src/components/sections/AboutSection.tsx` | "We Are A Lifelong Family" + chapter photo backdrop / white scrims (§5.4) |
-| `src/app/about/page.tsx` | About page; stats bar removed; hero now has `about-chapter.jpg` photo backdrop (§5.10) |
-| `src/components/about/LogoMarquee.tsx` | "Our Network" - real logos on white chips over blue (§5.10); `h-8` fixes viewBox-only SVG collapse (§4) |
-| `public/logos/*.svg` | 24 company logos for the network wall (§5.10); Wikipedia-sourced (§4) |
-| `public/chapter-group.jpg` | Chapter group photo, 2000×1065; backdrop for home `AboutSection` |
-| `public/about-chapter.jpg` | Atrium 5-brother photo, 2000×1500; backdrop for the `/about` hero |
-| `public/chapter/*.jpg` | Six chapter photos (§5.12) - rush hero, media hero, 4 Benefits pillars |
-| `src/components/about/Benefits.tsx` | 4 pillars with real photos via `PillarImage` (§5.10) |
-| `src/components/rush/RushHero.tsx` | "Join the Omicron Tau Chapter" + photo backdrop, scrim, scale/translate (§5.12) |
-| `src/app/portal/dashboard/page.tsx` | Dashboard; event rows wrap on mobile (§5.11) |
-| `src/components/members/MembersDirectory.tsx` | 3-tab directory ("Members" first, no count) |
-| `src/data/members.ts` | Public roster (president = Abhinav Gunda, has `photo`) |
-| `src/app/members/[slug]/page.tsx` | Public profile (no contact info) |
-| `src/components/ui/Logo.tsx` | AKPsi badge lockup; `wordmarkClassName` drops the wordmark on tight bars (§5.11) |
-| `src/app/portal/admin/page.tsx` | Admin center incl. `RolesPanel` + Archive |
-| `src/components/portal/PortalShell.tsx` | Portal chrome; mobile nav strip + normalised active state (§5.11); Admin nav gated by `manage:roles` |
-| `src/app/portal/events/page.tsx` + `src/data/calendar.ts` | Calendar embed + add-to-gcal links |
-| `src/app/media/page.tsx` + `src/components/media/InstagramEmbed.tsx` | Media page (photo hero, §5.12) + IG embeds |
-| `src/data/social.ts` | Social URLs |
-| `src/app/offline/page.tsx` | PWA offline fallback |
-| `docs/supabase-setup.md` / `docs/pwa-push-setup.md` | Setup runbooks |
+| `src/lib/roles.ts` / `access.ts` / `supabase.ts` | Roster + roles + permissions + client |
+| `src/context/AuthContext.tsx` | Auth (Google/magic-link + `signInWithPassword`) |
+| `src/app/portal/page.tsx` | Sign-in (RealSignIn / MockSignIn + `PledgeLogin`) |
+| `src/lib/points.ts` / `submissions.ts` | Points config (PLACEHOLDER) + submissions data |
+| `src/app/portal/points/` / `review/` | Submit + points; VP-Ops review queue |
+| `src/components/portal/PortalShell.tsx` | Portal chrome + gated nav (Points, Review) |
+| `db/supabase-roles.sql` / `submissions.sql` / `push-subscriptions.sql` | Schema + RLS |
+| `src/components/anim/ParallaxImage.tsx` | `bg-fixed` photo backdrops |
+| `src/components/ui/SectionHeader.tsx` | Kicker + title + gold bar (reveal fixed) |
+| `src/components/sections/Hero.tsx` | Video hero + navy-dissolve on scroll |
+| `src/data/members.ts` | Roster (40 headshots wired) |
+| `src/components/members/*` | Directory, card, section |
+| `src/components/about/LogoMarquee.tsx` | 3-row "Our Network" wall |
+| `public/members/<slug>.jpg` | Member headshots (sips-processed) |
+| `docs/supabase-setup.md` / `pwa-push-setup.md` | Setup runbooks |
 
----
-
-## Git state
-
-Remote `github.com/msp276-bot/akpsi-site`, branch `main`, **working tree clean
-and fully pushed** (`main` == `origin/main`).
-
-Recent history (newest first):
-```
-5a8a08f  Add real company logos to Our Network; put chapter photo behind About hero
-1c1f5f2  Bring PROJECT_STATE current through 11d7a16
-11d7a16  Reposition the rush hero photo down and to the right
-37bb94d  Add real chapter photos across the site
-d2c56c8  Recruit for Fall '26; drop "second founding" from the president letter
-20a0712  Revert "Make the home page a deck of full-height snap panels"
-15727d0  Make the home page a deck of full-height snap panels      <- reverted, see §4
-3bb8aee  Fix portal mobile layout; set app name; stop psi glyph falling back
-a1d2834  Refresh PROJECT_STATE spec; finish em dash sweep
-23b207b  Drop About stats bar, shrink network marquee, add chapter photo backdrop
-```
-`5a8a08f` also carried two edits already in the working tree at the time: the
-president-letter company realignment (§5.4) and the portal auth-error surfacing
-(§5.1). Working tree is clean; **commit only when asked.**
-Neither reverted experiment (the homepage glass redesign, `SectionFade`, or the
-snap panels) survives in the tree. **Commit only when asked.**
-
----
-
-## Deployment (IMPORTANT)
-
-**There is NO CI/CD.** No `.github/workflows`, no `vercel.json`, no `.vercel`,
-no `netlify.toml`. Pushing to GitHub updates the repo and **nothing else** -
-`rutgersakpsi.com` does not change.
-
-Per `README.md`, hosting is manual: build, then upload `out/` to S3 behind
-CloudFront. Wiring up GitHub Actions or AWS Amplify is an explicit open task,
-not something already in place. Do not tell the user a push has deployed.
-
-```bash
-npm run build   # emits out/
-# then sync out/ to the S3 bucket and invalidate CloudFront
-```
+**Git:** branch `main` on `github.com/msp276-bot/akpsi-site`. Recent:
+`f07c288` parallax + submissions/points portal + pledge/position logins;
+`c78cb5d` section-header redesign + content + Our Network wall.

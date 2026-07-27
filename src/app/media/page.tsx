@@ -48,7 +48,7 @@ export default function MediaPage() {
           {/* Chapter photo backdrop behind a navy scrim, matching the rush hero,
               parallaxing as you scroll past. Positioned past bottom so the
               brothers' faces lift into the hero. */}
-          <ParallaxImage src="/chapter/lecture-hall.jpg" position="center 130%" />
+          <ParallaxImage src="/chapter/lecture-hall.jpg" position="center 220%" />
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 bg-navy/[0.78]"
