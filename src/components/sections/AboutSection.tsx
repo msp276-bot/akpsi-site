@@ -1,4 +1,3 @@
-import Image from "next/image";
 import {
   Users,
   Building2,
@@ -8,6 +7,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import CountUp from "@/components/anim/CountUp";
+import ParallaxImage from "@/components/anim/ParallaxImage";
 import Reveal from "@/components/anim/Reveal";
 import GoldParticles from "@/components/backgrounds/GoldParticles";
 import { cardIn } from "@/lib/motion";
@@ -32,17 +32,9 @@ export default function AboutSection() {
       id="about"
       className="relative overflow-hidden bg-white py-24 sm:py-32"
     >
-      {/* Chapter photo backdrop. Sits behind a white scrim so the copy and the
-          stat cards keep their contrast at every viewport width. */}
-      <Image
-        src="/chapter-group.jpg"
-        alt=""
-        aria-hidden
-        fill
-        sizes="100vw"
-        priority={false}
-        className="pointer-events-none select-none object-cover object-center"
-      />
+      {/* Chapter photo backdrop, parallaxing behind the white scrim so the copy
+          and stat cards keep their contrast at every viewport width. */}
+      <ParallaxImage src="/chapter-group.jpg" />
       {/* Scrim: a flat white wash keeps the copy legible, and a vertical
           gradient goes fully opaque only at the very top and bottom so the
           section resolves cleanly against the sections above and below. */}

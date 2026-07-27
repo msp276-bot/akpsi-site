@@ -15,6 +15,8 @@ export type Permission =
   | "write:document"
   | "edit:member"
   | "manage:roles"
+  | "submissions:submit"
+  | "submissions:review"
   | "admin:*";
 
 export const ROLE_PERMISSIONS: Record<PortalRole, Permission[]> = {
@@ -23,6 +25,7 @@ export const ROLE_PERMISSIONS: Record<PortalRole, Permission[]> = {
     "read:calendar",
     "read:documents",
     "read:announcements",
+    "submissions:submit",
   ],
   active: [
     "read:public",
@@ -30,6 +33,7 @@ export const ROLE_PERMISSIONS: Record<PortalRole, Permission[]> = {
     "read:directory",
     "read:documents",
     "read:announcements",
+    "submissions:submit",
   ],
   board: [
     "read:public",
@@ -43,6 +47,8 @@ export const ROLE_PERMISSIONS: Record<PortalRole, Permission[]> = {
     "write:announcement",
     "write:document",
     "edit:member",
+    "submissions:submit",
+    "submissions:review",
   ],
   // President = everything the e-board can do, plus managing who has access.
   president: [
@@ -58,6 +64,8 @@ export const ROLE_PERMISSIONS: Record<PortalRole, Permission[]> = {
     "write:document",
     "edit:member",
     "manage:roles",
+    "submissions:submit",
+    "submissions:review",
   ],
   admin: ["admin:*"],
 };

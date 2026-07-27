@@ -50,12 +50,28 @@ export interface MemberRecord {
 
 const MOCK_KEY = "akpsi.ot.roster";
 
+// Pledges sign in with a username (no school email), so their roster row uses a
+// synthetic address under this domain (username -> `<username>@<PLEDGE_DOMAIN>`).
+// Position accounts (e.g. VP Ops) use an address under the chapter domain.
+export const PLEDGE_EMAIL_DOMAIN = "pledge.rutgersakpsi.org";
+export const CHAPTER_EMAIL_DOMAIN = "rutgersakpsi.org";
+
+/** Domains a roster address may use (brothers are @rutgers.edu; pledges + positions are provisioned). */
+const ALLOWED_ROSTER_DOMAINS = ["rutgers.edu", PLEDGE_EMAIL_DOMAIN, CHAPTER_EMAIL_DOMAIN];
+
+export function pledgeUsernameToEmail(username: string): string {
+  return `${username.trim().toLowerCase()}@${PLEDGE_EMAIL_DOMAIN}`;
+}
+
 const MOCK_SEED: MemberRecord[] = [
   { email: "president@rutgers.edu", fullName: "Chapter President", role: "president", addedBy: "seed", updatedAt: null },
   { email: "admin@rutgers.edu", fullName: "Chapter Admin", role: "admin", addedBy: "seed", updatedAt: null },
   { email: "tech@rutgers.edu", fullName: "Tech Chair", role: "admin", addedBy: "seed", updatedAt: null },
   { email: "member@rutgers.edu", fullName: "Active Brother", role: "active", addedBy: "seed", updatedAt: null },
   { email: "pledge@rutgers.edu", fullName: "New Pledge", role: "pledge", addedBy: "seed", updatedAt: null },
+  // Demo pledge (username login) + VP-Ops position account for the preview.
+  { email: "pledge1@pledge.rutgersakpsi.org", fullName: "Pledge One", role: "pledge", addedBy: "seed", updatedAt: null },
+  { email: "ops@rutgersakpsi.org", fullName: "Prakruti Ankem", role: "board", addedBy: "seed", updatedAt: null },
 ];
 
 function readMock(): MemberRecord[] {
@@ -151,8 +167,11 @@ export async function upsertMember(input: {
   actorEmail?: string | null;
 }): Promise<MemberRecord> {
   const email = normalizeEmail(input.email);
-  if (!email.endsWith("@rutgers.edu")) {
-    throw new Error("Only @rutgers.edu addresses can be added to the roster.");
+  const domain = email.split("@")[1] ?? "";
+  if (!ALLOWED_ROSTER_DOMAINS.includes(domain)) {
+    throw new Error(
+      "Roster addresses must be @rutgers.edu (brothers), a pledge username account, or a chapter position account."
+    );
   }
   const record: MemberRecord = {
     email,

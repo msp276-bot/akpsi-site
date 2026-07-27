@@ -36,6 +36,7 @@ const rawMembers: Omit<Member, "slug">[] = [
   { id: "b7", name: "Ashna Narielwala", position: "Vice President of Alumni Relations", group: "board", cohort: "Beta Founding", classYear: "2028" },
   { id: "b8", name: "Simone Mehta", position: "Vice President of Risk Management", group: "board", cohort: "Beta Founding", classYear: "2028" },
   { id: "b9", name: "Mahir Varanasi", position: "Vice President of Internal Affairs", group: "board", cohort: "Beta Founding", classYear: "2028" },
+  { id: "b10", name: "Oluwatomisin Abiola", position: "Vice President of Professional Development", group: "board", cohort: "Beta Founding", classYear: "2028" },
 
   // ---------------- ACTIVES ----------------
   { id: "a1", name: "Oluwatomisin Abiola", position: "Active Brother", group: "actives", cohort: "Beta Founding", classYear: "2028" },

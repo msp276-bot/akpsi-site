@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { ChevronDown, Pause, Play } from "lucide-react";
 
 const FALLBACK_VIDEO_SRC =
@@ -18,7 +19,18 @@ const VIDEO_SRC =
  */
 export default function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
   const [paused, setPaused] = useState(false);
+
+  // Per §7 of the project state doc the hero does one thing on scroll and
+  // "nothing more": a navy wash rises so the video dissolves into the navy of
+  // the section below. The video keeps its natural cover size (no parallax
+  // zoom); parallax drift is reserved for the still-image heroes.
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end start"],
+  });
+  const navyOpacity = useTransform(scrollYProgress, [0.3, 1], [0, 0.92]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -43,6 +55,7 @@ export default function Hero() {
 
   return (
     <section
+      ref={sectionRef}
       id="home"
       className="relative flex h-svh min-h-[640px] flex-col items-center justify-center overflow-hidden bg-[#0f172a]"
     >
@@ -68,6 +81,14 @@ export default function Hero() {
           background:
             "radial-gradient(90% 70% at 50% 45%, transparent 0%, rgba(15,23,42,0.3) 100%)",
         }}
+      />
+
+      {/* Navy wash that rises as the hero scrolls away - it dissolves into the
+          navy of the section below. */}
+      <motion.div
+        aria-hidden
+        style={{ opacity: navyOpacity }}
+        className="pointer-events-none absolute inset-0 z-[2] bg-[#0f172a]"
       />
 
       {/* Center content */}

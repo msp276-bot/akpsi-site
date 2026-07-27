@@ -77,6 +77,68 @@ export default function PortalSignInPage() {
   );
 }
 
+/* -------------------------------------------------- PLEDGE / POSITION */
+// Username/password sign-in form for pledges (a username issued on their first
+// day) and chapter position accounts (VP Ops, etc.). Brothers use Google /
+// magic link instead. Rendered inline where a pledge/position sign-in belongs.
+function PledgeLogin({ hint }: { hint?: string }) {
+  const { signInWithPassword } = useAuth();
+  const router = useRouter();
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setBusy(true);
+    try {
+      await signInWithPassword(identifier, password);
+      router.replace("/portal/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not sign in.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-3">
+      {error && (
+        <div className="rounded-md border border-scarlet/25 bg-scarlet/5 p-2 text-xs text-scarlet">
+          {error}
+        </div>
+      )}
+      <input
+        value={identifier}
+        onChange={(e) => setIdentifier(e.target.value)}
+        placeholder="Username or position email"
+        autoComplete="username"
+        className="w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink focus:border-navy focus:outline-none"
+      />
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Password"
+        autoComplete="current-password"
+        className="w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink focus:border-navy focus:outline-none"
+      />
+      <button
+        type="submit"
+        disabled={busy || !identifier || !password}
+        className="w-full rounded-full bg-navy py-3 text-sm font-semibold text-white transition-colors hover:bg-navy/90 disabled:opacity-60"
+      >
+        {busy ? "Signing in…" : "Sign in"}
+      </button>
+      <p className="text-center text-[11px] text-muted">
+        {hint ?? "Pledges: use the username and password issued on your first day."}
+      </p>
+    </form>
+  );
+}
+
 /* ------------------------------------------------------------------ REAL */
 // Shown when Supabase is configured. Login is Google OAuth or a magic-link
 // email; only emails on the roster (allowlist) can complete sign-in.
@@ -86,6 +148,7 @@ function RealSignIn() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [showPledge, setShowPledge] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -207,6 +270,21 @@ function RealSignIn() {
           {busy === "link" ? <Loader2 size={16} className="animate-spin" /> : "Send"}
         </button>
       </div>
+
+      <div className="mt-5 border-t border-line pt-4 text-center">
+        <button
+          type="button"
+          onClick={() => setShowPledge((v) => !v)}
+          className="text-xs text-muted underline underline-offset-2 hover:text-navy"
+        >
+          {showPledge ? "Back to member sign-in" : "Pledge or position login"}
+        </button>
+      </div>
+      {showPledge && (
+        <div className="mt-3">
+          <PledgeLogin />
+        </div>
+      )}
     </>
   );
 }
@@ -310,20 +388,26 @@ function MockSignIn() {
         </div>
       )}
 
-      <button
-        onClick={() => handleSignIn()}
-        disabled={submitting}
-        className="group mt-6 flex w-full items-center justify-center gap-3 rounded-full border border-line bg-white px-6 py-3 text-sm font-semibold text-ink shadow-sm transition-all duration-200 hover:border-blue hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue disabled:opacity-70"
-      >
-        {submitting ? (
-          <Loader2 size={18} className="animate-spin" />
-        ) : (
-          <span className="transition-transform duration-200 group-hover:-translate-y-px">
-            <GoogleIcon />
-          </span>
-        )}
-        {submitting ? "Signing in…" : `Continue as ${audience === "pledge" ? "a pledge" : "an active brother"}`}
-      </button>
+      {audience === "pledge" ? (
+        <div className="mt-6">
+          <PledgeLogin hint="Preview: try username “pledge1” with any password." />
+        </div>
+      ) : (
+        <button
+          onClick={() => handleSignIn()}
+          disabled={submitting}
+          className="group mt-6 flex w-full items-center justify-center gap-3 rounded-full border border-line bg-white px-6 py-3 text-sm font-semibold text-ink shadow-sm transition-all duration-200 hover:border-blue hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue disabled:opacity-70"
+        >
+          {submitting ? (
+            <Loader2 size={18} className="animate-spin" />
+          ) : (
+            <span className="transition-transform duration-200 group-hover:-translate-y-px">
+              <GoogleIcon />
+            </span>
+          )}
+          {submitting ? "Signing in…" : "Continue as an active brother"}
+        </button>
+      )}
 
       <div className="mt-4 text-center">
         <button

@@ -10,7 +10,7 @@ import {
   useState,
 } from "react";
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
-import { lookupMember, type MemberRole } from "@/lib/roles";
+import { lookupMember, pledgeUsernameToEmail, type MemberRole } from "@/lib/roles";
 
 export interface ChapterUser {
   name: string;
@@ -41,6 +41,15 @@ interface AuthState {
     email: string,
     membership?: "active" | "pledge"
   ) => Promise<{ sent: boolean }>;
+  /**
+   * Username/password sign-in for pledges (a username, mapped to a synthetic
+   * email) and chapter position accounts (an email, e.g. VP Ops). Brothers use
+   * Google / magic link instead.
+   */
+  signInWithPassword: (
+    identifier: string,
+    password: string
+  ) => Promise<ChapterUser>;
   signOut: () => void;
 }
 
@@ -225,6 +234,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [mode, mockSignIn]
   );
 
+  const signInWithPassword = useCallback(
+    async (identifier: string, password: string) => {
+      const raw = identifier.trim();
+      // A pledge enters a username (no "@"); positions/brothers enter an email.
+      const email = raw.includes("@")
+        ? raw.toLowerCase()
+        : pledgeUsernameToEmail(raw);
+
+      if (mode === "mock") {
+        // Preview: the roster is the allowlist; passwords aren't verified in
+        // mock mode (real password checks happen in Supabase). Any roster
+        // account can be demoed with any password.
+        await new Promise((r) => setTimeout(r, 500));
+        void password;
+        const member = await lookupMember(email);
+        if (!member) throw new Error(NOT_ON_ROSTER_MESSAGE);
+        const nextUser: ChapterUser = {
+          email: member.email,
+          name: member.fullName || deriveName(member.email),
+          role: member.role,
+        };
+        setUser(nextUser);
+        try {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser));
+        } catch {
+          /* storage may be unavailable */
+        }
+        return nextUser;
+      }
+
+      const supabase = supabaseRef.current;
+      if (!supabase) throw new Error("Sign-in is unavailable right now.");
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw new Error("Incorrect username/email or password.");
+      // The onAuthStateChange listener also resolves the roster role and sets
+      // the user (or fails closed if the account isn't on the roster).
+      const member = await lookupMember(email);
+      if (!member) throw new Error(NOT_ON_ROSTER_MESSAGE);
+      return {
+        email: member.email,
+        name: member.fullName || deriveName(member.email),
+        role: member.role,
+      };
+    },
+    [mode]
+  );
+
   const signOut = useCallback(() => {
     if (mode === "supabase") {
       supabaseRef.current?.auth.signOut();
@@ -238,8 +294,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [mode]);
 
   const value = useMemo(
-    () => ({ user, loading, mode, signInWithGoogle, requestMagicLink, signOut }),
-    [user, loading, mode, signInWithGoogle, requestMagicLink, signOut]
+    () => ({
+      user,
+      loading,
+      mode,
+      signInWithGoogle,
+      requestMagicLink,
+      signInWithPassword,
+      signOut,
+    }),
+    [user, loading, mode, signInWithGoogle, requestMagicLink, signInWithPassword, signOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

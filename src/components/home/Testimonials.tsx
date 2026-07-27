@@ -26,7 +26,7 @@ const TESTIMONIALS: Testimonial[] = [
   {
     quote:
       "I joined for the professional side, but what kept me here were the late-night study sessions that turned into lifelong friendships. These are the people I'll be standing next to at weddings.",
-    name: "Olivia K",
+    name: "Olivia Karanxha",
     context: "Active Brother",
     tag: "Brotherhood",
   },
@@ -55,7 +55,7 @@ const TESTIMONIALS: Testimonial[] = [
     quote:
       "AKPsi completely changed how I approached recruiting. Instead of feeling overwhelmed by the process, it felt like having a mentor by my side 24/7.",
     name: "David Fordjour",
-    context: "Active Brother · Class of ’28",
+    context: "Active Brother",
     tag: "Professional",
   },
 ];

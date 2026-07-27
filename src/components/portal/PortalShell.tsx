@@ -11,6 +11,8 @@ import {
   Megaphone,
   LogOut,
   ClipboardList,
+  ClipboardCheck,
+  Award,
   ShieldCheck,
   Bell,
 } from "lucide-react";
@@ -25,6 +27,20 @@ const NAV = [
   { label: "Directory", href: "/portal/directory", Icon: Users },
   { label: "Documents", href: "/portal/documents", Icon: FolderOpen },
   { label: "Announcements", href: "/portal/announcements", Icon: Megaphone },
+  {
+    label: "Points",
+    href: "/portal/points",
+    Icon: Award,
+    // Everyone who can submit sees their points + submission history.
+    permission: "submissions:submit" as const,
+  },
+  {
+    label: "Review",
+    href: "/portal/review",
+    Icon: ClipboardCheck,
+    // VP Ops / e-board approve or deny submissions.
+    permission: "submissions:review" as const,
+  },
   {
     label: "Applications",
     href: "/portal/applications",
@@ -41,7 +57,13 @@ const NAV = [
 ];
 
 const PLEDGE_NAV = NAV.filter(({ href }) =>
-  ["/portal/dashboard", "/portal/events", "/portal/documents", "/portal/announcements"].includes(href)
+  [
+    "/portal/dashboard",
+    "/portal/events",
+    "/portal/documents",
+    "/portal/announcements",
+    "/portal/points",
+  ].includes(href)
 );
 
 export default function PortalShell({
