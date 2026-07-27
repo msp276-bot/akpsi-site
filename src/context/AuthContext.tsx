@@ -202,8 +202,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         provider: "google",
         options: {
           redirectTo: redirectTarget(),
-          // Restrict the Google account chooser to the Rutgers workspace.
-          queryParams: { hd: "rutgers.edu", prompt: "select_account" },
+          // Let any Google account through (officers sign in with @gmail.com, not
+          // just @rutgers.edu). The roster allowlist decides who actually gets a
+          // session, so we only ask Google to show the account picker.
+          queryParams: { prompt: "select_account" },
         },
       });
       if (error) throw new Error(error.message);
