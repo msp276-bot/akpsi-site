@@ -181,12 +181,17 @@ create trigger enforce_member_allowlist
   for each row execute function public.enforce_member_allowlist();
 
 -- 5) Seed the first manager(s) ---------------------------------------------
--- REQUIRED: replace these with real emails before anyone can log in. You need
--- at least one president/admin to bootstrap; they add everyone else from the
--- website afterwards.
+-- You need at least one president/admin to bootstrap; they add everyone else
+-- from the website afterwards. These are the chapter's REAL manager accounts, so
+-- re-running this file is a harmless no-op (on conflict do nothing) and never
+-- recreates phantom rows. For a brand-new chapter/project, change these to your
+-- own president + tech emails before the first run.
+-- (Earlier versions seeded placeholder president@rutgers.edu / tech@rutgers.edu;
+--  if those still exist as duplicates, delete them once:
+--    delete from public.members where email in ('president@rutgers.edu','tech@rutgers.edu');)
 insert into public.members (email, full_name, role, added_by) values
-  ('president@rutgers.edu', 'Chapter President', 'president', 'seed'),
-  ('tech@rutgers.edu',      'Tech Chair',        'admin',     'seed')
+  ('akpsipresident2024@gmail.com', 'Chapter President', 'president', 'seed'),
+  ('akpsitech2024@gmail.com',      'Tech Chair',        'admin',     'seed')
 on conflict (email) do nothing;
 
 -- 6) Pledge & position accounts (username/password logins) ------------------
