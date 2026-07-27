@@ -16,10 +16,11 @@
 --  the members table defined here is the one the app actually uses today.)
 
 -- 1) Roster table -----------------------------------------------------------
--- Allowed addresses: brothers use @rutgers.edu or @gmail.com; pledges use a
--- synthetic username account @pledge.rutgersakpsi.org; chapter positions
--- (e.g. VP Ops) use @rutgersakpsi.org. Keep these domains in sync with
--- ALLOWED_ROSTER_DOMAINS in src/lib/roles.ts. NOTE: this domain check is a
+-- Allowed addresses: brothers use a Rutgers email - @rutgers.edu OR any
+-- subdomain such as @scarletmail.rutgers.edu (the student mail) - or @gmail.com;
+-- pledges use a synthetic username account @pledge.rutgersakpsi.org; chapter
+-- positions (e.g. VP Ops) use @rutgersakpsi.org. Keep in sync with
+-- isAllowedRosterEmail in src/lib/roles.ts. NOTE: this domain check is a
 -- convention guard, not the security boundary - roster membership + the signup
 -- allowlist trigger (section 4) are what actually gate who can sign in, so a
 -- random @gmail.com still can't log in unless it is added to this table.
@@ -27,6 +28,7 @@ create table if not exists public.members (
   email       text primary key
               check (email = lower(email) and (
                 email like '%@rutgers.edu'
+                or email like '%.rutgers.edu'          -- scarletmail + other rutgers subdomains
                 or email like '%@pledge.rutgersakpsi.org'
                 or email like '%@rutgersakpsi.org'
                 or email like '%@gmail.com'
@@ -47,6 +49,7 @@ begin
   alter table public.members add constraint members_email_check
     check (email = lower(email) and (
       email like '%@rutgers.edu'
+      or email like '%.rutgers.edu'
       or email like '%@pledge.rutgersakpsi.org'
       or email like '%@rutgersakpsi.org'
       or email like '%@gmail.com'

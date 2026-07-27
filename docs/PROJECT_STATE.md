@@ -133,11 +133,12 @@ Next APIs.
 Table is BOTH role store AND allowlist: on it ⇒ can sign in with that role; off
 it ⇒ rejected at signup (a `before insert on auth.users` trigger). RLS: any
 authed member reads; only president/admin write. Roles:
-`pledge|active|board|president|admin`. Email `check` allows `@rutgers.edu`,
-**`@gmail.com`** (officers use gmail; matches `rutgersakpsi2024@gmail.com`), the
-pledge domain (`@pledge.rutgersakpsi.org`), and the chapter domain
-(`@rutgersakpsi.org`) — keep in sync with `ALLOWED_ROSTER_DOMAINS` in
-`src/lib/roles.ts`. The domain check is a convention guard, NOT security (the
+`pledge|active|board|president|admin`. Email `check` allows a Rutgers email
+(`@rutgers.edu` **or any subdomain like `@scarletmail.rutgers.edu`**, the student
+mail), **`@gmail.com`** (officers), the pledge domain (`@pledge.rutgersakpsi.org`),
+and the chapter domain (`@rutgersakpsi.org`) — keep in sync with
+`isAllowedRosterEmail()` in `src/lib/roles.ts` (matches `rutgers.edu` +
+`*.rutgers.edu`). The domain check is a convention guard, NOT security (the
 roster + signup trigger are). A `members_prevent_lockout` trigger blocks deleting
 or demoting the **last** president/admin (would otherwise lock role management).
 The file is idempotent (re-syncs the email `check` via a `do $$` block, so
@@ -304,8 +305,13 @@ from a VP-Ops **event catalog** (a brother picks an event → its point value);
 - **`/portal/point-events`** (`submissions:review`, NEW) — VP-Ops manager: create
   events (title, points, date, description), edit inline, Activate/Deactivate,
   Delete (guarded).
+- **`/portal/standings`** (`submissions:review`, NEW) — every member's approved
+  points + service hours (each vs their role requirement), with a search box;
+  click a member to expand their submissions. Aggregates `listMembers()` ×
+  `listAllSubmissions()` (reviewers can read all via RLS). Lets VP Ops keep tabs
+  on everyone.
 - **`PortalShell` NAV** adds `Points` (`submissions:submit`, also in `PLEDGE_NAV`),
-  `Review`, and `Point Events` (both `submissions:review`).
+  and `Review` / `Point Events` / `Standings` (all `submissions:review`).
 
 ### 5.3 SectionHeader (redesigned + reveal fixed)
 `src/components/ui/SectionHeader.tsx`. Old bug: the title animated from
@@ -491,7 +497,7 @@ asked; history commits directly to `main`; end commit messages with
 | `src/lib/points.ts` | Requirement numbers only (PLACEHOLDER) |
 | `src/lib/events.ts` | `point_events` catalog data (VP-Ops managed) |
 | `src/lib/submissions.ts` | Submissions data (points events + service hours) |
-| `src/app/portal/points/` / `review/` / `point-events/` | Submit + tallies; review queue (w/ Reopen); VP-Ops event manager |
+| `src/app/portal/points/` / `review/` / `point-events/` / `standings/` | Submit + tallies; review queue (w/ Reopen); VP-Ops event manager; per-member standings |
 | `src/components/portal/PortalShell.tsx` | Portal chrome + gated nav (Points, Review) |
 | `db/supabase-roles.sql` / `submissions.sql` / `push-subscriptions.sql` | Schema + RLS |
 | `src/components/anim/ParallaxImage.tsx` | `bg-fixed` photo backdrops |

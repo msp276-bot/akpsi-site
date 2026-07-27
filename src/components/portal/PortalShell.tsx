@@ -13,6 +13,7 @@ import {
   ClipboardList,
   ClipboardCheck,
   CalendarPlus,
+  BarChart3,
   Award,
   ShieldCheck,
   Bell,
@@ -47,6 +48,13 @@ const NAV = [
     href: "/portal/point-events",
     Icon: CalendarPlus,
     // VP Ops / e-board create the events brothers submit for points.
+    permission: "submissions:review" as const,
+  },
+  {
+    label: "Standings",
+    href: "/portal/standings",
+    Icon: BarChart3,
+    // VP Ops / e-board see every member's approved points + service hours.
     permission: "submissions:review" as const,
   },
   {

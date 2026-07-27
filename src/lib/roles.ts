@@ -57,18 +57,21 @@ export const PLEDGE_EMAIL_DOMAIN = "pledge.rutgersakpsi.org";
 export const CHAPTER_EMAIL_DOMAIN = "rutgersakpsi.org";
 
 /**
- * Domains a roster address may use. Brothers are @rutgers.edu or @gmail.com;
- * pledges + chapter positions are provisioned under the two chapter domains.
- * Must stay in sync with the members_email_check constraint in
- * db/supabase-roles.sql. This is a convention guard, not a security boundary -
- * only addresses actually on the roster can sign in.
+ * Whether an address may go on the roster. Brothers use a Rutgers email -
+ * `rutgers.edu` OR any subdomain like `scarletmail.rutgers.edu` (the student
+ * mail) - or `@gmail.com` (officers); pledges + chapter positions use the two
+ * chapter domains. Must stay in sync with the members_email_check constraint in
+ * db/supabase-roles.sql. Convention guard, not a security boundary - only
+ * addresses actually on the roster can sign in.
  */
-const ALLOWED_ROSTER_DOMAINS = [
-  "rutgers.edu",
-  "gmail.com",
-  PLEDGE_EMAIL_DOMAIN,
-  CHAPTER_EMAIL_DOMAIN,
-];
+const CHAPTER_ROSTER_DOMAINS = ["gmail.com", PLEDGE_EMAIL_DOMAIN, CHAPTER_EMAIL_DOMAIN];
+
+export function isAllowedRosterEmail(email: string): boolean {
+  const domain = (email.split("@")[1] ?? "").toLowerCase();
+  if (!domain) return false;
+  if (domain === "rutgers.edu" || domain.endsWith(".rutgers.edu")) return true;
+  return CHAPTER_ROSTER_DOMAINS.includes(domain);
+}
 
 export function pledgeUsernameToEmail(username: string): string {
   return `${username.trim().toLowerCase()}@${PLEDGE_EMAIL_DOMAIN}`;
@@ -178,10 +181,9 @@ export async function upsertMember(input: {
   actorEmail?: string | null;
 }): Promise<MemberRecord> {
   const email = normalizeEmail(input.email);
-  const domain = email.split("@")[1] ?? "";
-  if (!ALLOWED_ROSTER_DOMAINS.includes(domain)) {
+  if (!isAllowedRosterEmail(email)) {
     throw new Error(
-      "Roster addresses must be @rutgers.edu or @gmail.com (brothers), a pledge username account, or a chapter position account."
+      "Roster addresses must be a Rutgers email (rutgers.edu or scarletmail.rutgers.edu), @gmail.com, a pledge username account, or a chapter position account."
     );
   }
   const record: MemberRecord = {
