@@ -120,8 +120,10 @@ Next APIs.
   `translateY(51.7px)`) and is now **fixed** — see §5.3.
 
 **Open item**
-- **Points rules in `src/lib/points.ts` are PLACEHOLDER** (categories, values,
-  pledge 30 / brother 20). The chapter must confirm the real numbers.
+- **Requirement numbers in `src/lib/points.ts` are PLACEHOLDER** (points 30/20,
+  service hours 10/8 for pledge/brother). The chapter must confirm. Per-event
+  point values are now data (the `point_events` catalog), set by VP Ops in
+  `/portal/point-events` — not code.
 
 ---
 
@@ -131,35 +133,61 @@ Next APIs.
 Table is BOTH role store AND allowlist: on it ⇒ can sign in with that role; off
 it ⇒ rejected at signup (a `before insert on auth.users` trigger). RLS: any
 authed member reads; only president/admin write. Roles:
-`pledge|active|board|president|admin`. Email check historically `@rutgers.edu`;
-now also allows pledge + chapter position domains (see §5.1).
+`pledge|active|board|president|admin`. Email `check` allows `@rutgers.edu`,
+**`@gmail.com`** (officers use gmail; matches `rutgersakpsi2024@gmail.com`), the
+pledge domain (`@pledge.rutgersakpsi.org`), and the chapter domain
+(`@rutgersakpsi.org`) — keep in sync with `ALLOWED_ROSTER_DOMAINS` in
+`src/lib/roles.ts`. The domain check is a convention guard, NOT security (the
+roster + signup trigger are). A `members_prevent_lockout` trigger blocks deleting
+or demoting the **last** president/admin (would otherwise lock role management).
+The file is idempotent (re-syncs the email `check` via a `do $$` block, so
+re-running fixes an already-created table).
 
-### 4b. `submissions` — `db/submissions.sql` (NEW; run after supabase-roles.sql)
-Service-hours / brother-points submissions with photo proof + approvals.
+### 4b. `point_events` + `submissions` — `db/submissions.sql` (run after supabase-roles.sql)
+Two SEPARATE tallies (never converted): **points** come from a VP-Ops catalog;
+**service hours** are free-form. Point values are decided **server-side**, so a
+browser can't forge them.
 ```sql
-create table if not exists public.submissions (
+-- Catalog VP Ops maintains; each event is worth fixed points. Reviewers write (RLS).
+create table public.point_events (
   id uuid primary key default gen_random_uuid(),
-  submitter_email   text not null references public.members(email) on delete cascade,
-  submitter_name    text not null default '',
-  category_id       text not null,
-  event_description text not null default '',
-  hours             numeric,
-  points            numeric not null default 0,
-  proof_path        text,            -- path in the private `proofs` Storage bucket
-  status            text not null default 'pending'
-                    check (status in ('pending','approved','denied')),
-  reviewed_by       text references public.members(email),
-  reviewed_at       timestamptz,
-  created_at        timestamptz not null default now()
+  title text not null, points_value numeric not null default 0 check (points_value >= 0),
+  description text not null default '', event_date date,
+  active boolean not null default true,           -- deactivate to hide from submit form
+  created_by text references public.members(email), created_at timestamptz not null default now()
 );
--- helper: can the caller review? board/president/admin (VP Ops sits on the e-board)
-create or replace function public.can_review_submissions() returns boolean
-  language sql stable security definer set search_path = public as $$
-  select exists (select 1 from public.members m
-    where m.email = lower(auth.jwt() ->> 'email') and m.role in ('board','president','admin')); $$;
--- RLS: insert as self; select own-or-reviewer; update/delete reviewer-only.
--- Storage: private bucket `proofs`; upload into own "<email>/" folder; read own or reviewer.
+create table public.submissions (
+  id uuid primary key default gen_random_uuid(),
+  submitter_email text not null references public.members(email) on delete cascade,
+  submitter_name  text not null default '',
+  type            text not null check (type in ('service_hours','points')),
+  event_id        uuid references public.point_events(id) on delete restrict,  -- points only
+  event_description text not null default '',      -- service: what/where; points: optional note
+  hours numeric,                                   -- service only
+  points numeric not null default 0,               -- server-computed (trigger)
+  proof_path text, status text not null default 'pending'
+    check (status in ('pending','approved','denied')),
+  reviewed_by text references public.members(email), reviewed_at timestamptz,
+  created_at timestamptz not null default now()
+);
 ```
+- **`submissions_before_insert`** trigger: forces `status='pending'`, clears
+  reviewer fields, and computes `points` — for `type='points'` from the linked
+  active event (else raises), for `service_hours` sets `points=0` + keeps `hours`.
+  Also stamps `submitter_name` from the roster. So client-sent status/points are
+  ignored (a pledge can't self-approve or send `points:9999`).
+- **`submissions_before_update`** trigger: reviewers may only change `status`;
+  every other column is reset to its old value. Stamps `reviewed_by`/`reviewed_at`
+  from the JWT, and CLEARS them when status goes back to `'pending'` (the Reopen
+  / undo path).
+- `can_review_submissions()` = board/president/admin. RLS: insert as self; select
+  own-or-reviewer; update/delete reviewer-only. `point_events`: any member reads,
+  reviewers write. Storage: private `proofs` bucket, own `<email>/` folder, read
+  own-or-reviewer. `event_id` is `on delete restrict` — an event with submissions
+  can't be hard-deleted, only deactivated (keeps history readable).
+- **⚠️ The file starts with a RESET** (drops submissions/point_events/the retired
+  `point_categories`) so re-running rebuilds cleanly. Comment out section 0 once
+  there is real data to keep. It seeds 3 example events.
 
 ### 4c. `push_subscriptions` — `db/push-subscriptions.sql`
 One row per opted-in browser; RLS lets a member manage only their own rows,
@@ -210,8 +238,23 @@ export function pledgeUsernameToEmail(u: string) { return `${u.trim().toLowerCas
   used as-is (position accounts / brothers). Supabase mode:
   `supabase.auth.signInWithPassword({email,password})` then `lookupMember` for
   the role (fails closed if not on roster). Mock mode: password is ignored (real
-  password checks are Supabase's job) — any roster account signs in. Google
-  OAuth + magic link (brothers, @rutgers.edu) unchanged.
+  password checks are Supabase's job) — any roster account signs in.
+  - **LOGIN-LOOP FIX (important):** the Supabase branch of `signInWithPassword`
+    now calls `setUser(nextUser)` **synchronously** before returning. Previously
+    it relied only on the async `onAuthStateChange` listener, so `PledgeLogin`
+    navigated to `/portal/dashboard` while `user` was still null and
+    `PortalShell`'s guard bounced it back to sign-in (an infinite loop). Do not
+    remove the synchronous `setUser`.
+  - **Magic link** (`requestMagicLink`) now accepts **any well-formed email**
+    (was `@rutgers.edu`-only), so gmail officers + chapter-domain addresses can
+    request a link; the roster allowlist is still the gate. Pledges have no real
+    inbox → they use password sign-in. Google OAuth unchanged (still hints
+    `hd:rutgers.edu`).
+  - **SERVICE-WORKER GOTCHA that looked like a broken login:** `public/sw.js`
+    caches static assets **cache-first**, so after a deploy the browser can serve
+    stale JS with old auth logic → the login loop reappears even after the code
+    is fixed. Bump `CACHE_VERSION` (now `akpsi-v4`) on releases; a user stuck on
+    a stale SW must Clear site data / unregister the SW once.
 - **`portal/page.tsx`** — `PledgeLogin` is a username/password form embedded in
   the **"Pledge portal"** chooser button of `MockSignIn`, and behind a "Pledge or
   position login" toggle in `RealSignIn`. Selecting Pledge portal shows the form
@@ -224,40 +267,45 @@ create that Supabase Auth user with a real password + a `members` row (role
 `board`); she signs in with it. The `ops@` address is a placeholder — any chapter
 position email works as long as it's on the roster with a reviewer role.
 
-### 5.2 Portal: submissions + points + approvals (NEW)
-Files: `src/lib/points.ts`, `src/lib/submissions.ts`, `src/app/portal/points/`,
-`src/app/portal/review/`, `db/submissions.sql`, nav in
+### 5.2 Portal: points (event catalog) + service hours + approvals
+Files: `src/lib/points.ts`, `src/lib/events.ts`, `src/lib/submissions.ts`,
+`src/app/portal/points/`, `src/app/portal/review/`,
+`src/app/portal/point-events/`, `db/submissions.sql`, nav in
 `src/components/portal/PortalShell.tsx`.
 
-- **`points.ts`** — PLACEHOLDER config the chapter must confirm:
-```ts
-export const POINT_CATEGORIES = [
-  { id:"service",      label:"Service / Volunteer Hours", kind:"service_hours", pointsPer:1, hint:"…" },
-  { id:"professional", label:"Professional Event",        kind:"points",        pointsPer:2 },
-  { id:"social",       label:"Social / Brotherhood Event",kind:"points",        pointsPer:1 },
-  { id:"fundraising",  label:"Fundraising (RUDM…)",        kind:"points",        pointsPer:2 },
-];
-export const POINT_REQUIREMENTS = { pledge: 30, brother: 20 } as const;
-export function requirementFor(role){ return role==="pledge"?30:20; }
-export function pointsForSubmission(catId, hours){ /* service = hours*pointsPer, else pointsPer */ }
-```
-- **`submissions.ts`** — dual impl. `createSubmission` (uploads proof to the
-  `proofs` bucket in Supabase mode; stores a data-URL in mock),
-  `listMySubmissions(email)`, `listAllSubmissions()` (RLS-gated to reviewers),
-  `reviewSubmission(id, "approved"|"denied", reviewerEmail)`,
-  `approvedPoints(subs)`, `pendingCount(subs)`. Supabase reads mint short-lived
-  signed URLs for proof photos.
-- **`/portal/points`** (`submissions:submit`, incl. pledges) — points summary
-  (approved / outstanding / progress), a submit form (category, hours if service,
-  event description, photo proof), and "My submissions" with status badges.
-  Content lives in an inner `PointsBody` so it only mounts once `PortalShell` has
-  an authenticated user. Data loads via an inline async effect keyed on a
-  `reloadKey` (bumped after submit) to satisfy the set-state-in-effect lint rule.
-- **`/portal/review`** (`submissions:review`) — Pending/All filter, each row with
-  name / email / category / hours / points / description + proof photo, Approve /
-  Deny buttons; non-reviewers see a "Not authorized" card.
-- **`PortalShell` NAV** adds `Points` (permission `submissions:submit`, also added
-  to `PLEDGE_NAV`) and `Review` (permission `submissions:review`).
+**Model:** points and service hours are two separate tallies. **Points** come
+from a VP-Ops **event catalog** (a brother picks an event → its point value);
+**service hours** are logged free-form (org + hours). See §4b.
+
+- **`points.ts`** — just the requirement numbers now (no more categories/scoring;
+  scoring lives on `point_events`). `POINT_REQUIREMENTS`, `SERVICE_HOUR_REQUIREMENTS`
+  (both per role), `pointsRequiredFor(role)`, `serviceHoursRequiredFor(role)`.
+  ⚠️ numbers are PLACEHOLDER (points 30/20, hours 10/8) — chapter must confirm.
+- **`events.ts`** (NEW) — the `point_events` catalog, dual mock/Supabase.
+  `listEvents()` (all, reviewer view), `listActiveEvents()`, `createEvent`,
+  `updateEvent` (incl. `active` toggle), `deleteEvent` (fails in Supabase if the
+  event has submissions → the UI tells you to deactivate instead).
+- **`submissions.ts`** — dual impl. `Submission` now carries `type`
+  (`service_hours`|`points`), `eventId`, `eventTitle` (joined via
+  `select "*, point_events(title)"`). `createSubmission` sends `type`+`event_id`
+  and lets the server compute points (uploads proof to the `proofs` bucket;
+  data-URL in mock). `listMySubmissions`, `listAllSubmissions` (RLS-gated),
+  `reviewSubmission(id,"approved"|"denied",reviewer)`, **`reopenSubmission(id)`**
+  (undo → back to pending), `approvedPoints(subs)` (points-type only),
+  **`approvedServiceHours(subs)`**, `pendingCount(subs)`.
+- **`/portal/points`** (`submissions:submit`, incl. pledges) — TWO summary cards
+  (Points and Service hours, each earned/required + progress bar). Submit form
+  has a **type toggle**: "Event points" (pick from active events) or "Service
+  hours" (org/what + hours). Photo proof required. "My submissions" list.
+- **`/portal/review`** (`submissions:review`) — Pending/All filter; each row shows
+  submitter, event title or "Service hours", hours-or-points, note, proof photo.
+  Pending → Approve/Deny. Decided rows show the badge plus a **Reopen** (undo)
+  button and the opposite decision, so an accidental approve/deny is reversible.
+- **`/portal/point-events`** (`submissions:review`, NEW) — VP-Ops manager: create
+  events (title, points, date, description), edit inline, Activate/Deactivate,
+  Delete (guarded).
+- **`PortalShell` NAV** adds `Points` (`submissions:submit`, also in `PLEDGE_NAV`),
+  `Review`, and `Point Events` (both `submissions:review`).
 
 ### 5.3 SectionHeader (redesigned + reveal fixed)
 `src/components/ui/SectionHeader.tsx`. Old bug: the title animated from
@@ -334,21 +382,38 @@ VAPID private key). Push is built but **dormant** until `NEXT_PUBLIC_VAPID_PUBLI
   higher via `background-position`; hero video dissolves into navy.
 - **Members**: Board-first tab; **40 real headshots** wired; Abhinav +
   Oluwatomisin de-duped.
-- **Portal submissions/points/approvals** feature built (points/review pages,
-  data lib, RLS SQL, nav) — works in preview (mock), ready for Supabase.
+- **Supabase is LIVE** (project ref `iagcpczxmfwrezrllewn`). The portal runs on
+  the real backend locally via `.env.local` (gitignored; anon key only). Roster
+  auth verified end-to-end: president signs in (gmail), role resolves, RLS gates.
+- **Points/events/hours feature (v2)**: VP-Ops `point_events` catalog +
+  event-based points + free-form service hours (two separate tallies) + review
+  Reopen/undo. Server-side scoring + immutable-review triggers. Verified against
+  live Supabase.
+- **Login-loop fixes**: synchronous `setUser` in password sign-in; magic link
+  accepts any email (gmail officers); SW `CACHE_VERSION` bumped to `akpsi-v4`.
 - **Pledge + VP-Ops logins** (username/password / position email).
 - PWA live; push built but dormant.
-- Build clean: 82 routes + ~55 member pages; tsc + eslint clean (one known
+- Build clean: 83 routes + ~55 member pages; tsc + eslint clean (one known
   pre-existing Hero warning).
 
 ---
 
 ## 7. NEXT STEPS
 
-### 7a. Supabase go-live (unblocks the portal + real logins) — REQUIRES USER
-The portal is Supabase-backed but **cannot share data across devices until
-Supabase is live** (currently mock/preview mode). Runbook (`docs/supabase-setup.md`
-+ the SQL files):
+### 7a. Supabase — LIVE locally; remaining = production + accounts + numbers
+Project `iagcpczxmfwrezrllewn` is created, all SQL is run, and the portal works
+against it locally (`.env.local`). **Remaining to fully launch:**
+- **Production env**: add `NEXT_PUBLIC_SUPABASE_URL` + `..._ANON_KEY` to the host
+  (S3/CloudFront build) and the real domain to Supabase redirect URLs; rebuild +
+  redeploy. `.env.local` only affects local.
+- **Confirm requirement numbers** in `src/lib/points.ts` (points + service hours).
+- **Provision accounts**: VP-Ops `ops@rutgersakpsi.org` (Auth user w/ password +
+  `members` row role `board`) — or give Prak a gmail on the roster; pledges as
+  `<username>@pledge.rutgersakpsi.org` Auth users + `pledge` rows.
+- (Optional) push: VAPID keys + `send-push` deploy.
+
+Original one-time runbook (`docs/supabase-setup.md` + the SQL files), for
+reference / re-provisioning:
 1. Create a Supabase project. Copy the URL + anon key into env
    (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`); rebuild.
 2. SQL editor: run `db/supabase-roles.sql`, then `db/submissions.sql`, then
@@ -411,8 +476,10 @@ asked; history commits directly to `main`; end commit messages with
 | `src/lib/roles.ts` / `access.ts` / `supabase.ts` | Roster + roles + permissions + client |
 | `src/context/AuthContext.tsx` | Auth (Google/magic-link + `signInWithPassword`) |
 | `src/app/portal/page.tsx` | Sign-in (RealSignIn / MockSignIn + `PledgeLogin`) |
-| `src/lib/points.ts` / `submissions.ts` | Points config (PLACEHOLDER) + submissions data |
-| `src/app/portal/points/` / `review/` | Submit + points; VP-Ops review queue |
+| `src/lib/points.ts` | Requirement numbers only (PLACEHOLDER) |
+| `src/lib/events.ts` | `point_events` catalog data (VP-Ops managed) |
+| `src/lib/submissions.ts` | Submissions data (points events + service hours) |
+| `src/app/portal/points/` / `review/` / `point-events/` | Submit + tallies; review queue (w/ Reopen); VP-Ops event manager |
 | `src/components/portal/PortalShell.tsx` | Portal chrome + gated nav (Points, Review) |
 | `db/supabase-roles.sql` / `submissions.sql` / `push-subscriptions.sql` | Schema + RLS |
 | `src/components/anim/ParallaxImage.tsx` | `bg-fixed` photo backdrops |
@@ -425,5 +492,7 @@ asked; history commits directly to `main`; end commit messages with
 | `docs/supabase-setup.md` / `pwa-push-setup.md` | Setup runbooks |
 
 **Git:** branch `main` on `github.com/msp276-bot/akpsi-site`. Recent:
-`f07c288` parallax + submissions/points portal + pledge/position logins;
-`c78cb5d` section-header redesign + content + Our Network wall.
+latest — Supabase live + points/events/hours v2 + RLS hardening + login-loop
+fixes (this handoff); `cf85d45` allow pledge/position domains, document
+submissions; `f07c288` parallax + submissions/points portal + pledge/position
+logins.

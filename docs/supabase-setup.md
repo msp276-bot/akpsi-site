@@ -127,13 +127,17 @@ approve/deny points submissions.
 ## Step 7 - Submissions / points (service hours + brother points)
 
 1. In the SQL editor, run **`db/submissions.sql`** (after `db/supabase-roles.sql`).
-   It creates the `submissions` table, its Row-Level Security (submitters see
-   only their own rows; board/president/admin see all), and the private
-   **`proofs`** Storage bucket for photo proof.
-2. Confirm the real point rules in **`src/lib/points.ts`** - the categories,
-   their point values, and the pledge/brother requirements are PLACEHOLDERS.
-   Editing that one file updates the submit form and the points math (no backend
-   change needed); rebuild after.
+   It creates the `point_categories` scoring table, the `submissions` table, its
+   Row-Level Security (submitters see only their own rows; board/president/admin
+   see all), the triggers that score submissions **server-side** (so a submitted
+   point value can't be forged in the browser), and the private **`proofs`**
+   Storage bucket for photo proof.
+2. Confirm the real point rules in **TWO places that must match**: the
+   `point_categories` seed in `db/submissions.sql` (what actually scores a
+   submission on the server) and `src/lib/points.ts` (what the submit form shows
+   as a live estimate). The categories, values, and pledge/brother requirements
+   are PLACEHOLDERS. Editing `points.ts` updates the form + math; edit the DB rows
+   in the SQL editor (or re-seed) to match, then rebuild.
 3. Members submit at **Portal → Points**; VP Ops / e-board approve at
    **Portal → Review**.
 

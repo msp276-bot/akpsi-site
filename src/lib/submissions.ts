@@ -1,32 +1,37 @@
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
-import { pointsForSubmission } from "@/lib/points";
 
 /**
- * Service-hours / brother-points submissions.
+ * Points & service-hours submissions.
  *
- * Dual implementation, mirroring `roles.ts`:
- *  - Supabase mode (NEXT_PUBLIC_SUPABASE_* set): rows live in the `submissions`
- *    table, proof photos in the `proofs` Storage bucket. Who can read/write what
- *    is enforced by Row-Level Security (see db/submissions.sql), NOT this client.
- *  - Mock mode: everything lives in localStorage so the flow is demoable in the
- *    static preview. ⚠️ Mock mode is per-browser - a pledge's submission will
- *    NOT reach the reviewer on another device. Real cross-user review needs
- *    Supabase to be live.
+ * Two kinds of submission (see db/submissions.sql), tallied separately:
+ *  - type "points": links a `point_events` catalog entry. The point value is
+ *    decided SERVER-SIDE by the event (the client-sent value is ignored).
+ *  - type "service_hours": free-form (org/what + hours). Counted as hours.
+ *
+ * Dual implementation:
+ *  - Supabase mode: rows in `submissions`, proof photos in the `proofs` bucket.
+ *    Read/write is enforced by Row-Level Security, NOT this client.
+ *  - Mock mode: localStorage, per-browser (a behaviour demo, not shared).
  */
 
 export type SubmissionStatus = "pending" | "approved" | "denied";
+export type SubmissionType = "service_hours" | "points";
 
 export interface Submission {
   id: string;
   submitterEmail: string;
   submitterName: string;
-  categoryId: string;
+  type: SubmissionType;
+  /** Linked event (points submissions) or null (service hours). */
+  eventId: string | null;
+  /** Event title for display (joined in Supabase; carried in mock). */
+  eventTitle: string | null;
+  /** Service: what/where. Points: optional note. */
   eventDescription: string;
   hours: number | null;
   points: number;
   /** Displayable proof image (mock: data URL; Supabase: signed URL). */
   proof: string | null;
-  /** Storage path (Supabase only) used to resolve `proof`. */
   proofPath: string | null;
   status: SubmissionStatus;
   reviewedBy: string | null;
@@ -37,10 +42,15 @@ export interface Submission {
 export interface NewSubmission {
   submitterEmail: string;
   submitterName: string;
-  categoryId: string;
+  type: SubmissionType;
+  /** points only: the chosen event. */
+  eventId: string | null;
+  /** points only: title + value, used for the mock store and optimistic UI. */
+  eventTitle: string | null;
+  pointsValue: number;
   eventDescription: string;
+  /** service only. */
   hours: number | null;
-  /** Proof image as a File (from the upload input). */
   proofFile: File | null;
 }
 
@@ -95,7 +105,8 @@ type Row = {
   id: string;
   submitter_email: string;
   submitter_name: string;
-  category_id: string;
+  type: SubmissionType;
+  event_id: string | null;
   event_description: string;
   hours: number | null;
   points: number;
@@ -104,7 +115,11 @@ type Row = {
   reviewed_by: string | null;
   reviewed_at: string | null;
   created_at: string;
+  point_events: { title: string } | null;
 };
+
+// Select list including the joined event title.
+const SELECT = "*, point_events(title)";
 
 async function mapRow(row: Row): Promise<Submission> {
   let proof: string | null = null;
@@ -119,10 +134,12 @@ async function mapRow(row: Row): Promise<Submission> {
     id: row.id,
     submitterEmail: row.submitter_email,
     submitterName: row.submitter_name,
-    categoryId: row.category_id,
+    type: row.type,
+    eventId: row.event_id,
+    eventTitle: row.point_events?.title ?? null,
     eventDescription: row.event_description,
     hours: row.hours,
-    points: row.points,
+    points: Number(row.points),
     proof,
     proofPath: row.proof_path,
     status: row.status,
@@ -135,8 +152,8 @@ async function mapRow(row: Row): Promise<Submission> {
 // --- Public API ------------------------------------------------------------
 
 export async function createSubmission(input: NewSubmission): Promise<Submission> {
-  const points = pointsForSubmission(input.categoryId, input.hours);
   const email = normalizeEmail(input.submitterEmail);
+  const isPoints = input.type === "points";
 
   if (!isSupabaseConfigured) {
     const proof = input.proofFile ? await fileToDataUrl(input.proofFile) : null;
@@ -144,10 +161,12 @@ export async function createSubmission(input: NewSubmission): Promise<Submission
       id: newId(),
       submitterEmail: email,
       submitterName: input.submitterName,
-      categoryId: input.categoryId,
+      type: input.type,
+      eventId: isPoints ? input.eventId : null,
+      eventTitle: isPoints ? input.eventTitle : null,
       eventDescription: input.eventDescription.trim(),
-      hours: input.hours,
-      points,
+      hours: isPoints ? null : input.hours,
+      points: isPoints ? input.pointsValue : 0,
       proof,
       proofPath: null,
       status: "pending",
@@ -172,19 +191,19 @@ export async function createSubmission(input: NewSubmission): Promise<Submission
     if (upErr) throw upErr;
   }
 
+  // points/status are computed by the server-side trigger; we don't send them.
   const { data, error } = await supabase
     .from("submissions")
     .insert({
       submitter_email: email,
       submitter_name: input.submitterName,
-      category_id: input.categoryId,
+      type: input.type,
+      event_id: isPoints ? input.eventId : null,
       event_description: input.eventDescription.trim(),
-      hours: input.hours,
-      points,
+      hours: isPoints ? null : input.hours,
       proof_path: proofPath,
-      status: "pending",
     })
-    .select("*")
+    .select(SELECT)
     .single();
   if (error) throw error;
   return mapRow(data as Row);
@@ -201,7 +220,7 @@ export async function listMySubmissions(email: string): Promise<Submission[]> {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("submissions")
-    .select("*")
+    .select(SELECT)
     .eq("submitter_email", address)
     .order("created_at", { ascending: false });
   if (error) throw error;
@@ -217,7 +236,7 @@ export async function listAllSubmissions(): Promise<Submission[]> {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("submissions")
-    .select("*")
+    .select(SELECT)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return Promise.all((data ?? []).map((r) => mapRow(r as Row)));
@@ -242,22 +261,46 @@ export async function reviewSubmission(
   }
   const supabase = getSupabase();
   if (!supabase) throw new Error("Backend unavailable.");
+  // reviewer/time are stamped by the server-side trigger.
+  const { error } = await supabase.from("submissions").update({ status }).eq("id", id);
+  if (error) throw error;
+}
+
+/** Undo a decision: send an approved/denied submission back to Pending. */
+export async function reopenSubmission(id: string): Promise<void> {
+  if (!isSupabaseConfigured) {
+    const rows = readMock();
+    const row = rows.find((s) => s.id === id);
+    if (row) {
+      row.status = "pending";
+      row.reviewedBy = null;
+      row.reviewedAt = null;
+      writeMock(rows);
+    }
+    return;
+  }
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Backend unavailable.");
+  // Setting status back to 'pending' makes the trigger clear the review stamp.
   const { error } = await supabase
     .from("submissions")
-    .update({
-      status,
-      reviewed_by: reviewer,
-      reviewed_at: new Date().toISOString(),
-    })
+    .update({ status: "pending" })
     .eq("id", id);
   if (error) throw error;
 }
 
-/** Approved points a set of submissions is worth. */
+/** Approved POINTS (points-type submissions only). */
 export function approvedPoints(submissions: Submission[]): number {
   return submissions
-    .filter((s) => s.status === "approved")
+    .filter((s) => s.status === "approved" && s.type === "points")
     .reduce((sum, s) => sum + s.points, 0);
+}
+
+/** Approved SERVICE HOURS (service-type submissions only). */
+export function approvedServiceHours(submissions: Submission[]): number {
+  return submissions
+    .filter((s) => s.status === "approved" && s.type === "service_hours")
+    .reduce((sum, s) => sum + (s.hours ?? 0), 0);
 }
 
 export function pendingCount(submissions: Submission[]): number {

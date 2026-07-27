@@ -215,8 +215,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const requestMagicLink = useCallback(
     async (email: string, membership: "active" | "pledge" = "active") => {
       const address = email.trim().toLowerCase();
-      if (!address.endsWith(RUTGERS_DOMAIN)) {
-        throw new Error("Enter your @rutgers.edu email.");
+      // Any well-formed email may request a link; the roster allowlist (and the
+      // Supabase signup trigger) decide who can actually complete sign-in. This
+      // lets @gmail.com (officers) and chapter-domain addresses in, not just
+      // @rutgers.edu. Pledges have no real inbox, so they use password sign-in.
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address)) {
+        throw new Error("Enter a valid email address.");
       }
       if (mode === "mock") {
         await mockSignIn(address, membership);
@@ -268,15 +272,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!supabase) throw new Error("Sign-in is unavailable right now.");
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw new Error("Incorrect username/email or password.");
-      // The onAuthStateChange listener also resolves the roster role and sets
-      // the user (or fails closed if the account isn't on the roster).
       const member = await lookupMember(email);
       if (!member) throw new Error(NOT_ON_ROSTER_MESSAGE);
-      return {
+      const nextUser: ChapterUser = {
         email: member.email,
         name: member.fullName || deriveName(member.email),
         role: member.role,
       };
+      // Set the user synchronously so the portal doesn't bounce us back to the
+      // sign-in page before the async onAuthStateChange listener catches up.
+      // (That listener still fires and re-resolves the same user - harmless.)
+      setUser(nextUser);
+      return nextUser;
     },
     [mode]
   );

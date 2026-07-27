@@ -10,7 +10,7 @@
  *
  * Bump CACHE_VERSION whenever the precache list changes to force an update.
  */
-const CACHE_VERSION = "akpsi-v3";
+const CACHE_VERSION = "akpsi-v4";
 const PRECACHE = [
   "/",
   "/offline/",

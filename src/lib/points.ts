@@ -1,85 +1,35 @@
 /**
- * Points / service-hours configuration.
+ * Points & service-hours requirements.
  *
- * ⚠️ PLACEHOLDER VALUES - the chapter (VP Ops) must confirm the real categories,
- * point values, and per-role requirements. Everything below is a reasonable
- * default so the submission + points UI is fully functional today; changing a
- * number here changes it everywhere (the submit form, the points math, and the
- * "outstanding" calculation). No backend change is needed to edit these.
+ * Points and service hours are two SEPARATE tallies (see db/submissions.sql):
+ *  - Points come from the VP-Ops event catalog (src/lib/events.ts). The value of
+ *    a submission is decided server-side by the event, so there is no per-category
+ *    math here anymore.
+ *  - Service hours are logged free-form and counted as hours.
+ *
+ * ⚠️ The REQUIREMENT numbers below are PLACEHOLDERS - the chapter (VP Ops) must
+ * confirm the real per-semester requirements. Changing them here updates the
+ * progress meters on the Points page.
  */
 
-export type SubmissionKind = "service_hours" | "points";
-
-export interface PointCategory {
-  id: string;
-  label: string;
-  kind: SubmissionKind;
-  /**
-   * For `points` categories: points awarded per approved submission.
-   * For `service_hours` categories: points awarded per hour submitted.
-   */
-  pointsPer: number;
-  /** Short helper shown under the field in the submit form. */
-  hint?: string;
-}
-
-export const POINT_CATEGORIES: PointCategory[] = [
-  {
-    id: "service",
-    label: "Service / Volunteer Hours",
-    kind: "service_hours",
-    pointsPer: 1,
-    hint: "Enter the number of hours. Attach a photo as proof.",
-  },
-  {
-    id: "professional",
-    label: "Professional Event",
-    kind: "points",
-    pointsPer: 2,
-    hint: "Workshops, info sessions, networking nights.",
-  },
-  {
-    id: "social",
-    label: "Social / Brotherhood Event",
-    kind: "points",
-    pointsPer: 1,
-    hint: "Chapter socials, retreats, brotherhood events.",
-  },
-  {
-    id: "fundraising",
-    label: "Fundraising (RUDM, philanthropy)",
-    kind: "points",
-    pointsPer: 2,
-    hint: "Dance Marathon, donation drives, philanthropy.",
-  },
-];
-
-export function getCategory(id: string): PointCategory | undefined {
-  return POINT_CATEGORIES.find((c) => c.id === id);
-}
-
-/**
- * Points required per membership status. "brother" covers active/board/etc.;
- * pledges have their own (usually higher) requirement. PLACEHOLDER numbers.
- */
+/** Points required per membership status. "brother" covers active/board/etc. */
 export const POINT_REQUIREMENTS = {
   pledge: 30,
   brother: 20,
 } as const;
 
-export function requirementFor(role: string): number {
+/** Service hours required per membership status. */
+export const SERVICE_HOUR_REQUIREMENTS = {
+  pledge: 10,
+  brother: 8,
+} as const;
+
+export function pointsRequiredFor(role: string): number {
   return role === "pledge" ? POINT_REQUIREMENTS.pledge : POINT_REQUIREMENTS.brother;
 }
 
-/**
- * Points a single submission is worth, given its category and (for service
- * hours) the number of hours.
- */
-export function pointsForSubmission(categoryId: string, hours: number | null): number {
-  const cat = getCategory(categoryId);
-  if (!cat) return 0;
-  if (cat.kind === "service_hours") {
-    return Math.max(0, (hours ?? 0) * cat.pointsPer);
-  }
-  return cat.pointsPer;
+export function serviceHoursRequiredFor(role: string): number {
+  return role === "pledge"
+    ? SERVICE_HOUR_REQUIREMENTS.pledge
+    : SERVICE_HOUR_REQUIREMENTS.brother;
 }

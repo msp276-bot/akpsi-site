@@ -16,16 +16,20 @@
 --  the members table defined here is the one the app actually uses today.)
 
 -- 1) Roster table -----------------------------------------------------------
--- Allowed addresses: brothers use @rutgers.edu; pledges use a synthetic
--- username account @pledge.rutgersakpsi.org; chapter positions (e.g. VP Ops)
--- use @rutgersakpsi.org. Keep these three domains in sync with
--- ALLOWED_ROSTER_DOMAINS in src/lib/roles.ts.
+-- Allowed addresses: brothers use @rutgers.edu or @gmail.com; pledges use a
+-- synthetic username account @pledge.rutgersakpsi.org; chapter positions
+-- (e.g. VP Ops) use @rutgersakpsi.org. Keep these domains in sync with
+-- ALLOWED_ROSTER_DOMAINS in src/lib/roles.ts. NOTE: this domain check is a
+-- convention guard, not the security boundary - roster membership + the signup
+-- allowlist trigger (section 4) are what actually gate who can sign in, so a
+-- random @gmail.com still can't log in unless it is added to this table.
 create table if not exists public.members (
   email       text primary key
               check (email = lower(email) and (
                 email like '%@rutgers.edu'
                 or email like '%@pledge.rutgersakpsi.org'
                 or email like '%@rutgersakpsi.org'
+                or email like '%@gmail.com'
               )),
   full_name   text not null default '',
   role        text not null default 'active'
@@ -34,6 +38,20 @@ create table if not exists public.members (
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
+
+-- Re-sync the email domain check even if the table was created by an earlier run
+-- (create table if not exists leaves an existing constraint untouched). Idempotent.
+do $$
+begin
+  alter table public.members drop constraint if exists members_email_check;
+  alter table public.members add constraint members_email_check
+    check (email = lower(email) and (
+      email like '%@rutgers.edu'
+      or email like '%@pledge.rutgersakpsi.org'
+      or email like '%@rutgersakpsi.org'
+      or email like '%@gmail.com'
+    ));
+end $$;
 
 -- 2) Helper: does the current signed-in user have role-management rights? ----
 -- Reads the caller's email from their auth JWT and checks their roster role.
@@ -94,6 +112,43 @@ $$;
 drop trigger if exists members_touch on public.members;
 create trigger members_touch before update on public.members
   for each row execute function public.members_touch_updated_at();
+
+-- 3b) Lockout guard ---------------------------------------------------------
+-- Managing roles is restricted to president/admin. If the LAST such account is
+-- deleted or demoted, nobody can ever grant the role again from the website
+-- (recovery would need the SQL editor / service role). Block that.
+create or replace function public.prevent_last_manager_lockout()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  other_managers int;
+begin
+  select count(*) into other_managers
+    from public.members
+    where role in ('president','admin') and email <> old.email;
+
+  if tg_op = 'DELETE' then
+    if old.role in ('president','admin') and other_managers = 0 then
+      raise exception
+        'Cannot remove the last president/admin - it would lock everyone out of role management.';
+    end if;
+    return old;
+  end if;
+
+  -- UPDATE: only a demotion of the last manager is a problem.
+  if old.role in ('president','admin')
+     and new.role not in ('president','admin')
+     and other_managers = 0 then
+    raise exception
+      'Cannot demote the last president/admin - it would lock everyone out of role management.';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists members_prevent_lockout on public.members;
+create trigger members_prevent_lockout
+  before update or delete on public.members
+  for each row execute function public.prevent_last_manager_lockout();
 
 -- 4) Login allowlist --------------------------------------------------------
 -- Reject any sign-up whose email is not already on the roster. This fires when

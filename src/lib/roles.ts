@@ -56,8 +56,19 @@ const MOCK_KEY = "akpsi.ot.roster";
 export const PLEDGE_EMAIL_DOMAIN = "pledge.rutgersakpsi.org";
 export const CHAPTER_EMAIL_DOMAIN = "rutgersakpsi.org";
 
-/** Domains a roster address may use (brothers are @rutgers.edu; pledges + positions are provisioned). */
-const ALLOWED_ROSTER_DOMAINS = ["rutgers.edu", PLEDGE_EMAIL_DOMAIN, CHAPTER_EMAIL_DOMAIN];
+/**
+ * Domains a roster address may use. Brothers are @rutgers.edu or @gmail.com;
+ * pledges + chapter positions are provisioned under the two chapter domains.
+ * Must stay in sync with the members_email_check constraint in
+ * db/supabase-roles.sql. This is a convention guard, not a security boundary -
+ * only addresses actually on the roster can sign in.
+ */
+const ALLOWED_ROSTER_DOMAINS = [
+  "rutgers.edu",
+  "gmail.com",
+  PLEDGE_EMAIL_DOMAIN,
+  CHAPTER_EMAIL_DOMAIN,
+];
 
 export function pledgeUsernameToEmail(username: string): string {
   return `${username.trim().toLowerCase()}@${PLEDGE_EMAIL_DOMAIN}`;
@@ -170,7 +181,7 @@ export async function upsertMember(input: {
   const domain = email.split("@")[1] ?? "";
   if (!ALLOWED_ROSTER_DOMAINS.includes(domain)) {
     throw new Error(
-      "Roster addresses must be @rutgers.edu (brothers), a pledge username account, or a chapter position account."
+      "Roster addresses must be @rutgers.edu or @gmail.com (brothers), a pledge username account, or a chapter position account."
     );
   }
   const record: MemberRecord = {

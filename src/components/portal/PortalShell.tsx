@@ -12,6 +12,7 @@ import {
   LogOut,
   ClipboardList,
   ClipboardCheck,
+  CalendarPlus,
   Award,
   ShieldCheck,
   Bell,
@@ -39,6 +40,13 @@ const NAV = [
     href: "/portal/review",
     Icon: ClipboardCheck,
     // VP Ops / e-board approve or deny submissions.
+    permission: "submissions:review" as const,
+  },
+  {
+    label: "Point Events",
+    href: "/portal/point-events",
+    Icon: CalendarPlus,
+    // VP Ops / e-board create the events brothers submit for points.
     permission: "submissions:review" as const,
   },
   {

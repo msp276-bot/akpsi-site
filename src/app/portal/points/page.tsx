@@ -1,22 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Upload, X, Award, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Upload, X, Award, Clock, CheckCircle2, XCircle, HeartHandshake } from "lucide-react";
 import PortalShell from "@/components/portal/PortalShell";
 import { useAuth } from "@/context/AuthContext";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import {
-  POINT_CATEGORIES,
-  getCategory,
-  requirementFor,
-  pointsForSubmission,
-} from "@/lib/points";
+import { pointsRequiredFor, serviceHoursRequiredFor } from "@/lib/points";
+import { listActiveEvents, type PointEvent } from "@/lib/events";
 import {
   createSubmission,
   listMySubmissions,
   approvedPoints,
+  approvedServiceHours,
   type Submission,
   type SubmissionStatus,
+  type SubmissionType,
 } from "@/lib/submissions";
 
 const STATUS_META: Record<
@@ -37,14 +35,54 @@ function StatusBadge({ status }: { status: SubmissionStatus }) {
   );
 }
 
+function SummaryCard({
+  label,
+  earned,
+  required,
+  unit,
+  accent,
+}: {
+  label: string;
+  earned: number;
+  required: number;
+  unit: string;
+  accent: "gold" | "navy";
+}) {
+  const outstanding = Math.max(0, required - earned);
+  const pct = required > 0 ? Math.min(100, Math.round((earned / required) * 100)) : 0;
+  return (
+    <div className="rounded-2xl border border-line bg-white p-5">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</p>
+      <div className="mt-1 flex items-end justify-between">
+        <p className="text-3xl font-bold text-navy">
+          {earned}
+          <span className="text-base font-medium text-muted"> / {required}</span>
+        </p>
+        <p className="text-sm text-muted">{pct}%</p>
+      </div>
+      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+        <div
+          className={`h-full rounded-full ${accent === "gold" ? "bg-gold" : "bg-navy"}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="mt-2 text-xs text-muted">
+        {outstanding > 0 ? `${outstanding} ${unit} to go` : `Requirement met 🎉`}
+      </p>
+    </div>
+  );
+}
+
 function PointsBody() {
   const { user } = useAuth();
 
   const [mine, setMine] = useState<Submission[]>([]);
+  const [events, setEvents] = useState<PointEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [categoryId, setCategoryId] = useState(POINT_CATEGORIES[0].id);
-  const [eventDescription, setEventDescription] = useState("");
+  const [type, setType] = useState<SubmissionType>("points");
+  const [eventId, setEventId] = useState<string>("");
+  const [note, setNote] = useState("");
   const [hours, setHours] = useState("");
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -52,18 +90,23 @@ function PointsBody() {
   const [justSubmitted, setJustSubmitted] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
-  const category = getCategory(categoryId);
-  const isService = category?.kind === "service_hours";
+  const selectedEvent = events.find((e) => e.id === eventId) ?? null;
 
   useEffect(() => {
     let active = true;
     (async () => {
       if (!user) return;
       try {
-        const rows = await listMySubmissions(user.email);
-        if (active) setMine(rows);
+        const [rows, evts] = await Promise.all([
+          listMySubmissions(user.email),
+          listActiveEvents(),
+        ]);
+        if (!active) return;
+        setMine(rows);
+        setEvents(evts);
+        setEventId((id) => id || evts[0]?.id || "");
       } catch {
-        /* leave the list as-is */
+        /* leave as-is */
       } finally {
         if (active) setLoading(false);
       }
@@ -78,13 +121,19 @@ function PointsBody() {
     if (!user) return;
     setError(null);
 
-    if (!eventDescription.trim()) {
-      setError("Add a short description of the event.");
+    if (type === "points" && !selectedEvent) {
+      setError("Pick an event from the list.");
       return;
     }
-    if (isService && (!hours || Number(hours) <= 0)) {
-      setError("Enter how many hours you completed.");
-      return;
+    if (type === "service_hours") {
+      if (!note.trim()) {
+        setError("Say where you volunteered and what you did.");
+        return;
+      }
+      if (!hours || Number(hours) <= 0) {
+        setError("Enter how many hours you completed.");
+        return;
+      }
     }
     if (!proofFile) {
       setError("Attach a photo as proof.");
@@ -96,12 +145,15 @@ function PointsBody() {
       await createSubmission({
         submitterEmail: user.email,
         submitterName: user.name,
-        categoryId,
-        eventDescription,
-        hours: isService ? Number(hours) : null,
+        type,
+        eventId: type === "points" ? selectedEvent!.id : null,
+        eventTitle: type === "points" ? selectedEvent!.title : null,
+        pointsValue: type === "points" ? selectedEvent!.pointsValue : 0,
+        eventDescription: note,
+        hours: type === "service_hours" ? Number(hours) : null,
         proofFile,
       });
-      setEventDescription("");
+      setNote("");
       setHours("");
       setProofFile(null);
       setJustSubmitted(true);
@@ -116,18 +168,15 @@ function PointsBody() {
 
   if (!user) return null;
 
-  const earned = approvedPoints(mine);
-  const required = requirementFor(user.role);
-  const outstanding = Math.max(0, required - earned);
-  const pct = required > 0 ? Math.min(100, Math.round((earned / required) * 100)) : 0;
-  const previewPoints = pointsForSubmission(categoryId, isService ? Number(hours) || 0 : null);
+  const earnedPoints = approvedPoints(mine);
+  const earnedHours = approvedServiceHours(mine);
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="headline text-3xl uppercase text-navy">My Points</h1>
+        <h1 className="headline text-3xl uppercase text-navy">My Points &amp; Hours</h1>
         <p className="mt-1 text-sm text-muted">
-          Submit service hours and brother points, and track approvals.
+          Submit chapter-event points and service hours, and track approvals.
         </p>
       </div>
 
@@ -139,32 +188,49 @@ function PointsBody() {
         </div>
       )}
 
-      {/* Points summary */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-line bg-white p-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Approved</p>
-          <p className="mt-1 text-3xl font-bold text-navy">{earned}</p>
-          <p className="text-xs text-muted">points earned</p>
-        </div>
-        <div className="rounded-2xl border border-line bg-white p-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Outstanding</p>
-          <p className="mt-1 text-3xl font-bold text-gold">{outstanding}</p>
-          <p className="text-xs text-muted">to reach {required}</p>
-        </div>
-        <div className="rounded-2xl border border-line bg-white p-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Progress</p>
-          <p className="mt-1 text-3xl font-bold text-navy">{pct}%</p>
-          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-            <div className="h-full rounded-full bg-gold" style={{ width: `${pct}%` }} />
-          </div>
-        </div>
+      {/* Two separate tallies */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <SummaryCard
+          label="Points"
+          earned={earnedPoints}
+          required={pointsRequiredFor(user.role)}
+          unit="pts"
+          accent="gold"
+        />
+        <SummaryCard
+          label="Service hours"
+          earned={earnedHours}
+          required={serviceHoursRequiredFor(user.role)}
+          unit="hrs"
+          accent="navy"
+        />
       </div>
 
       {/* Submit form */}
       <form onSubmit={onSubmit} className="rounded-2xl border border-line bg-white p-6">
-        <h2 className="flex items-center gap-2 text-lg font-bold text-navy">
-          <Award size={18} className="text-gold" /> Submit for points
-        </h2>
+        <h2 className="text-lg font-bold text-navy">Submit</h2>
+
+        {/* Type toggle */}
+        <div className="mt-4 inline-flex gap-1 rounded-full bg-slate-100 p-1">
+          <button
+            type="button"
+            onClick={() => setType("points")}
+            className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              type === "points" ? "bg-navy text-white" : "text-ink hover:bg-white"
+            }`}
+          >
+            <Award size={15} /> Event points
+          </button>
+          <button
+            type="button"
+            onClick={() => setType("service_hours")}
+            className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              type === "service_hours" ? "bg-navy text-white" : "text-ink hover:bg-white"
+            }`}
+          >
+            <HeartHandshake size={15} /> Service hours
+          </button>
+        </div>
 
         {error && (
           <div className="mt-4 rounded-lg border border-scarlet/25 bg-scarlet/5 p-3 text-sm text-scarlet">
@@ -177,22 +243,54 @@ function PointsBody() {
           </div>
         )}
 
-        <div className="mt-5 grid gap-5 sm:grid-cols-2">
-          <label className="block">
-            <span className="text-sm font-medium text-ink">Category</span>
-            <select
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink focus:border-navy focus:outline-none"
-            >
-              {POINT_CATEGORIES.map((c) => (
-                <option key={c.id} value={c.id}>{c.label}</option>
-              ))}
-            </select>
-            {category?.hint && <span className="mt-1 block text-xs text-muted">{category.hint}</span>}
-          </label>
-
-          {isService && (
+        {type === "points" ? (
+          <div className="mt-5 space-y-5">
+            <label className="block">
+              <span className="text-sm font-medium text-ink">Event</span>
+              {events.length === 0 ? (
+                <p className="mt-1 rounded-lg border border-line bg-slate-50 px-3 py-2.5 text-sm text-muted">
+                  No events available yet. Ask VP Ops to add one.
+                </p>
+              ) : (
+                <select
+                  value={eventId}
+                  onChange={(e) => setEventId(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink focus:border-navy focus:outline-none"
+                >
+                  {events.map((ev) => (
+                    <option key={ev.id} value={ev.id}>
+                      {ev.title} — {ev.pointsValue} pt{ev.pointsValue === 1 ? "" : "s"}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {selectedEvent?.description && (
+                <span className="mt-1 block text-xs text-muted">{selectedEvent.description}</span>
+              )}
+            </label>
+            <label className="block">
+              <span className="text-sm font-medium text-ink">Note <span className="text-muted">(optional)</span></span>
+              <input
+                type="text"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink focus:border-navy focus:outline-none"
+                placeholder="Anything the reviewer should know"
+              />
+            </label>
+          </div>
+        ) : (
+          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+            <label className="block sm:col-span-2">
+              <span className="text-sm font-medium text-ink">Where &amp; what</span>
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={2}
+                className="mt-1 w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink focus:border-navy focus:outline-none"
+                placeholder="e.g. Food bank at St. Peter's — sorted donations"
+              />
+            </label>
             <label className="block">
               <span className="text-sm font-medium text-ink">Hours</span>
               <input
@@ -205,19 +303,8 @@ function PointsBody() {
                 placeholder="e.g. 3"
               />
             </label>
-          )}
-        </div>
-
-        <label className="mt-5 block">
-          <span className="text-sm font-medium text-ink">Event description</span>
-          <textarea
-            value={eventDescription}
-            onChange={(e) => setEventDescription(e.target.value)}
-            rows={3}
-            className="mt-1 w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink focus:border-navy focus:outline-none"
-            placeholder="What was the event? When and where?"
-          />
-        </label>
+          </div>
+        )}
 
         {/* Proof upload */}
         <div className="mt-5">
@@ -244,11 +331,17 @@ function PointsBody() {
 
         <div className="mt-6 flex items-center justify-between">
           <span className="text-sm text-muted">
-            Worth <strong className="text-navy">{previewPoints}</strong> point{previewPoints === 1 ? "" : "s"} if approved
+            {type === "points"
+              ? selectedEvent
+                ? <>Worth <strong className="text-navy">{selectedEvent.pointsValue}</strong> point{selectedEvent.pointsValue === 1 ? "" : "s"} if approved</>
+                : "Pick an event"
+              : hours
+                ? <>Logs <strong className="text-navy">{Number(hours) || 0}</strong> service hour{Number(hours) === 1 ? "" : "s"} if approved</>
+                : "Enter your hours"}
           </span>
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || (type === "points" && events.length === 0)}
             className="inline-flex items-center justify-center rounded-full bg-gold px-6 py-2.5 text-sm font-semibold text-navy transition-colors hover:bg-gold-soft disabled:opacity-60"
           >
             {submitting ? "Submitting…" : "Submit"}
@@ -269,17 +362,23 @@ function PointsBody() {
               <li key={s.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-white p-4">
                 <div className="min-w-0 flex-1 basis-64">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-navy">{getCategory(s.categoryId)?.label ?? s.categoryId}</span>
+                    <span className="font-medium text-navy">
+                      {s.type === "points" ? s.eventTitle ?? "Event" : "Service hours"}
+                    </span>
                     <StatusBadge status={s.status} />
                   </div>
-                  <p className="mt-0.5 line-clamp-2 text-sm text-muted">{s.eventDescription}</p>
+                  {s.eventDescription && (
+                    <p className="mt-0.5 line-clamp-2 text-sm text-muted">{s.eventDescription}</p>
+                  )}
                 </div>
                 {s.proof && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={s.proof} alt="Proof" className="h-12 w-12 shrink-0 rounded-lg object-cover" />
                 )}
                 <span className="shrink-0 text-sm font-semibold text-navy">
-                  {s.points} pt{s.points === 1 ? "" : "s"}
+                  {s.type === "points"
+                    ? `${s.points} pt${s.points === 1 ? "" : "s"}`
+                    : `${s.hours ?? 0} hr${s.hours === 1 ? "" : "s"}`}
                 </span>
               </li>
             ))}

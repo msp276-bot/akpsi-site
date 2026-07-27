@@ -218,9 +218,10 @@ function RealSignIn() {
         Member sign-in
       </h1>
       <p className="mt-3 text-center text-sm leading-relaxed text-muted">
-        Sign in with your{" "}
-        <span className="font-medium text-ink">@rutgers.edu</span> account to
-        reach chapter events, documents, the directory, and announcements.
+        Sign in with your chapter account to reach events, documents, the
+        directory, and announcements. Pledges and positions use{" "}
+        <span className="font-medium text-ink">Pledge or position login</span>{" "}
+        below.
       </p>
 
       {error && (

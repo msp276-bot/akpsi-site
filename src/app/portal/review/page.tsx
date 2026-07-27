@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ClipboardCheck, Check, X } from "lucide-react";
+import { ClipboardCheck, Check, X, RotateCcw } from "lucide-react";
 import PortalShell from "@/components/portal/PortalShell";
 import { useAuth } from "@/context/AuthContext";
 import { hasPermission } from "@/lib/access";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import { getCategory } from "@/lib/points";
 import {
   listAllSubmissions,
   reviewSubmission,
+  reopenSubmission,
   pendingCount,
   type Submission,
   type SubmissionStatus,
@@ -52,7 +52,19 @@ function ReviewBody() {
       await reviewSubmission(id, status, user.email);
       setReloadKey((k) => k + 1);
     } catch {
-      /* ignore; the row simply stays pending */
+      /* ignore; the row simply keeps its status */
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function reopen(id: string) {
+    setBusyId(id);
+    try {
+      await reopenSubmission(id);
+      setReloadKey((k) => k + 1);
+    } catch {
+      /* ignore */
     } finally {
       setBusyId(null);
     }
@@ -115,56 +127,75 @@ function ReviewBody() {
         </div>
       ) : (
         <ul className="space-y-3">
-          {visible.map((s) => (
-            <li key={s.id} className="flex flex-wrap items-start gap-4 rounded-2xl border border-line bg-white p-4">
-              {s.proof ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={s.proof} alt="Proof" className="h-20 w-20 shrink-0 rounded-lg object-cover" />
-              ) : (
-                <div className="grid h-20 w-20 shrink-0 place-items-center rounded-lg bg-slate-100 text-xs text-muted">
-                  No photo
+          {visible.map((s) => {
+            const isService = s.type === "service_hours";
+            const busy = busyId === s.id;
+            return (
+              <li key={s.id} className="flex flex-wrap items-start gap-4 rounded-2xl border border-line bg-white p-4">
+                {s.proof ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={s.proof} alt="Proof" className="h-20 w-20 shrink-0 rounded-lg object-cover" />
+                ) : (
+                  <div className="grid h-20 w-20 shrink-0 place-items-center rounded-lg bg-slate-100 text-xs text-muted">
+                    No photo
+                  </div>
+                )}
+                <div className="min-w-0 flex-1 basis-56">
+                  <p className="font-semibold text-navy">{s.submitterName}</p>
+                  <p className="text-xs text-muted">{s.submitterEmail}</p>
+                  <p className="mt-1 text-sm text-ink">
+                    <span className="font-medium">
+                      {isService ? "Service hours" : s.eventTitle ?? "Event"}
+                    </span>
+                    {isService
+                      ? <> · {s.hours ?? 0} hr{s.hours === 1 ? "" : "s"}</>
+                      : <> · {s.points} pt{s.points === 1 ? "" : "s"}</>}
+                  </p>
+                  {s.eventDescription && <p className="mt-1 text-sm text-muted">{s.eventDescription}</p>}
                 </div>
-              )}
-              <div className="min-w-0 flex-1 basis-56">
-                <p className="font-semibold text-navy">{s.submitterName}</p>
-                <p className="text-xs text-muted">{s.submitterEmail}</p>
-                <p className="mt-1 text-sm text-ink">
-                  <span className="font-medium">{getCategory(s.categoryId)?.label ?? s.categoryId}</span>
-                  {s.hours != null && <> · {s.hours} hrs</>} · {s.points} pt{s.points === 1 ? "" : "s"}
-                </p>
-                <p className="mt-1 text-sm text-muted">{s.eventDescription}</p>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                {s.status === "pending" ? (
-                  <>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  {s.status !== "pending" && (
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                        s.status === "approved" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
+                      }`}
+                    >
+                      {s.status === "approved" ? <Check size={13} /> : <X size={13} />}
+                      {s.status === "approved" ? "Approved" : "Denied"}
+                    </span>
+                  )}
+                  {s.status !== "approved" && (
                     <button
                       onClick={() => decide(s.id, "approved")}
-                      disabled={busyId === s.id}
+                      disabled={busy}
                       className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-60"
                     >
                       <Check size={15} /> Approve
                     </button>
+                  )}
+                  {s.status !== "denied" && (
                     <button
                       onClick={() => decide(s.id, "denied")}
-                      disabled={busyId === s.id}
+                      disabled={busy}
                       className="inline-flex items-center gap-1 rounded-full border border-line px-3 py-2 text-sm font-semibold text-scarlet transition-colors hover:bg-rose-50 disabled:opacity-60"
                     >
                       <X size={15} /> Deny
                     </button>
-                  </>
-                ) : (
-                  <span
-                    className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                      s.status === "approved" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
-                    }`}
-                  >
-                    {s.status === "approved" ? <Check size={13} /> : <X size={13} />}
-                    {s.status === "approved" ? "Approved" : "Denied"}
-                  </span>
-                )}
-              </div>
-            </li>
-          ))}
+                  )}
+                  {s.status !== "pending" && (
+                    <button
+                      onClick={() => reopen(s.id)}
+                      disabled={busy}
+                      title="Send back to pending"
+                      className="inline-flex items-center gap-1 rounded-full border border-line px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-slate-50 disabled:opacity-60"
+                    >
+                      <RotateCcw size={15} /> Reopen
+                    </button>
+                  )}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
