@@ -142,7 +142,13 @@ and the chapter domain (`@rutgersakpsi.org`) — keep in sync with
 roster + signup trigger are). A `members_prevent_lockout` trigger blocks deleting
 or demoting the **last** president/admin (would otherwise lock role management).
 The file is idempotent (re-syncs the email `check` via a `do $$` block, so
-re-running fixes an already-created table).
+re-running fixes an already-created table). The bootstrap **seed** now inserts the
+chapter's REAL manager gmail accounts (`akpsipresident2024@gmail.com` president,
+`akpsitech2024@gmail.com` admin), not placeholders — so re-runs are a no-op and
+never recreate phantom rows. Earlier runs seeded placeholder
+`president@rutgers.edu` / `tech@rutgers.edu`; if those still exist as duplicates,
+delete them once: `delete from public.members where email in
+('president@rutgers.edu','tech@rutgers.edu');`.
 
 ### 4b. `point_events` + `submissions` — `db/submissions.sql` (run after supabase-roles.sql)
 Two SEPARATE tallies (never converted): **points** come from a VP-Ops catalog;
@@ -196,8 +202,9 @@ president/admin (or the service-role Edge Function) read all.
 
 ### 4d. Public member record — `src/data/members.ts`
 No `email` field (privacy). `slug = slugify(name)`; photo path
-`/members/<slug>.jpg`. **~55 members after de-duping**; 40 now have real
-headshots (board fully covered). Board = President → EVP → VPs.
+`/members/<slug>.jpg`. **59 members after de-duping**; **57 now have real
+headshots** (all but 2 — board + nearly all actives/alumni covered). Board =
+President → EVP → VPs.
 ```ts
 export interface Member {
   id: string; slug: string; name: string; position: string;
@@ -249,8 +256,9 @@ export function pledgeUsernameToEmail(u: string) { return `${u.trim().toLowerCas
   - **Magic link** (`requestMagicLink`) now accepts **any well-formed email**
     (was `@rutgers.edu`-only), so gmail officers + chapter-domain addresses can
     request a link; the roster allowlist is still the gate. Pledges have no real
-    inbox → they use password sign-in. Google OAuth unchanged (still hints
-    `hd:rutgers.edu`).
+    inbox → they use password sign-in. **Google OAuth no longer sends
+    `hd:rutgers.edu`** (removed so @gmail.com officer accounts show in the Google
+    picker); the roster allowlist still decides who actually gets in.
   - **SERVICE-WORKER GOTCHA that looked like a broken login:** `public/sw.js`
     caches static assets **cache-first**, so after a deploy the browser can serve
     stale JS with old auth logic → the login loop reappears even after the code
@@ -351,7 +359,7 @@ hero scrolls out (dissolve into navy, §7) — no drift, no zoom.
 `src/data/members.ts`. Board is the first/default tab (`TABS=["board","actives",
 "alumni"]`); the "Members" tab includes board members. `MemberCard` renders
 `member.photo` via `object-cover` in an `aspect-[3/4]` tile, monogram fallback
-otherwise. 40 members have `/members/<slug>.jpg` headshots.
+otherwise. 57 members have `/members/<slug>.jpg` headshots.
 
 ### 5.6 "Our Network" logo wall — `src/components/about/LogoMarquee.tsx`
 Three infinite marquee rows on the brand-blue band, **no company repeated across
@@ -386,7 +394,7 @@ VAPID private key). Push is built but **dormant** until `NEXT_PUBLIC_VAPID_PUBLI
 - **Section headers redesigned + reveal fixed** (kicker + title + gold bar).
 - **Parallax** on all four photo backdrops (`bg-fixed`); About/Media framed
   higher via `background-position`; hero video dissolves into navy.
-- **Members**: Board-first tab; **40 real headshots** wired; Abhinav +
+- **Members**: Board-first tab; **57 real headshots** wired; Abhinav +
   Oluwatomisin de-duped.
 - **Supabase is LIVE** (project ref `iagcpczxmfwrezrllewn`). The portal runs on
   the real backend locally via `.env.local` (gitignored; anon key only). Roster
@@ -396,10 +404,16 @@ VAPID private key). Push is built but **dormant** until `NEXT_PUBLIC_VAPID_PUBLI
   Reopen/undo. Server-side scoring + immutable-review triggers. Verified against
   live Supabase.
 - **Login-loop fixes**: synchronous `setUser` in password sign-in; magic link
-  accepts any email (gmail officers); SW `CACHE_VERSION` bumped to `akpsi-v4`.
+  accepts any email (gmail officers); Google OAuth `hd=rutgers.edu` hint dropped
+  (gmail officers can sign in); SW `CACHE_VERSION` bumped to `akpsi-v4`.
+- **Standings** page (`/portal/standings`, reviewers): every member's approved
+  points + service hours, searchable, expandable — for VP Ops to keep tabs.
+- **Roster domains**: any `*.rutgers.edu` (scarletmail) + gmail now allowed.
+- **Deploy**: live on **Vercel** (auto-deploys from `main`); env vars set there.
+- **Headshots**: 57 of 59 members wired (added 16 this round).
 - **Pledge + VP-Ops logins** (username/password / position email).
 - PWA live; push built but dormant.
-- Build clean: 83 routes + ~55 member pages; tsc + eslint clean (one known
+- Build clean: 84 routes + ~59 member pages; tsc + eslint clean (one known
   pre-existing Hero warning).
 
 ---
@@ -442,7 +456,7 @@ reference / re-provisioning:
 in code + SQL is ready; hand me env values or run the runbook and I'll verify.*
 
 ### 7b. Member photos — DONE, with follow-ups
-40 headshots wired. Remaining: members without a headshot render a monogram
+57 headshots wired (all but 2). Remaining: members without a headshot render a monogram
 (fine). If `Olivia Occhipinti` is a real member, add her to `members.ts` and drop
 `olivia-occhipinti.jpg` (re-run the sips convert). If more headshots arrive, run
 the same pipeline: `sips -s format jpeg -s formatOptions 82 -Z 900 "<file>"
@@ -503,14 +517,16 @@ asked; history commits directly to `main`; end commit messages with
 | `src/components/anim/ParallaxImage.tsx` | `bg-fixed` photo backdrops |
 | `src/components/ui/SectionHeader.tsx` | Kicker + title + gold bar (reveal fixed) |
 | `src/components/sections/Hero.tsx` | Video hero + navy-dissolve on scroll |
-| `src/data/members.ts` | Roster (40 headshots wired) |
+| `src/data/members.ts` | Roster (57 headshots wired) |
 | `src/components/members/*` | Directory, card, section |
 | `src/components/about/LogoMarquee.tsx` | 3-row "Our Network" wall |
 | `public/members/<slug>.jpg` | Member headshots (sips-processed) |
 | `docs/supabase-setup.md` / `pwa-push-setup.md` | Setup runbooks |
 
-**Git:** branch `main` on `github.com/msp276-bot/akpsi-site`. Recent:
-latest — Supabase live + points/events/hours v2 + RLS hardening + login-loop
-fixes (this handoff); `cf85d45` allow pledge/position domains, document
-submissions; `f07c288` parallax + submissions/points portal + pledge/position
-logins.
+**Git:** branch `main` on `github.com/msp276-bot/akpsi-site`. Recent (newest
+first): `fc9c653` +16 member headshots (41→57); `5c448fb` seed real manager
+emails (stop placeholder duplicates); `8f4b258` allow rutgers.edu subdomains
+(scarletmail) + e-board Standings view; `49468a3` drop `hd=rutgers.edu` so gmail
+officers can use Google sign-in; `ce248ac` docs: Vercel is the deploy target;
+`4329de3` event-based points + separate service hours + RLS hardening + login
+fixes.
