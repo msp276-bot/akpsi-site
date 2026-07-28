@@ -28,10 +28,15 @@ export default function ScrollParallaxImage({
   className = "",
   position = "center",
   strength = 0.12,
+  focusY = 0,
 }: {
   src: string;
   className?: string;
-  /** background-position, e.g. "center", "center 32%". */
+  /**
+   * background-position, e.g. "center", "center 32%". Note: only affects the
+   * axis that actually overflows - a wide hero over a wider-than-tall image
+   * crops horizontally, so use `focusY` (not this) to move it vertically there.
+   */
   position?: string;
   /**
    * Drift as a fraction of the image layer's own height, each direction.
@@ -39,6 +44,13 @@ export default function ScrollParallaxImage({
    * always covers the travel.
    */
   strength?: number;
+  /**
+   * Resting vertical bias, in percent of the layer's own height. Positive lifts
+   * the framing down so the subjects sit lower; 0 (default) keeps the original
+   * centered framing. When non-zero the layer is oversized further so the bias
+   * plus the parallax travel never exposes an edge.
+   */
+  focusY?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   // These heroes sit at the very top of the page, so map the parallax to the
@@ -50,11 +62,18 @@ export default function ScrollParallaxImage({
     offset: ["start start", "end start"],
   });
 
-  // Layer is 150% of the section tall, centered (top -25%), so there is 25% of
-  // headroom above and below. Travel of `pct` of the layer's own height stays
-  // inside that headroom as long as pct * 1.5 <= 0.25 -> pct <= 0.166.
+  // Default layer is 150% of the section tall, centered (top -25%). When a
+  // vertical bias is requested we oversize to 200% (top -50%) so the bias plus
+  // the parallax travel (|bias| + pct*100 <= 25% of the layer) stays covered.
   const pct = Math.max(0, Math.min(strength, 0.16));
-  const y = useTransform(scrollYProgress, [0, 1], [`-${pct * 100}%`, `${pct * 100}%`]);
+  const biased = focusY !== 0;
+  const layerTop = biased ? "-50%" : "-25%";
+  const layerHeight = biased ? "200%" : "150%";
+  const y = useTransform(
+    scrollYProgress,
+    [0, 1],
+    [`${focusY - pct * 100}%`, `${focusY + pct * 100}%`]
+  );
 
   return (
     <div
@@ -63,7 +82,7 @@ export default function ScrollParallaxImage({
       className="pointer-events-none absolute inset-0 select-none overflow-hidden"
     >
       <motion.div
-        style={{ y, top: "-25%", height: "150%" }}
+        style={{ y, top: layerTop, height: layerHeight }}
         className="absolute inset-x-0 will-change-transform"
       >
         <div
