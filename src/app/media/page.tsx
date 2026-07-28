@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ArrowUpRight, PlayCircle } from "lucide-react";
-import CoverImage from "@/components/ui/CoverImage";
+import ScrollParallaxImage from "@/components/anim/ScrollParallaxImage";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { InstagramIcon } from "@/components/BrandIcons";
@@ -45,9 +45,10 @@ export default function MediaPage() {
       <main className="flex-1 bg-slate-50">
         {/* Hero */}
         <section className="relative overflow-hidden bg-navy px-5 pb-16 pt-32 sm:px-8">
-          {/* Still chapter photo backdrop: no parallax/zoom, so the framing stays
-              put on scroll and doesn't jump as the window resizes. */}
-          <CoverImage src="/chapter/lecture-hall.jpg" position="center 38%" />
+          {/* Scroll-driven parallax backdrop: drifts as the hero scrolls, but is
+              element-sized and percentage-driven so the framing doesn't re-crop
+              on window resize (works on iOS too, unlike background-fixed). */}
+          <ScrollParallaxImage src="/chapter/lecture-hall.jpg" position="center 38%" />
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 bg-navy/[0.78]"
