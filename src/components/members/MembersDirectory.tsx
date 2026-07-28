@@ -30,7 +30,7 @@ const COHORT_ORDER: Cohort[] = ["Alpha Founding", "Beta Founding", "Alpha Tau"];
 const rosterIndex = new Map(members.map((m, i) => [m.id, i]));
 
 const GRID =
-  "grid grid-cols-2 gap-5 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4";
+  "grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4";
 
 export default function MembersDirectory() {
   const [tab, setTab] = useState<Tab>("board");
