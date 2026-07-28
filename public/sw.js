@@ -3,14 +3,17 @@
  *
  * Two jobs:
  *   1) Offline shell: cache the app shell + visited pages so the site opens
- *      without a connection (network-first for pages, cache-first for assets).
+ *      without a connection. Strategy is NETWORK-FIRST for everything (with a
+ *      cached fallback) so the SW can never serve a stale JS chunk that
+ *      mismatches the current HTML - that mismatch crashes the app (missing
+ *      "module factory") and looks like vanished images + dead navigation.
  *   2) Push notifications: show pushes and focus the app on click. These
  *      handlers stay dormant until a brother subscribes (see src/lib/push.ts)
  *      and the Supabase send-push function is live.
  *
- * Bump CACHE_VERSION whenever the precache list changes to force an update.
+ * Bump CACHE_VERSION on any release to force old caches out.
  */
-const CACHE_VERSION = "akpsi-v5";
+const CACHE_VERSION = "akpsi-v7";
 const PRECACHE = [
   "/",
   "/offline/",
@@ -47,37 +50,26 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return; // let cross-origin (Supabase, Google, IG) pass through
 
-  // Page navigations: network-first, fall back to cache, then the offline page.
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((res) => {
+  // Network-first for EVERYTHING same-origin: when online we always serve the
+  // freshly-built HTML/JS/CSS/assets (so a cached chunk can never mismatch the
+  // live HTML and crash the app), caching each success for offline use. Only
+  // when the network fails do we fall back to the cache, then the offline page.
+  event.respondWith(
+    fetch(request)
+      .then((res) => {
+        if (res && res.ok && res.type === "basic") {
           const copy = res.clone();
           caches.open(CACHE_VERSION).then((c) => c.put(request, copy));
-          return res;
+        }
+        return res;
+      })
+      .catch(() =>
+        caches.match(request).then((cached) => {
+          if (cached) return cached;
+          if (request.mode === "navigate") return caches.match("/offline/");
+          return Response.error();
         })
-        .catch(() =>
-          caches
-            .match(request)
-            .then((cached) => cached || caches.match("/offline/"))
-        )
-    );
-    return;
-  }
-
-  // Static assets: cache-first, then network (and cache the result).
-  event.respondWith(
-    caches.match(request).then(
-      (cached) =>
-        cached ||
-        fetch(request).then((res) => {
-          if (res.ok && res.type === "basic") {
-            const copy = res.clone();
-            caches.open(CACHE_VERSION).then((c) => c.put(request, copy));
-          }
-          return res;
-        })
-    )
+      )
   );
 });
 
