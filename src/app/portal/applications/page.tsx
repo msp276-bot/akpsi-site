@@ -121,59 +121,62 @@ function ApplicationsBoard() {
         <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,22rem)_1fr]">
           {/* Deck */}
           <div>
-            <div className="relative">
-              {/* Prev/Next let you revisit any applicant - nothing disappears. */}
-              <button
-                onClick={() => go(-1)}
-                disabled={safeIndex === 0}
-                className="absolute -left-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-line bg-white text-muted shadow-sm hover:text-navy disabled:opacity-40"
-                aria-label="Previous applicant"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                onClick={() => go(1)}
-                disabled={safeIndex >= deck.length - 1}
-                className="absolute -right-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-line bg-white text-muted shadow-sm hover:text-navy disabled:opacity-40"
-                aria-label="Next applicant"
-              >
-                <ChevronRight size={18} />
-              </button>
-
-              <div className="h-[30rem]">
-                <SwipeCard
-                  key={current.id}
-                  app={current}
-                  decision={decisions[current.id]}
-                  canSwipe={canSwipe}
-                  onDecide={decide}
-                />
-              </div>
+            <div className="relative h-[30rem]">
+              <SwipeCard
+                key={current.id}
+                app={current}
+                decision={decisions[current.id]}
+                canSwipe={canSwipe}
+                onDecide={decide}
+              />
             </div>
 
-            <p className="mt-3 text-center text-xs text-muted">
+            <p className="mt-4 text-center text-xs text-muted">
               {safeIndex + 1} of {deck.length}
             </p>
 
-            {canSwipe ? (
-              <div className="mt-4 flex items-center justify-center gap-4">
-                <button
-                  onClick={() => decide("pass")}
-                  className="grid h-14 w-14 place-items-center rounded-full border-2 border-scarlet/30 bg-white text-scarlet shadow-sm transition-colors hover:bg-scarlet hover:text-white"
-                  aria-label="Pass"
-                >
-                  <X size={24} />
-                </button>
-                <button
-                  onClick={() => decide("keep")}
-                  className="grid h-14 w-14 place-items-center rounded-full border-2 border-green-500/30 bg-white text-green-600 shadow-sm transition-colors hover:bg-green-600 hover:text-white"
-                  aria-label="Keep"
-                >
-                  <Check size={24} />
-                </button>
-              </div>
-            ) : (
-              <p className="mt-4 inline-flex w-full items-center justify-center gap-2 text-xs text-muted">
+            {/* Navigation + decisions in one roomy row - no cramped overlay arrows. */}
+            <div className="mt-3 flex items-center justify-center gap-5">
+              <button
+                onClick={() => go(-1)}
+                disabled={safeIndex === 0}
+                className="grid h-11 w-11 place-items-center rounded-full border border-line bg-white text-muted shadow-sm transition-colors hover:text-navy disabled:opacity-40"
+                aria-label="Previous applicant"
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              {canSwipe && (
+                <>
+                  <button
+                    onClick={() => decide("pass")}
+                    className="grid h-14 w-14 place-items-center rounded-full border-2 border-scarlet/30 bg-white text-scarlet shadow-sm transition-colors hover:bg-scarlet hover:text-white"
+                    aria-label="Pass"
+                  >
+                    <X size={24} />
+                  </button>
+                  <button
+                    onClick={() => decide("keep")}
+                    className="grid h-14 w-14 place-items-center rounded-full border-2 border-green-500/30 bg-white text-green-600 shadow-sm transition-colors hover:bg-green-600 hover:text-white"
+                    aria-label="Keep"
+                  >
+                    <Check size={24} />
+                  </button>
+                </>
+              )}
+
+              <button
+                onClick={() => go(1)}
+                disabled={safeIndex >= deck.length - 1}
+                className="grid h-11 w-11 place-items-center rounded-full border border-line bg-white text-muted shadow-sm transition-colors hover:text-navy disabled:opacity-40"
+                aria-label="Next applicant"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+
+            {!canSwipe && (
+              <p className="mt-3 inline-flex w-full items-center justify-center gap-2 text-xs text-muted">
                 <Lock size={13} /> Only the president can keep or pass applicants.
               </p>
             )}
