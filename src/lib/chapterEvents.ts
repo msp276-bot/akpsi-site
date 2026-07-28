@@ -29,6 +29,13 @@ export interface ChapterEventRecord {
   maxAttendees: number | null;
   requiresRsvp: boolean;
   visibility: Visibility;
+  /**
+   * Manual override for the "going" count. When set, it is shown instead of the
+   * count derived from RSVP rows (e.g. an imported/offline headcount). null =
+   * no override, use the derived count. E-board only (chapter_events is
+   * manager-write).
+   */
+  goingOverride: number | null;
   createdBy: string | null;
   createdAt: string;
 }
@@ -52,6 +59,7 @@ export interface NewChapterEvent {
   maxAttendees?: number | null;
   requiresRsvp: boolean;
   visibility: Visibility;
+  goingOverride?: number | null;
 }
 
 const EVENTS_KEY = "akpsi.ot.chapter_events";
@@ -81,6 +89,7 @@ const MOCK_EVENTS_SEED: ChapterEventRecord[] = [
     maxAttendees: null,
     requiresRsvp: true,
     visibility: "public",
+    goingOverride: null,
     createdBy: "seed",
     createdAt: new Date(0).toISOString(),
   },
@@ -96,6 +105,7 @@ const MOCK_EVENTS_SEED: ChapterEventRecord[] = [
     maxAttendees: 30,
     requiresRsvp: true,
     visibility: "members",
+    goingOverride: null,
     createdBy: "seed",
     createdAt: new Date(0).toISOString(),
   },
@@ -111,6 +121,7 @@ const MOCK_EVENTS_SEED: ChapterEventRecord[] = [
     maxAttendees: null,
     requiresRsvp: true,
     visibility: "active",
+    goingOverride: null,
     createdBy: "seed",
     createdAt: new Date(0).toISOString(),
   },
@@ -180,6 +191,7 @@ type EventRow = {
   max_attendees: number | null;
   requires_rsvp: boolean;
   visibility: Visibility;
+  going_override: number | null;
   created_by: string | null;
   created_at: string;
 };
@@ -205,6 +217,7 @@ function mapEvent(row: EventRow): ChapterEventRecord {
     maxAttendees: row.max_attendees,
     requiresRsvp: row.requires_rsvp,
     visibility: row.visibility,
+    goingOverride: row.going_override ?? null,
     createdBy: row.created_by,
     createdAt: row.created_at,
   };
@@ -232,6 +245,7 @@ function eventPatchToDb(patch: Partial<NewChapterEvent>): Record<string, unknown
   if (patch.maxAttendees !== undefined) db.max_attendees = patch.maxAttendees;
   if (patch.requiresRsvp !== undefined) db.requires_rsvp = patch.requiresRsvp;
   if (patch.visibility !== undefined) db.visibility = patch.visibility;
+  if (patch.goingOverride !== undefined) db.going_override = patch.goingOverride;
   return db;
 }
 
@@ -263,6 +277,7 @@ export async function createChapterEvent(input: NewChapterEvent): Promise<Chapte
       maxAttendees: input.maxAttendees ?? null,
       requiresRsvp: input.requiresRsvp,
       visibility: input.visibility,
+      goingOverride: input.goingOverride ?? null,
       createdBy: "you",
       createdAt: new Date().toISOString(),
     };
@@ -306,6 +321,7 @@ export async function updateChapterEvent(id: string, patch: Partial<NewChapterEv
       if (patch.maxAttendees !== undefined) row.maxAttendees = patch.maxAttendees ?? null;
       if (patch.requiresRsvp !== undefined) row.requiresRsvp = patch.requiresRsvp;
       if (patch.visibility !== undefined) row.visibility = patch.visibility;
+      if (patch.goingOverride !== undefined) row.goingOverride = patch.goingOverride ?? null;
       writeEventsMock(rows);
     }
     return;
@@ -396,9 +412,17 @@ export async function removeRsvp(eventId: string, memberEmail: string): Promise<
 
 // --- Helpers ---------------------------------------------------------------
 
-/** Count of members marked "going" for an event. */
+/** Count of members marked "going" for an event, derived from RSVP rows. */
 export function goingCount(rsvps: EventRsvp[], eventId: string): number {
   return rsvps.filter((r) => r.eventId === eventId && r.status === "going").length;
+}
+
+/**
+ * The "going" number to display: the e-board's manual override when set,
+ * otherwise the count derived from RSVP rows.
+ */
+export function displayedGoing(event: ChapterEventRecord, rsvps: EventRsvp[]): number {
+  return event.goingOverride ?? goingCount(rsvps, event.id);
 }
 
 export function rsvpsForEvent(rsvps: EventRsvp[], eventId: string): EventRsvp[] {

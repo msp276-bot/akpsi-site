@@ -16,7 +16,7 @@ import { EASE_OUT_EXPO } from "@/lib/motion";
 import { listMembers, type MemberRecord } from "@/lib/roles";
 import {
   listChapterEvents, listRsvps, createChapterEvent, updateChapterEvent, deleteChapterEvent,
-  setRsvp, removeRsvp, goingCount, rsvpsForEvent,
+  setRsvp, removeRsvp, goingCount, displayedGoing, rsvpsForEvent,
   type ChapterEventRecord, type EventRsvp, type NewChapterEvent, type RsvpStatus,
 } from "@/lib/chapterEvents";
 import { GOOGLE_CALENDAR_ID, googleCalendarEmbedSrc, addToGoogleCalendarUrl } from "@/data/calendar";
@@ -173,6 +173,19 @@ function EventsCalendar() {
     }
   }
 
+  async function handleSetOverride(id: string, value: number | null) {
+    setBusy(true);
+    setError(null);
+    try {
+      await updateChapterEvent(id, { goingOverride: value });
+      reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update the count.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleSelfRsvp(id: string, status: RsvpStatus) {
     if (!user) return;
     setBusy(true);
@@ -287,7 +300,7 @@ function EventsCalendar() {
                     <p className="text-sm text-muted">No events to show.</p>
                   ) : (
                     chronological.map((event) => (
-                      <EventRow key={event.id} event={event} onSelect={(e) => setSelectedId(e.id)} status={myStatusFor(event.id)} going={goingCount(rsvps, event.id)} showVisibility={isBoard} />
+                      <EventRow key={event.id} event={event} onSelect={(e) => setSelectedId(e.id)} status={myStatusFor(event.id)} going={displayedGoing(event, rsvps)} showVisibility={isBoard} />
                     ))
                   )}
                 </div>
@@ -305,7 +318,8 @@ function EventsCalendar() {
               <EventDetail
                 event={selected}
                 rsvps={rsvpsForEvent(rsvps, selected.id)}
-                going={goingCount(rsvps, selected.id)}
+                going={displayedGoing(selected, rsvps)}
+                derivedGoing={goingCount(rsvps, selected.id)}
                 myStatus={myStatusFor(selected.id)}
                 isBoard={isBoard}
                 roster={roster}
@@ -314,6 +328,7 @@ function EventsCalendar() {
                 onRsvp={(status) => handleSelfRsvp(selected.id, status)}
                 onAddAttendee={(m) => handleAddAttendee(selected.id, m)}
                 onRemoveAttendee={(email) => handleRemoveAttendee(selected.id, email)}
+                onSetOverride={(value) => handleSetOverride(selected.id, value)}
                 onEdit={() => { setEditing(selected); setSelectedId(null); }}
                 onAskDelete={() => setConfirmDeleteId(selected.id)}
                 onCancelDelete={() => setConfirmDeleteId(null)}
@@ -422,12 +437,13 @@ function EventRow({ event, onSelect, status, going, showVisibility = false }: { 
 }
 
 function EventDetail({
-  event, rsvps, going, myStatus, isBoard, roster, busy, confirmDelete,
-  onRsvp, onAddAttendee, onRemoveAttendee, onEdit, onAskDelete, onCancelDelete, onDelete, onClose,
+  event, rsvps, going, derivedGoing, myStatus, isBoard, roster, busy, confirmDelete,
+  onRsvp, onAddAttendee, onRemoveAttendee, onSetOverride, onEdit, onAskDelete, onCancelDelete, onDelete, onClose,
 }: {
   event: ChapterEventRecord;
   rsvps: EventRsvp[];
   going: number;
+  derivedGoing: number;
   myStatus?: RsvpStatus;
   isBoard: boolean;
   roster: MemberRecord[];
@@ -436,6 +452,7 @@ function EventDetail({
   onRsvp: (s: RsvpStatus) => void;
   onAddAttendee: (m: MemberRecord) => void;
   onRemoveAttendee: (email: string) => void;
+  onSetOverride: (value: number | null) => void;
   onEdit: () => void;
   onAskDelete: () => void;
   onCancelDelete: () => void;
@@ -448,6 +465,8 @@ function EventDetail({
   const attendedEmails = new Set(rsvps.map((r) => r.memberEmail));
   const addable = roster.filter((m) => !attendedEmails.has(m.email.toLowerCase()));
   const [addEmail, setAddEmail] = useState("");
+  const [countDraft, setCountDraft] = useState("");
+  const hasOverride = event.goingOverride !== null;
 
   return (
     <div className="flex h-full flex-col">
@@ -471,7 +490,10 @@ function EventDetail({
 
         <div className="rounded-xl bg-slate-50 p-4">
           <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-2 text-sm text-ink"><UsersRound size={16} className="text-muted" /><strong>{going}</strong> going</span>
+            <span className="inline-flex items-center gap-2 text-sm text-ink">
+              <UsersRound size={16} className="text-muted" /><strong>{going}</strong> going
+              {hasOverride && <span className="rounded-full bg-gold/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#a97f2f]">Manual</span>}
+            </span>
             {event.maxAttendees && <span className="text-xs text-muted">{event.maxAttendees} capacity</span>}
           </div>
           <div className="mt-3 flex flex-wrap gap-1.5">
@@ -500,6 +522,51 @@ function EventDetail({
                   <Trash2 size={13} /> Delete event
                 </button>
               )}
+            </div>
+
+            {/* Manual "going" count override: set an arbitrary number (e.g. an
+                offline headcount) or clear it to fall back to the RSVP total. */}
+            <div className="mt-4 rounded-lg bg-white p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-navy/70">Displayed going count</p>
+              <p className="mt-1 text-xs text-muted">
+                {hasOverride ? (
+                  <>Showing a manual count of <strong className="text-ink">{event.goingOverride}</strong>. RSVPs total {derivedGoing}.</>
+                ) : (
+                  <>Deriving <strong className="text-ink">{derivedGoing}</strong> from RSVPs. Set a number to override it.</>
+                )}
+              </p>
+              <div className="mt-2 flex gap-2">
+                <input
+                  type="number"
+                  min={0}
+                  value={countDraft}
+                  onChange={(e) => setCountDraft(e.target.value)}
+                  placeholder={String(hasOverride ? event.goingOverride : derivedGoing)}
+                  className="w-24 rounded-lg border border-line px-2.5 py-2 text-xs outline-none focus:border-navy"
+                />
+                <button
+                  onClick={() => {
+                    const n = Number(countDraft);
+                    if (countDraft.trim() !== "" && Number.isFinite(n) && n >= 0) {
+                      onSetOverride(Math.floor(n));
+                      setCountDraft("");
+                    }
+                  }}
+                  disabled={busy || countDraft.trim() === ""}
+                  className="rounded-lg bg-navy px-3 py-2 text-xs font-semibold text-white hover:bg-navy/90 disabled:opacity-60"
+                >
+                  Set count
+                </button>
+                {hasOverride && (
+                  <button
+                    onClick={() => { onSetOverride(null); setCountDraft(""); }}
+                    disabled={busy}
+                    className="rounded-lg border border-scarlet/30 bg-white px-3 py-2 text-xs font-semibold text-scarlet hover:bg-scarlet hover:text-white disabled:opacity-60"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Attendee list management */}

@@ -107,10 +107,17 @@ create table if not exists public.chapter_events (
   requires_rsvp  boolean not null default true,
   visibility     text not null default 'members'
                  check (visibility in ('public','members','active','pledge','eboard')),
+  -- Manual "going" count override. When non-null it is shown instead of the
+  -- count derived from event_rsvps (e.g. an offline/imported headcount). Only
+  -- e-board can set it (chapter_events is manager-write).
+  going_override integer,
   created_by     text references public.members(email) on delete set null,
   created_at     timestamptz not null default now()
 );
 create index if not exists chapter_events_starts_idx on public.chapter_events (starts_at);
+-- Idempotent add for chapters that already created chapter_events before the
+-- override column existed (create-table-if-not-exists won't alter an existing table).
+alter table public.chapter_events add column if not exists going_override integer;
 
 create or replace function public.chapter_events_before_insert()
 returns trigger language plpgsql security definer set search_path = public as $$
