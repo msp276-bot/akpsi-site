@@ -1,21 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  AnimatePresence,
-  motion,
-  useMotionValue,
-  useTransform,
-} from "framer-motion";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 import {
   Search, ShieldAlert, GraduationCap, FileText, Mail, Phone,
-  X, Check, RotateCcw, Users2,
+  X, Check, ChevronLeft, ChevronRight, Lock,
 } from "lucide-react";
 import PortalShell from "@/components/portal/PortalShell";
 import { useAuth } from "@/context/AuthContext";
 import { applications, type RushApplication, type ApplicationStatus } from "@/data/applications";
 import { getInitials } from "@/data/members";
-import { hasPermission } from "@/lib/access";
+import { hasPermission, portalRole } from "@/lib/access";
 
 const STATUS_META: Record<ApplicationStatus, string> = {
   pending: "bg-gold/15 text-[#9a7228]",
@@ -37,11 +32,14 @@ export default function ApplicationsPage() {
 
 function ApplicationsBoard() {
   const { user } = useAuth();
+  const role = portalRole(user);
+  const allowed = hasPermission(role, "read:applications");
+  // Only the president decides; everyone else with access is view-only.
+  const canSwipe = role === "president";
+
   const [query, setQuery] = useState("");
   const [index, setIndex] = useState(0);
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
-  const [exitDir, setExitDir] = useState<Decision>("keep");
-  const allowed = hasPermission(user?.role ?? "active", "read:applications");
 
   const deck = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -51,19 +49,26 @@ function ApplicationsBoard() {
     );
   }, [query]);
 
-  const current = deck[index];
-  const next = deck[index + 1];
+  // Clamp so a shrinking filter result never points past the end.
+  const safeIndex = deck.length ? Math.min(index, deck.length - 1) : 0;
+  const current = deck[safeIndex];
 
-  function decide(dir: Decision) {
-    if (!current) return;
-    setExitDir(dir);
-    setDecisions((prev) => ({ ...prev, [current.id]: dir }));
-    setIndex((i) => i + 1);
+  function setDecision(id: string, dir: Decision) {
+    setDecisions((prev) => ({ ...prev, [id]: dir }));
   }
-
-  function reset() {
-    setIndex(0);
-    setDecisions({});
+  function decide(dir: Decision) {
+    if (!canSwipe || !current) return;
+    setDecision(current.id, dir);
+    // Advance to the next card, but never past the end - the applicant stays
+    // in the deck and the list, just now marked.
+    setIndex((i) => Math.min(i + 1, deck.length - 1));
+  }
+  function go(delta: number) {
+    setIndex((i) => Math.max(0, Math.min(deck.length - 1, i + delta)));
+  }
+  function jumpTo(id: string) {
+    const i = deck.findIndex((a) => a.id === id);
+    if (i >= 0) setIndex(i);
   }
 
   if (!allowed) {
@@ -72,8 +77,8 @@ function ApplicationsBoard() {
         <ShieldAlert className="mx-auto text-scarlet" size={34} />
         <h1 className="mt-4 text-2xl font-bold text-ink">Applications are E-Board only</h1>
         <p className="mt-2 text-sm text-muted">
-          Rush applications, headshots, and pipeline actions are hidden unless
-          your account has E-Board or admin access.
+          Rush applications and reviewer actions are hidden unless your account
+          has E-Board or admin access.
         </p>
       </div>
     );
@@ -81,18 +86,26 @@ function ApplicationsBoard() {
 
   const keepCount = Object.values(decisions).filter((d) => d === "keep").length;
   const passCount = Object.values(decisions).filter((d) => d === "pass").length;
-  const done = index >= deck.length;
 
   return (
-    <div className="mx-auto max-w-xl">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-ink">Rush applications</h1>
-        <p className="mt-1 text-sm text-muted">
-          Swipe through applicants. Right to keep, left to pass.
-        </p>
+    <div className="mx-auto max-w-5xl">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-ink">Rush applications</h1>
+          <p className="mt-1 text-sm text-muted">
+            {canSwipe
+              ? "Swipe or use the buttons - right to keep, left to pass. Nothing is removed; decisions are saved on each card."
+              : "View only - the president makes keep/pass decisions."}
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-3 text-xs text-muted">
+          <span className="inline-flex items-center gap-1.5"><Check size={13} className="text-green-600" /> {keepCount} kept</span>
+          <span className="inline-flex items-center gap-1.5"><X size={13} className="text-scarlet" /> {passCount} passed</span>
+          <span>{deck.length} total</span>
+        </span>
       </div>
 
-      <div className="relative mx-auto mt-5 w-full max-w-xs">
+      <div className="relative mt-4 w-full max-w-xs">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
         <input
           value={query}
@@ -102,54 +115,101 @@ function ApplicationsBoard() {
         />
       </div>
 
-      {/* Progress */}
-      <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted">
-        <span className="inline-flex items-center gap-1.5"><Check size={13} className="text-green-600" /> {keepCount} kept</span>
-        <span className="inline-flex items-center gap-1.5"><X size={13} className="text-scarlet" /> {passCount} passed</span>
-        <span>{Math.min(index + (done ? 0 : 1), deck.length)} / {deck.length}</span>
-      </div>
+      {deck.length === 0 ? (
+        <p className="mt-10 text-center text-sm text-muted">No applicants match your search.</p>
+      ) : (
+        <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,22rem)_1fr]">
+          {/* Deck */}
+          <div>
+            <div className="relative">
+              {/* Prev/Next let you revisit any applicant - nothing disappears. */}
+              <button
+                onClick={() => go(-1)}
+                disabled={safeIndex === 0}
+                className="absolute -left-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-line bg-white text-muted shadow-sm hover:text-navy disabled:opacity-40"
+                aria-label="Previous applicant"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                onClick={() => go(1)}
+                disabled={safeIndex >= deck.length - 1}
+                className="absolute -right-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-line bg-white text-muted shadow-sm hover:text-navy disabled:opacity-40"
+                aria-label="Next applicant"
+              >
+                <ChevronRight size={18} />
+              </button>
 
-      {/* Deck */}
-      <div className="relative mx-auto mt-6 h-[30rem] w-full max-w-sm">
-        {done ? (
-          <DeckDone deck={deck} decisions={decisions} onReset={reset} />
-        ) : (
-          <>
-            {/* Peek of the next card for depth */}
-            {next && (
-              <div className="absolute inset-x-4 top-3 bottom-0 -z-0 scale-[0.97] rounded-3xl border border-line bg-white opacity-60 shadow-sm" />
+              <div className="h-[30rem]">
+                <SwipeCard
+                  key={current.id}
+                  app={current}
+                  decision={decisions[current.id]}
+                  canSwipe={canSwipe}
+                  onDecide={decide}
+                />
+              </div>
+            </div>
+
+            <p className="mt-3 text-center text-xs text-muted">
+              {safeIndex + 1} of {deck.length}
+            </p>
+
+            {canSwipe ? (
+              <div className="mt-4 flex items-center justify-center gap-4">
+                <button
+                  onClick={() => decide("pass")}
+                  className="grid h-14 w-14 place-items-center rounded-full border-2 border-scarlet/30 bg-white text-scarlet shadow-sm transition-colors hover:bg-scarlet hover:text-white"
+                  aria-label="Pass"
+                >
+                  <X size={24} />
+                </button>
+                <button
+                  onClick={() => decide("keep")}
+                  className="grid h-14 w-14 place-items-center rounded-full border-2 border-green-500/30 bg-white text-green-600 shadow-sm transition-colors hover:bg-green-600 hover:text-white"
+                  aria-label="Keep"
+                >
+                  <Check size={24} />
+                </button>
+              </div>
+            ) : (
+              <p className="mt-4 inline-flex w-full items-center justify-center gap-2 text-xs text-muted">
+                <Lock size={13} /> Only the president can keep or pass applicants.
+              </p>
             )}
-            <AnimatePresence custom={exitDir} initial={false}>
-              <SwipeCard key={current.id} app={current} exitDir={exitDir} onDecide={decide} />
-            </AnimatePresence>
-          </>
-        )}
-      </div>
+          </div>
 
-      {/* Action buttons */}
-      {!done && (
-        <div className="mt-6 flex items-center justify-center gap-4">
-          <button
-            onClick={() => decide("pass")}
-            className="grid h-14 w-14 place-items-center rounded-full border-2 border-scarlet/30 bg-white text-scarlet shadow-sm transition-colors hover:bg-scarlet hover:text-white"
-            aria-label="Pass"
-          >
-            <X size={24} />
-          </button>
-          <button
-            onClick={reset}
-            className="grid h-11 w-11 place-items-center rounded-full border border-line bg-white text-muted shadow-sm transition-colors hover:text-navy"
-            aria-label="Reset deck"
-          >
-            <RotateCcw size={17} />
-          </button>
-          <button
-            onClick={() => decide("keep")}
-            className="grid h-14 w-14 place-items-center rounded-full border-2 border-green-500/30 bg-white text-green-600 shadow-sm transition-colors hover:bg-green-600 hover:text-white"
-            aria-label="Keep"
-          >
-            <Check size={24} />
-          </button>
+          {/* Full list - every applicant is always visible with its decision. */}
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">All applicants</h2>
+            <ul className="mt-3 divide-y divide-line overflow-hidden rounded-xl border border-line bg-white">
+              {deck.map((a, i) => {
+                const d = decisions[a.id];
+                const isCurrent = i === safeIndex;
+                return (
+                  <li key={a.id}>
+                    <button
+                      onClick={() => jumpTo(a.id)}
+                      className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 ${isCurrent ? "bg-slate-50" : ""}`}
+                    >
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-navy text-[10px] font-bold text-white">
+                        {getInitials(a.fullName)}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium text-ink">{a.fullName}</span>
+                        <span className="block truncate text-xs text-muted">
+                          Class of &rsquo;{String(a.gradYear).slice(2)} · {a.major}
+                        </span>
+                      </span>
+                      {d === "keep" && <span className="shrink-0 rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-semibold text-green-700">Kept</span>}
+                      {d === "pass" && <span className="shrink-0 rounded-full bg-scarlet/10 px-2.5 py-1 text-[11px] font-semibold text-scarlet">Passed</span>}
+                      {!d && <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-muted">New</span>}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
       )}
     </div>
@@ -158,38 +218,38 @@ function ApplicationsBoard() {
 
 function SwipeCard({
   app,
-  exitDir,
+  decision,
+  canSwipe,
   onDecide,
 }: {
   app: RushApplication;
-  exitDir: Decision;
+  decision?: Decision;
+  canSwipe: boolean;
   onDecide: (dir: Decision) => void;
 }) {
   const x = useMotionValue(0);
-  const rotate = useTransform(x, [-220, 220], [-14, 14]);
+  const rotate = useTransform(x, [-220, 220], [-12, 12]);
   const keepOpacity = useTransform(x, [30, 130], [0, 1]);
   const passOpacity = useTransform(x, [-130, -30], [1, 0]);
 
   return (
     <motion.article
-      className="absolute inset-0 cursor-grab overflow-hidden rounded-3xl border border-line bg-white shadow-xl active:cursor-grabbing"
-      style={{ x, rotate }}
-      drag="x"
+      className={`absolute inset-0 overflow-hidden rounded-3xl border border-line bg-white shadow-xl ${canSwipe ? "cursor-grab active:cursor-grabbing" : ""}`}
+      style={canSwipe ? { x, rotate } : undefined}
+      drag={canSwipe ? "x" : false}
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.6}
-      custom={exitDir}
-      variants={{
-        exit: (dir: Decision) => ({
-          x: dir === "keep" ? 520 : -520,
-          opacity: 0,
-          transition: { duration: 0.28 },
-        }),
-      }}
-      exit="exit"
-      onDragEnd={(_, info) => {
-        if (info.offset.x > 120) onDecide("keep");
-        else if (info.offset.x < -120) onDecide("pass");
-      }}
+      onDragEnd={
+        canSwipe
+          ? (_, info) => {
+              if (info.offset.x > 120) onDecide("keep");
+              else if (info.offset.x < -120) onDecide("pass");
+            }
+          : undefined
+      }
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
     >
       {/* Headshot / monogram */}
       <div className="relative h-64 w-full bg-[radial-gradient(120%_120%_at_30%_0%,#2d3e5f_0%,#1a2744_60%,#131d33_100%)]">
@@ -204,19 +264,34 @@ function SwipeCard({
           </div>
         )}
 
-        {/* Swipe overlays */}
-        <motion.div
-          style={{ opacity: keepOpacity }}
-          className="pointer-events-none absolute left-4 top-4 rounded-lg border-2 border-green-400 px-3 py-1 text-lg font-extrabold uppercase tracking-wide text-green-400 [transform:rotate(-12deg)]"
-        >
-          Keep
-        </motion.div>
-        <motion.div
-          style={{ opacity: passOpacity }}
-          className="pointer-events-none absolute right-4 top-4 rounded-lg border-2 border-scarlet px-3 py-1 text-lg font-extrabold uppercase tracking-wide text-scarlet [transform:rotate(12deg)]"
-        >
-          Pass
-        </motion.div>
+        {/* Saved decision badge (persists as you browse) */}
+        {decision && (
+          <span
+            className={`absolute left-4 top-4 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${
+              decision === "keep" ? "bg-green-600 text-white" : "bg-scarlet text-white"
+            }`}
+          >
+            {decision === "keep" ? "Kept" : "Passed"}
+          </span>
+        )}
+
+        {/* Live drag overlays (president only) */}
+        {canSwipe && (
+          <>
+            <motion.div
+              style={{ opacity: keepOpacity }}
+              className="pointer-events-none absolute right-4 top-4 rounded-lg border-2 border-green-400 px-3 py-1 text-lg font-extrabold uppercase tracking-wide text-green-400 [transform:rotate(12deg)]"
+            >
+              Keep
+            </motion.div>
+            <motion.div
+              style={{ opacity: passOpacity }}
+              className="pointer-events-none absolute right-4 bottom-24 rounded-lg border-2 border-scarlet px-3 py-1 text-lg font-extrabold uppercase tracking-wide text-scarlet [transform:rotate(-12deg)]"
+            >
+              Pass
+            </motion.div>
+          </>
+        )}
 
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy via-navy/70 to-transparent p-4 pt-12">
           <div className="flex items-end justify-between gap-2">
@@ -273,51 +348,5 @@ function SwipeCard({
         )}
       </div>
     </motion.article>
-  );
-}
-
-function DeckDone({
-  deck,
-  decisions,
-  onReset,
-}: {
-  deck: RushApplication[];
-  decisions: Record<string, Decision>;
-  onReset: () => void;
-}) {
-  const kept = deck.filter((a) => decisions[a.id] === "keep");
-  return (
-    <div className="flex h-full flex-col rounded-3xl border border-line bg-white p-6 shadow-sm">
-      <div className="text-center">
-        <Users2 className="mx-auto text-navy" size={30} />
-        <h2 className="mt-3 text-lg font-bold text-ink">Deck complete</h2>
-        <p className="mt-1 text-sm text-muted">
-          {kept.length} kept of {deck.length} applicants.
-        </p>
-      </div>
-      <div className="mt-4 flex-1 space-y-2 overflow-y-auto">
-        {kept.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted">No one kept yet.</p>
-        ) : (
-          kept.map((a) => (
-            <div key={a.id} className="flex items-center gap-3 rounded-lg bg-slate-50 px-3 py-2">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-navy text-[10px] font-bold text-white">
-                {getInitials(a.fullName)}
-              </span>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-ink">{a.fullName}</p>
-                <p className="truncate text-xs text-muted">Class of &rsquo;{String(a.gradYear).slice(2)} · {a.major}</p>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-      <button
-        onClick={onReset}
-        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm font-semibold text-navy hover:bg-slate-50"
-      >
-        <RotateCcw size={15} /> Start over
-      </button>
-    </div>
   );
 }
