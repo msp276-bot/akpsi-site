@@ -85,3 +85,53 @@ The private key lives **only** in Supabase secrets - never in the app bundle.
 **Dormant-safe:** with no VAPID key, the toggle shows "not available yet", and
 `sendPushToChapter()` is a no-op - so everything above ships without breaking the
 static build or the mock-mode preview.
+
+---
+
+## Timed / scheduled pings
+
+Two layers now deliver "pings":
+
+1. **In-app timed pings (works today, no infra).** The header bell
+   (`src/components/portal/NotificationBell.tsx`) polls announcements + upcoming
+   events every ~3 minutes while the portal is open. New items bump the unread
+   badge and, if the member granted notification permission, fire a **local**
+   `Notification` (foreground only). Nothing server-side is required.
+
+2. **Scheduled device push (needs the setup below).** To ping members even when
+   the app is closed, a scheduler must call the `send-push` Edge Function on a
+   timer. `send-push` normally checks the caller is a roster manager via their
+   JWT, so a scheduled call must authenticate with the **service_role** key
+   instead (add a branch that trusts the `Authorization: Bearer <service_role>`
+   header and skips the manager check).
+
+   **Option A - pg_cron + pg_net (all in Supabase):**
+   ```sql
+   -- one-time
+   create extension if not exists pg_cron;
+   create extension if not exists pg_net;
+
+   -- e.g. every day at 9am ET, ping about events happening tomorrow.
+   select cron.schedule('daily-event-reminder', '0 13 * * *', $$
+     select net.http_post(
+       url     := 'https://iagcpczxmfwrezrllewn.supabase.co/functions/v1/send-push',
+       headers := jsonb_build_object(
+         'Content-Type','application/json',
+         'Authorization','Bearer <SERVICE_ROLE_KEY>'),
+       body    := jsonb_build_object(
+         'title','Event tomorrow',
+         'body','Check the chapter calendar for details.',
+         'url','/portal/events/')
+     );
+   $$);
+   ```
+   (Cron runs in UTC; `13` = 9am ET during EDT.) For "event tomorrow" to be
+   dynamic, move the query into a small SQL function or a dedicated scheduled
+   Edge Function that builds the body from `chapter_events`.
+
+   **Option B - external scheduler (GitHub Actions / cron-job.org):** hit the
+   same function URL on a schedule with the service_role bearer token.
+
+Until a VAPID key is set (`NEXT_PUBLIC_VAPID_PUBLIC_KEY`) and `send-push` is
+deployed, layer 2 is dormant and the bell's "Enable device push" button reports
+that push isn't set up yet - layer 1 keeps working regardless.

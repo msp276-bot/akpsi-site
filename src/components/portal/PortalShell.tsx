@@ -16,10 +16,10 @@ import {
   BarChart3,
   Award,
   ShieldCheck,
-  Bell,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Logo from "@/components/ui/Logo";
+import NotificationBell from "@/components/portal/NotificationBell";
 import { getInitials } from "@/data/members";
 import { hasPermission, roleLabel } from "@/lib/access";
 
@@ -118,23 +118,19 @@ export default function PortalShell({
     <div className="min-h-svh bg-slate-50">
       {/* Top bar */}
       <header className="sticky top-0 z-40 border-b border-line bg-navy text-white">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:gap-3 sm:px-8">
+        <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:gap-3 sm:px-8">
           {/* The wordmark is ~250px and never wraps, so it is dropped below sm
               to stop the header overflowing on a phone. */}
           <div className="flex min-w-0 items-center gap-3">
             <Logo tone="light" wordmarkClassName="hidden sm:flex" />
-            <span className="hidden text-xs uppercase tracking-widest text-white/50 lg:block">
-              {roleLabel(user.role)}
-            </span>
           </div>
+          {/* Portal label, centered across the whole bar (absolute so it centers
+              on the header, not between the flanking groups). */}
+          <span className="pointer-events-none absolute left-1/2 hidden -translate-x-1/2 whitespace-nowrap text-xs uppercase tracking-widest text-white/50 lg:block">
+            {roleLabel(user.role)}
+          </span>
           <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-            <button
-              className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/15 text-white/80 transition-colors hover:bg-white/10"
-              aria-label="Notifications"
-            >
-              <Bell size={16} />
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-scarlet" />
-            </button>
+            <NotificationBell role={user.role} email={user.email} />
             <div className="hidden text-right lg:block">
               <p className="text-sm font-medium leading-tight">{user.name}</p>
               <p className="text-xs text-white/50">{user.email}</p>
