@@ -37,6 +37,24 @@ export function formatEventTime(iso: string): string {
   });
 }
 
+/** Human "2 hours ago" / "3 days ago" for a real timestamp. */
+export function relativeTime(iso: string, now: Date = new Date()): string {
+  const then = new Date(iso).getTime();
+  const diff = now.getTime() - then;
+  if (Number.isNaN(then)) return "";
+  if (diff < 60_000) return "Just now";
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 60) return `${mins} minute${mins === 1 ? "" : "s"} ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export function formatDayMonth(iso: string): { day: string; month: string } {
   const d = new Date(iso);
   return {

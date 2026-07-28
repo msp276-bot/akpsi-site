@@ -387,6 +387,18 @@ VAPID private key). Push is built but **dormant** until `NEXT_PUBLIC_VAPID_PUBLI
 
 ---
 
+### 4e. `announcements` + `chapter_events` + `event_rsvps` — `db/portal-content.sql` (run after supabase-roles.sql)
+Backs the portal's announcements and calendar with real, e-board-writable data
+(independent of `submissions.sql`). Helpers: `member_role()`, `can_manage_content()`
+(board/president/admin), `can_view_visibility(vis)` (mirrors `canAccessVisibility`
+in `access.ts`). RLS: any member reads rows their role may see (by `visibility`);
+only e-board writes. `event_rsvps` = one row per (event, member); a member manages
+their OWN rsvp, e-board adds/removes ANYONE. The **"going" count is DERIVED** from
+`event_rsvps` (status `going`), never stored on the event. Triggers stamp
+author/created_by/attendee identity from the JWT so it can't be forged. Uses
+`create table if not exists` (preserves rows on re-run) and seeds 3 example
+events. **Not yet run on the live project** — run it for production (see §7a).
+
 ## 6. Current status — DONE
 
 - Public site content complete (home, about, members, media, rush).
@@ -415,6 +427,26 @@ VAPID private key). Push is built but **dormant** until `NEXT_PUBLIC_VAPID_PUBLI
 - PWA live; push built but dormant.
 - Build clean: 84 routes + ~59 member pages; tsc + eslint clean (one known
   pre-existing Hero warning).
+- **Announcements + Events + RSVP are now Supabase-backed & e-board editable**
+  (`db/portal-content.sql`, `src/lib/announcements.ts`, `src/lib/chapterEvents.ts`;
+  see §4e). Announcements: e-board **edit + delete** (dual mock/Supabase). Events:
+  e-board **create / edit / delete**; every member self-RSVPs (going/maybe/declined/
+  waitlist); e-board manages the **full attendee list** (add any roster member /
+  remove anyone); the **"going" count is derived** from RSVP rows. Verified end to
+  end in mock mode (edit, delete, self-RSVP, add/remove attendee, delete-with-
+  cascade). ⚠️ `db/portal-content.sql` must be run on the live project before these
+  work in production (until then the live portal pages error — the tables don't
+  exist yet); mock mode already works.
+- **Backgrounds made stable**: About/Media `bg-fixed` parallax kept, but reframed
+  within 0–100% (About `center 32%`, Media `center 38%`) so the crop barely shifts
+  as the window resizes (the old 170%/220% values amplified the bg-fixed shift).
+  Verified across viewport sizes.
+- **Simone's headshot** lifted via a new `Member.photoPosition` field
+  (`"center bottom"`, applied in `MemberCard` + profile page). Note: her source
+  JPG is 600×900 in a 3:4 tile, so object-position only has ~50px of vertical
+  slack — `center bottom` is the max lift. For more, re-crop the source JPG to
+  remove headroom above her.
+- SW `CACHE_VERSION` bumped to `akpsi-v5`.
 
 ---
 
@@ -427,6 +459,10 @@ against it locally (`.env.local`). **Remaining to fully launch:**
   (Settings → Environment Variables, all envs) and redeploy with a FRESH build
   (no cache) — they're build-time inlined. Add the Vercel origin to Supabase
   redirect URLs. `.env.local` only affects local. (See §8 Deployment.)
+- **Run `db/portal-content.sql`** on the live project (SQL editor) so announcements
+  + events + RSVPs work in production. It's idempotent (`create table if not
+  exists`). Until it's run, the live announcements/events pages have no tables and
+  will error; mock/preview already works.
 - **Confirm requirement numbers** in `src/lib/points.ts` (points + service hours).
 - **Provision accounts**: VP-Ops `ops@rutgersakpsi.org` (Auth user w/ password +
   `members` row role `board`) — or give Prak a gmail on the roster; pledges as
@@ -438,6 +474,7 @@ reference / re-provisioning:
 1. Create a Supabase project. Copy the URL + anon key into env
    (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`); rebuild.
 2. SQL editor: run `db/supabase-roles.sql`, then `db/submissions.sql`, then
+   `db/portal-content.sql` (announcements/events/RSVPs), then
    `db/push-subscriptions.sql`. Seed at least one `president`/`admin` roster row.
 3. **Provision accounts** (Auth → Add user, plus a matching `members` row):
    - Brothers: their `@rutgers.edu` (Google/magic-link, no password needed).
@@ -463,6 +500,11 @@ the same pipeline: `sips -s format jpeg -s formatOptions 82 -Z 900 "<file>"
 --out public/members/<slug>.jpg`, then add `photo:"/members/<slug>.jpg"`.
 
 ### 7c. Smaller open items
+- **Dashboard "Upcoming events" widget** (`/portal/dashboard`) still reads the
+  STATIC `src/data/events.ts` array + its own local rsvp toggle — it is NOT yet
+  wired to the live `chapter_events` (only the `/portal/events` calendar is). So
+  the dashboard can show different events than the calendar. Follow-up: point the
+  dashboard widget at `listChapterEvents()` + `listRsvps()` too.
 - Rush **Application Portal / Interest Form** URLs are `"#"` placeholders in
   `src/components/rush/RushApply.tsx` — drop in the real form links.
 - Google Calendar must be shared **public** for the `/portal/events` embed to

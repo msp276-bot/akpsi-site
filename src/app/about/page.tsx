@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Reveal from "@/components/anim/Reveal";
-import ParallaxImage from "@/components/anim/ParallaxImage";
+import CoverImage from "@/components/ui/CoverImage";
 import Button from "@/components/ui/Button";
 import LogoMarquee from "@/components/about/LogoMarquee";
 import Benefits from "@/components/about/Benefits";
@@ -20,10 +20,9 @@ export default function AboutPage() {
       <main className="flex-1">
         {/* Hero */}
         <section className="relative overflow-hidden bg-navy px-5 pb-20 pt-32 sm:px-8">
-          {/* Chapter photo backdrop behind the hero copy, parallaxing as you
-              scroll past. Positioned well past bottom so the brothers' faces
-              lift into the hero rather than the atrium ceiling. */}
-          <ParallaxImage src="/about-chapter.jpg" position="center 170%" />
+          {/* Still chapter photo backdrop: no parallax/zoom, so the framing stays
+              put on scroll and doesn't jump as the window resizes. */}
+          <CoverImage src="/about-chapter.jpg" position="center 32%" />
           {/* Navy scrim keeps the white hero copy legible over the photo, and
               the gradient stays darkest at the top (under the navbar) and the
               bottom so the section blends into the white story block below. */}

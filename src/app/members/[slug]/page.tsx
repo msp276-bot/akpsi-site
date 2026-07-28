@@ -62,6 +62,7 @@ export default async function MemberProfilePage({
                     <img
                       src={member.photo}
                       alt={member.name}
+                      style={member.photoPosition ? { objectPosition: member.photoPosition } : undefined}
                       className="h-full w-full object-cover"
                     />
                   ) : (

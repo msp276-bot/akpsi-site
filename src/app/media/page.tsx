@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ArrowUpRight, PlayCircle } from "lucide-react";
-import ParallaxImage from "@/components/anim/ParallaxImage";
+import CoverImage from "@/components/ui/CoverImage";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { InstagramIcon } from "@/components/BrandIcons";
@@ -45,10 +45,9 @@ export default function MediaPage() {
       <main className="flex-1 bg-slate-50">
         {/* Hero */}
         <section className="relative overflow-hidden bg-navy px-5 pb-16 pt-32 sm:px-8">
-          {/* Chapter photo backdrop behind a navy scrim, matching the rush hero,
-              parallaxing as you scroll past. Positioned past bottom so the
-              brothers' faces lift into the hero. */}
-          <ParallaxImage src="/chapter/lecture-hall.jpg" position="center 220%" />
+          {/* Still chapter photo backdrop: no parallax/zoom, so the framing stays
+              put on scroll and doesn't jump as the window resizes. */}
+          <CoverImage src="/chapter/lecture-hall.jpg" position="center 38%" />
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 bg-navy/[0.78]"

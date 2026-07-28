@@ -19,6 +19,12 @@ function CardInner({ member }: { member: Member }) {
         <img
           src={member.photo}
           alt={member.name}
+          style={{
+            objectPosition: member.photoPosition ?? undefined,
+            // Optional zoom for photos with too much headroom to fix with
+            // object-position alone (object-cover has little vertical play here).
+            transform: member.photoScale ? `scale(${member.photoScale})` : undefined,
+          }}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
       ) : (

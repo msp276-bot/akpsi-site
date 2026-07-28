@@ -17,6 +17,14 @@ export interface Member {
   industry?: string;
   bio?: string;
   photo?: string; // real photo url; falls back to initials when absent
+  /**
+   * CSS object-position for the headshot inside its 3:4 tile. Defaults to
+   * "center" (50% 50%). Use a smaller Y (e.g. "center 20%") to lift a face
+   * that sits too low in the crop.
+   */
+  photoPosition?: string;
+  /** Optional zoom (e.g. 1.3) for photos with heavy headroom that object-position alone can't lift. */
+  photoScale?: number;
   linkedin?: string;
 }
 
@@ -34,7 +42,7 @@ const rawMembers: Omit<Member, "slug">[] = [
   { id: "b5", name: "Ankitha Jagadeesh", position: "Vice President of Membership", group: "board", cohort: "Beta Founding", classYear: "2028", photo: "/members/ankitha-jagadeesh.jpg" },
   { id: "b6", name: "Aditya Mehta", position: "Vice President of Marketing", group: "board", cohort: "Beta Founding", classYear: "2027", photo: "/members/aditya-mehta.jpg" },
   { id: "b7", name: "Ashna Narielwala", position: "Vice President of Alumni Relations", group: "board", cohort: "Beta Founding", classYear: "2028", photo: "/members/ashna-narielwala.jpg" },
-  { id: "b8", name: "Simone Mehta", position: "Vice President of Risk Management", group: "board", cohort: "Beta Founding", classYear: "2028", photo: "/members/simone-mehta.jpg" },
+  { id: "b8", name: "Simone Mehta", position: "Vice President of Risk Management", group: "board", cohort: "Beta Founding", classYear: "2028", photo: "/members/simone-mehta.jpg", photoPosition: "center 55%", photoScale: 1.35 },
   { id: "b9", name: "Mahir Varanasi", position: "Vice President of Internal Affairs", group: "board", cohort: "Beta Founding", classYear: "2028", photo: "/members/mahir-varanasi.jpg" },
   { id: "b10", name: "Oluwatomisin Abiola", position: "Vice President of Professional Development", group: "board", cohort: "Beta Founding", classYear: "2028", photo: "/members/oluwatomisin-abiola.jpg" },
 
