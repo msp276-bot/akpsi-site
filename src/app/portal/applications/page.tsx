@@ -314,8 +314,8 @@ function FullScreenReview({
         {/* Body: headshot + stats on the left, resume on the right */}
         <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,24rem)_1fr]">
           {/* Left column */}
-          <div className="overflow-y-auto border-b border-line p-5 lg:border-b-0 lg:border-r">
-            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-[radial-gradient(120%_120%_at_30%_0%,#2d3e5f_0%,#1a2744_60%,#131d33_100%)]">
+          <div className="flex min-h-0 flex-col border-b border-line p-5 lg:border-b-0 lg:border-r">
+            <div className="relative min-h-0 w-full flex-1 overflow-hidden rounded-xl bg-[radial-gradient(120%_120%_at_30%_0%,#2d3e5f_0%,#1a2744_60%,#131d33_100%)]">
               {app.headshot ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={app.headshot} alt={app.fullName} className="h-full w-full object-cover" />
