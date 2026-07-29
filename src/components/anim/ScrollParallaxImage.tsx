@@ -79,7 +79,12 @@ export default function ScrollParallaxImage({
   // In anchorTop mode the layer is 150% tall pinned at the top (top 0%) and
   // drifts UPWARD only, so the photo's top edge shows at rest and the 50%
   // overhang below always covers the travel.
-  const pct = Math.max(0, Math.min(strength, 0.16));
+  // anchorTop pins the layer at the top with a 50% overhang below, so the
+  // upward drift has far more room than the centered mode (which must split its
+  // margin between both directions). Allow a bigger, more noticeable travel
+  // there while keeping a safety margin under the 50% overhang.
+  const maxPct = anchorTop ? 0.35 : 0.16;
+  const pct = Math.max(0, Math.min(strength, maxPct));
   const biased = focusY !== 0;
   const layerTop = anchorTop ? "0%" : biased ? "-50%" : "-25%";
   const layerHeight = anchorTop ? "150%" : biased ? "200%" : "150%";
