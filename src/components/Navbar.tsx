@@ -47,9 +47,6 @@ export default function Navbar() {
           : "bg-transparent"
       }`}
     >
-      {/* Board accent: scarlet rule across the very top edge */}
-      <div className="h-[3px] w-full bg-gradient-to-r from-scarlet via-[#e11d48] to-scarlet" />
-
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-8 px-5 sm:px-8">
         <Logo tone="light" withWordmark />
 

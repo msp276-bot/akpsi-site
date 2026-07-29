@@ -12,7 +12,7 @@ const VALUES = [
   {
     Icon: Network,
     title: "Alumni Network",
-    desc: "700+ alumni across 10+ industries, from consulting and finance to tech and marketing.",
+    desc: "600+ alumni across 10+ industries, from consulting and finance to tech and marketing.",
   },
   {
     Icon: Users,

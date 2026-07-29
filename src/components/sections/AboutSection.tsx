@@ -20,7 +20,7 @@ const STATS: {
 }[] = [
   { value: 60, suffix: "+", label: "Members", Icon: Users },
   { value: 10, suffix: "+", label: "Industries", Icon: Building2 },
-  { value: 200, suffix: "+", label: "Alumni", Icon: GraduationCap },
+  { value: 600, suffix: "+", label: "Alumni", Icon: GraduationCap },
   { value: 10, suffix: "+", label: "Majors", Icon: BookOpen },
 ];
 

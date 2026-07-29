@@ -29,6 +29,7 @@ export default function ScrollParallaxImage({
   position = "center",
   strength = 0.12,
   focusY = 0,
+  anchorTop = false,
 }: {
   src: string;
   className?: string;
@@ -51,6 +52,16 @@ export default function ScrollParallaxImage({
    * plus the parallax travel never exposes an edge.
    */
   focusY?: number;
+  /**
+   * Top-anchor the image: the layer's top edge sits at the section top at rest
+   * (so the TOP of the photo is what shows, not the middle), and the parallax
+   * drifts upward from there. The layer is oversized 150% DOWNWARD only, so the
+   * upward travel never exposes the bottom edge and the top is never cut. Pairs
+   * with position="center top" for a vertically-overflowing image; for a
+   * horizontally-overflowing one the image fills top-aligned automatically.
+   * Overrides `focusY`.
+   */
+  anchorTop?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   // These heroes sit at the very top of the page, so map the parallax to the
@@ -65,14 +76,19 @@ export default function ScrollParallaxImage({
   // Default layer is 150% of the section tall, centered (top -25%). When a
   // vertical bias is requested we oversize to 200% (top -50%) so the bias plus
   // the parallax travel (|bias| + pct*100 <= 25% of the layer) stays covered.
+  // In anchorTop mode the layer is 150% tall pinned at the top (top 0%) and
+  // drifts UPWARD only, so the photo's top edge shows at rest and the 50%
+  // overhang below always covers the travel.
   const pct = Math.max(0, Math.min(strength, 0.16));
   const biased = focusY !== 0;
-  const layerTop = biased ? "-50%" : "-25%";
-  const layerHeight = biased ? "200%" : "150%";
+  const layerTop = anchorTop ? "0%" : biased ? "-50%" : "-25%";
+  const layerHeight = anchorTop ? "150%" : biased ? "200%" : "150%";
   const y = useTransform(
     scrollYProgress,
     [0, 1],
-    [`${focusY - pct * 100}%`, `${focusY + pct * 100}%`]
+    anchorTop
+      ? ["0%", `${-pct * 100}%`]
+      : [`${focusY - pct * 100}%`, `${focusY + pct * 100}%`]
   );
 
   return (

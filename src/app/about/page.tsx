@@ -23,7 +23,7 @@ export default function AboutPage() {
           {/* Scroll-driven parallax backdrop: drifts as the hero scrolls, but is
               element-sized and percentage-driven so the framing doesn't re-crop
               on window resize (works on iOS too, unlike background-fixed). */}
-          <ScrollParallaxImage src="/about-chapter.jpg" position="center 32%" />
+          <ScrollParallaxImage src="/about-chapter.jpg" anchorTop position="center top" />
           {/* Navy scrim keeps the white hero copy legible over the photo, and
               the gradient stays darkest at the top (under the navbar) and the
               bottom so the section blends into the white story block below. */}
@@ -84,7 +84,7 @@ export default function AboutPage() {
                   </p>
                   <p>
                     Today the chapter counts 60+ active members and a growing
-                    alumni network of 700+ spanning consulting, finance,
+                    alumni network of 600+ spanning consulting, finance,
                     technology, marketing, and beyond.
                   </p>
                 </div>
