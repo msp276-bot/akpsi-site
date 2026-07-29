@@ -23,20 +23,21 @@ export default function AboutPage() {
           {/* Scroll-driven parallax backdrop: drifts as the hero scrolls, but is
               element-sized and percentage-driven so the framing doesn't re-crop
               on window resize (works on iOS too, unlike background-fixed). */}
-          <ScrollParallaxImage src="/about-chapter.jpg" anchorTop position="center top" strength={0.22} />
-          {/* Navy scrim keeps the white hero copy legible over the photo, and
-              the gradient stays darkest at the top (under the navbar) and the
-              bottom so the section blends into the white story block below. */}
+          <ScrollParallaxImage src="/about-chapter.jpg" position="center top" strength={0.08} />
+          {/* Navy scrim keeps the white hero copy legible over the photo. The
+              faces sit in the top third now, so the gradient is lightest up top
+              (let the people show) and darkest at the bottom so the section
+              still blends into the white story block below. */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 bg-navy/45"
+            className="pointer-events-none absolute inset-0 bg-navy/30"
           />
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0"
             style={{
               background:
-                "linear-gradient(to bottom, rgba(26,39,68,0.78) 0%, rgba(26,39,68,0.4) 45%, rgba(26,39,68,0.88) 100%)",
+                "linear-gradient(to bottom, rgba(26,39,68,0.34) 0%, rgba(26,39,68,0.45) 48%, rgba(26,39,68,0.88) 100%)",
             }}
           />
           <div className="relative z-10 mx-auto max-w-3xl text-center [text-shadow:0_2px_14px_rgba(10,16,30,0.55)]">

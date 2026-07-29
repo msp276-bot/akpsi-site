@@ -29,7 +29,6 @@ export default function ScrollParallaxImage({
   position = "center",
   strength = 0.12,
   focusY = 0,
-  anchorTop = false,
 }: {
   src: string;
   className?: string;
@@ -52,16 +51,6 @@ export default function ScrollParallaxImage({
    * plus the parallax travel never exposes an edge.
    */
   focusY?: number;
-  /**
-   * Top-anchor the image: the layer's top edge sits at the section top at rest
-   * (so the TOP of the photo is what shows, not the middle), and the parallax
-   * drifts upward from there. The layer is oversized 150% DOWNWARD only, so the
-   * upward travel never exposes the bottom edge and the top is never cut. Pairs
-   * with position="center top" for a vertically-overflowing image; for a
-   * horizontally-overflowing one the image fills top-aligned automatically.
-   * Overrides `focusY`.
-   */
-  anchorTop?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   // These heroes sit at the very top of the page, so map the parallax to the
@@ -73,27 +62,23 @@ export default function ScrollParallaxImage({
     offset: ["start start", "end start"],
   });
 
-  // Default layer is 150% of the section tall, centered (top -25%). When a
-  // vertical bias is requested we oversize to 200% (top -50%) so the bias plus
-  // the parallax travel (|bias| + pct*100 <= 25% of the layer) stays covered.
-  // In anchorTop mode the layer is 150% tall pinned at the top (top 0%) and
-  // drifts UPWARD only, so the photo's top edge shows at rest and the 50%
-  // overhang below always covers the travel.
-  // anchorTop pins the layer at the top with a 50% overhang below, so the
-  // upward drift has far more room than the centered mode (which must split its
-  // margin between both directions). Allow a bigger, more noticeable travel
-  // there while keeping a safety margin under the 50% overhang.
-  const maxPct = anchorTop ? 0.35 : 0.16;
-  const pct = Math.max(0, Math.min(strength, maxPct));
+  // Default layer is 120% of the section tall, centered (top -10%). Keeping the
+  // oversize small means `position` (background-position) is what actually
+  // frames the photo - a bigger oversize would shove the visible window down the
+  // image and fight the crop. When a vertical bias is requested we oversize to
+  // 200% (top -50%) for the extra travel room the bias needs. As the hero
+  // scrolls the layer drifts from y = -pct to y = +pct, i.e. gently DOWNWARD - a
+  // background lag that trails the page rather than racing it. Travel is clamped
+  // under the oversize margin so no edge is ever exposed (10% each side default).
   const biased = focusY !== 0;
-  const layerTop = anchorTop ? "0%" : biased ? "-50%" : "-25%";
-  const layerHeight = anchorTop ? "150%" : biased ? "200%" : "150%";
+  const pct = Math.max(0, Math.min(strength, biased ? 0.16 : 0.1));
+  const travel = pct * 100;
+  const layerTop = biased ? "-50%" : "-10%";
+  const layerHeight = biased ? "200%" : "120%";
   const y = useTransform(
     scrollYProgress,
     [0, 1],
-    anchorTop
-      ? ["0%", `${-pct * 100}%`]
-      : [`${focusY - pct * 100}%`, `${focusY + pct * 100}%`]
+    [`${focusY - travel}%`, `${focusY + travel}%`]
   );
 
   return (

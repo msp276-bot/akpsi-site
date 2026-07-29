@@ -48,7 +48,7 @@ export default function MediaPage() {
           {/* Scroll-driven parallax backdrop: drifts as the hero scrolls, but is
               element-sized and percentage-driven so the framing doesn't re-crop
               on window resize (works on iOS too, unlike background-fixed). */}
-          <ScrollParallaxImage src="/chapter/lecture-hall.jpg" anchorTop position="center top" strength={0.2} />
+          <ScrollParallaxImage src="/chapter/lecture-hall.jpg" position="center top" strength={0.08} />
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 bg-navy/[0.78]"
