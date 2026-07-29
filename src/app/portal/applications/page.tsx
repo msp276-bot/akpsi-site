@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import {
   Search, ShieldAlert, GraduationCap, FileText, Mail, Phone,
-  X, Check, ChevronLeft, ChevronRight, Lock,
+  X, Check, ChevronLeft, ChevronRight, Lock, Maximize2, ExternalLink,
 } from "lucide-react";
 import PortalShell from "@/components/portal/PortalShell";
 import { useAuth } from "@/context/AuthContext";
@@ -40,6 +40,7 @@ function ApplicationsBoard() {
   const [query, setQuery] = useState("");
   const [index, setIndex] = useState(0);
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
+  const [expanded, setExpanded] = useState(false);
 
   const deck = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -131,9 +132,17 @@ function ApplicationsBoard() {
               />
             </div>
 
-            <p className="mt-4 text-center text-xs text-muted">
-              {safeIndex + 1} of {deck.length}
-            </p>
+            <div className="mt-4 flex items-center justify-center gap-4">
+              <p className="text-xs text-muted">
+                {safeIndex + 1} of {deck.length}
+              </p>
+              <button
+                onClick={() => setExpanded(true)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1 text-xs font-medium text-navy shadow-sm transition-colors hover:bg-slate-50"
+              >
+                <Maximize2 size={13} /> Full screen
+              </button>
+            </div>
 
             {/* Navigation + decisions in one roomy row - no cramped overlay arrows. */}
             <div className="mt-3 flex items-center justify-center gap-5">
@@ -215,6 +224,204 @@ function ApplicationsBoard() {
           </div>
         </div>
       )}
+
+      {expanded && current && (
+        <FullScreenReview
+          app={current}
+          index={safeIndex}
+          total={deck.length}
+          decision={decisions[current.id]}
+          canSwipe={canSwipe}
+          onDecide={decide}
+          onNav={go}
+          onClose={() => setExpanded(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function FullScreenReview({
+  app,
+  index,
+  total,
+  decision,
+  canSwipe,
+  onDecide,
+  onNav,
+  onClose,
+}: {
+  app: RushApplication;
+  index: number;
+  total: number;
+  decision?: Decision;
+  canSwipe: boolean;
+  onDecide: (dir: Decision) => void;
+  onNav: (delta: number) => void;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+      else if (e.key === "ArrowLeft") onNav(-1);
+      else if (e.key === "ArrowRight") onNav(1);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose, onNav]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex bg-navy/50 p-3 backdrop-blur-sm sm:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Application review for ${app.fullName}`}
+    >
+      <div className="mx-auto flex h-full w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-line bg-slate-50 shadow-2xl">
+        {/* Top bar */}
+        <div className="flex items-center justify-between gap-3 border-b border-line bg-white px-4 py-3 sm:px-6">
+          <div className="min-w-0">
+            <h2 className="truncate text-lg font-bold text-ink">{app.fullName}</h2>
+            <p className="text-xs text-muted">{index + 1} of {total}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onNav(-1)}
+              disabled={index === 0}
+              className="grid h-9 w-9 place-items-center rounded-full border border-line bg-white text-muted transition-colors hover:text-navy disabled:opacity-40"
+              aria-label="Previous applicant"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={() => onNav(1)}
+              disabled={index >= total - 1}
+              className="grid h-9 w-9 place-items-center rounded-full border border-line bg-white text-muted transition-colors hover:text-navy disabled:opacity-40"
+              aria-label="Next applicant"
+            >
+              <ChevronRight size={18} />
+            </button>
+            <button
+              onClick={onClose}
+              className="ml-1 inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-sm font-medium text-navy transition-colors hover:bg-slate-50"
+              aria-label="Close full screen"
+            >
+              <X size={16} /> Close
+            </button>
+          </div>
+        </div>
+
+        {/* Body: headshot + stats on the left, resume on the right */}
+        <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,24rem)_1fr]">
+          {/* Left column */}
+          <div className="overflow-y-auto border-b border-line p-5 lg:border-b-0 lg:border-r">
+            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-[radial-gradient(120%_120%_at_30%_0%,#2d3e5f_0%,#1a2744_60%,#131d33_100%)]">
+              {app.headshot ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={app.headshot} alt={app.fullName} className="h-full w-full object-cover" />
+              ) : (
+                <div className="grid h-full w-full place-items-center">
+                  <span className="grid h-28 w-28 place-items-center rounded-full border border-gold/40 bg-gold/10 font-display text-4xl text-gold">
+                    {getInitials(app.fullName)}
+                  </span>
+                </div>
+              )}
+              {decision && (
+                <span
+                  className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${
+                    decision === "keep" ? "bg-green-600 text-white" : "bg-scarlet text-white"
+                  }`}
+                >
+                  {decision === "keep" ? "Kept" : "Passed"}
+                </span>
+              )}
+            </div>
+
+            <p className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-[#9a7228]">
+              <GraduationCap size={15} /> Class of &rsquo;{String(app.gradYear).slice(2)} · {app.major}
+            </p>
+
+            {app.pitch && (
+              <p className="mt-3 text-sm italic leading-relaxed text-ink/80">&ldquo;{app.pitch}&rdquo;</p>
+            )}
+
+            <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
+              {[
+                ["GPA", app.gpa],
+                ["Class", `'${String(app.gradYear).slice(2)}`],
+                ["Source", app.referralSource],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-lg bg-white py-2 shadow-sm">
+                  <dt className="text-[10px] uppercase tracking-wide text-muted">{label}</dt>
+                  <dd className="mt-0.5 truncate px-1 text-sm font-semibold text-ink">{value}</dd>
+                </div>
+              ))}
+            </dl>
+
+            <div className="mt-4 space-y-2 text-xs text-muted">
+              <a href={`mailto:${app.email}`} className="flex items-center gap-1.5 hover:text-navy">
+                <Mail size={13} /> {app.email}
+              </a>
+              {app.phone && (
+                <span className="flex items-center gap-1.5"><Phone size={13} /> {app.phone}</span>
+              )}
+            </div>
+
+            {canSwipe && (
+              <div className="mt-5 flex items-center gap-3">
+                <button
+                  onClick={() => onDecide("pass")}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-scarlet/30 bg-white px-4 py-2.5 text-sm font-semibold text-scarlet transition-colors hover:bg-scarlet hover:text-white"
+                >
+                  <X size={18} /> Pass
+                </button>
+                <button
+                  onClick={() => onDecide("keep")}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-green-500/30 bg-white px-4 py-2.5 text-sm font-semibold text-green-600 transition-colors hover:bg-green-600 hover:text-white"
+                >
+                  <Check size={18} /> Keep
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Right column: resume */}
+          <div className="flex min-h-0 flex-col bg-slate-100">
+            <div className="flex items-center justify-between gap-2 border-b border-line bg-white px-4 py-2.5">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted">
+                <FileText size={14} /> Résumé
+              </span>
+              {app.resumeUrl && (
+                <a
+                  href={app.resumeUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-navy hover:underline"
+                >
+                  Open <ExternalLink size={12} />
+                </a>
+              )}
+            </div>
+            {app.resumeUrl ? (
+              <iframe
+                src={app.resumeUrl}
+                title={`${app.fullName} résumé`}
+                className="min-h-0 flex-1 border-0 bg-white"
+              />
+            ) : (
+              <div className="grid flex-1 place-items-center p-8 text-center">
+                <div>
+                  <FileText className="mx-auto text-muted/50" size={40} />
+                  <p className="mt-3 text-sm font-medium text-muted">Résumé pending</p>
+                  <p className="mt-1 text-xs text-muted/80">
+                    This applicant has not attached a résumé yet.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
