@@ -3,6 +3,7 @@ import { Hanken_Grotesk, Bodoni_Moda, Instrument_Serif } from "next/font/google"
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import ServiceWorkerRegister from "@/components/pwa/ServiceWorkerRegister";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 // Neutral geometric grotesk (a free Söhne / Neue Haas Grotesk stand-in) - the
 // professional-finance body voice that doesn't compete with the display serif.
@@ -93,6 +94,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-white text-ink">
         <AuthProvider>{children}</AuthProvider>
         <ServiceWorkerRegister />
+        <SpeedInsights />
       </body>
     </html>
   );
