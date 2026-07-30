@@ -23,7 +23,12 @@ export default function AboutPage() {
           {/* Scroll-driven parallax backdrop: drifts as the hero scrolls, but is
               element-sized and percentage-driven so the framing doesn't re-crop
               on window resize (works on iOS too, unlike background-fixed). */}
-          <ScrollParallaxImage src="/about-chapter.jpg" position="center top" strength={0.08} />
+          <ScrollParallaxImage
+            src="/about-chapter-desktop.jpg"
+            srcMobile="/about-chapter-mobile.jpg"
+            position="center"
+            strength={0.06}
+          />
           {/* Navy scrim keeps the white hero copy legible over the photo. The
               faces sit in the top third now, so the gradient is lightest up top
               (let the people show) and darkest at the bottom so the section

@@ -25,12 +25,20 @@ import { motion, useScroll, useTransform } from "framer-motion";
  */
 export default function ScrollParallaxImage({
   src,
+  srcMobile,
   className = "",
   position = "center",
+  positionMobile,
   strength = 0.12,
   focusY = 0,
 }: {
   src: string;
+  /**
+   * Optional art-directed source for phones. When set, this image is shown below
+   * the `md` breakpoint and `src` at/above it, so each device gets a crop framed
+   * for its own shape (a wide crop can't also frame a tall phone). Both parallax.
+   */
+  srcMobile?: string;
   className?: string;
   /**
    * background-position, e.g. "center", "center 32%". Note: only affects the
@@ -38,10 +46,12 @@ export default function ScrollParallaxImage({
    * crops horizontally, so use `focusY` (not this) to move it vertically there.
    */
   position?: string;
+  /** background-position for the mobile source; falls back to `position`. */
+  positionMobile?: string;
   /**
    * Drift as a fraction of the image layer's own height, each direction.
-   * 0.12 = a moderate, tasteful parallax. Clamped to 0.16 so the oversize below
-   * always covers the travel.
+   * 0.12 = a moderate, tasteful parallax. Clamped so the oversize below always
+   * covers the travel.
    */
   strength?: number;
   /**
@@ -62,23 +72,23 @@ export default function ScrollParallaxImage({
     offset: ["start start", "end start"],
   });
 
-  // Default layer is 120% of the section tall, centered (top -10%). Keeping the
-  // oversize small means `position` (background-position) is what actually
-  // frames the photo - a bigger oversize would shove the visible window down the
-  // image and fight the crop. When a vertical bias is requested we oversize to
-  // 200% (top -50%) for the extra travel room the bias needs. As the hero
-  // scrolls the layer drifts from y = -pct to y = +pct, i.e. gently DOWNWARD - a
-  // background lag that trails the page rather than racing it. Travel is clamped
-  // under the oversize margin so no edge is ever exposed (10% each side default).
+  // Default layer is 116% of the section tall (top -8%). Crucially the photo
+  // shows CENTERED (as-composed) at rest - the layer only translates DOWN from
+  // zero as the hero scrolls - so pre-framed crops are never shoved off the top
+  // by the parallax. The 8% margin each side covers the downward travel so no
+  // edge is exposed. When a vertical bias is requested we oversize to 200% (top
+  // -50%) and keep the older symmetric drift for that mode.
   const biased = focusY !== 0;
-  const pct = Math.max(0, Math.min(strength, biased ? 0.16 : 0.1));
+  const pct = Math.max(0, Math.min(strength, biased ? 0.16 : 0.04));
   const travel = pct * 100;
-  const layerTop = biased ? "-50%" : "-10%";
-  const layerHeight = biased ? "200%" : "120%";
+  const layerTop = biased ? "-50%" : "-8%";
+  const layerHeight = biased ? "200%" : "116%";
   const y = useTransform(
     scrollYProgress,
     [0, 1],
-    [`${focusY - travel}%`, `${focusY + travel}%`]
+    biased
+      ? [`${focusY - travel}%`, `${focusY + travel}%`]
+      : ["0%", `${2 * travel}%`]
   );
 
   return (
@@ -91,10 +101,26 @@ export default function ScrollParallaxImage({
         style={{ y, top: layerTop, height: layerHeight }}
         className="absolute inset-x-0 will-change-transform"
       >
-        <div
-          className={`h-full w-full bg-cover bg-no-repeat ${className}`}
-          style={{ backgroundImage: `url('${src}')`, backgroundPosition: position }}
-        />
+        {srcMobile ? (
+          <>
+            <div
+              className={`absolute inset-0 h-full w-full bg-cover bg-no-repeat md:hidden ${className}`}
+              style={{
+                backgroundImage: `url('${srcMobile}')`,
+                backgroundPosition: positionMobile ?? position,
+              }}
+            />
+            <div
+              className={`absolute inset-0 hidden h-full w-full bg-cover bg-no-repeat md:block ${className}`}
+              style={{ backgroundImage: `url('${src}')`, backgroundPosition: position }}
+            />
+          </>
+        ) : (
+          <div
+            className={`h-full w-full bg-cover bg-no-repeat ${className}`}
+            style={{ backgroundImage: `url('${src}')`, backgroundPosition: position }}
+          />
+        )}
       </motion.div>
     </div>
   );
