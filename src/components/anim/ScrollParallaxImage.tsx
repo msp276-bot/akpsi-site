@@ -72,17 +72,17 @@ export default function ScrollParallaxImage({
     offset: ["start start", "end start"],
   });
 
-  // Default layer is 130% of the section tall (top -15%). Crucially the photo
+  // Default layer is 150% of the section tall (top -25%). Crucially the photo
   // shows CENTERED (as-composed) at rest - the layer only translates DOWN from
   // zero as the hero scrolls - so pre-framed crops are never shoved off the top
-  // by the parallax. The 15% margin each side gives a strong downward drift room
-  // while still covering it so no edge is exposed. When a vertical bias is
-  // requested we oversize to 200% (top -50%) and keep the older symmetric drift.
+  // by the parallax. The 25% margin each side gives a big downward drift while
+  // still covering it so no edge is exposed. When a vertical bias is requested
+  // we oversize to 200% (top -50%) and keep the older symmetric drift.
   const biased = focusY !== 0;
-  const pct = Math.max(0, Math.min(strength, biased ? 0.16 : 0.07));
+  const pct = Math.max(0, Math.min(strength, biased ? 0.16 : 0.12));
   const travel = pct * 100;
-  const layerTop = biased ? "-50%" : "-15%";
-  const layerHeight = biased ? "200%" : "130%";
+  const layerTop = biased ? "-50%" : "-25%";
+  const layerHeight = biased ? "200%" : "150%";
   const y = useTransform(
     scrollYProgress,
     [0, 1],

@@ -52,7 +52,7 @@ export default function MediaPage() {
             src="/chapter/lecture-hall-desktop.jpg"
             srcMobile="/chapter/lecture-hall-mobile.jpg"
             position="center"
-            strength={0.07}
+            strength={0.12}
           />
           <div
             aria-hidden
