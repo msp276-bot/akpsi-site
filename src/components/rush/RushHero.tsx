@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import GoldParticles from "@/components/backgrounds/GoldParticles";
-import ParallaxImage from "@/components/anim/ParallaxImage";
+import ScrollParallaxImage from "@/components/anim/ScrollParallaxImage";
 import Button from "@/components/ui/Button";
 import { staggerContainer, fadeUp } from "@/lib/motion";
 
@@ -12,9 +12,9 @@ export default function RushHero() {
     <section className="relative flex h-svh min-h-[620px] items-center justify-center overflow-hidden bg-navy">
       {/* Chapter photo backdrop behind a navy scrim - the headline and both
           buttons sit on top, so the wash has to stay heavy enough for white
-          type to hold up over the brightest part of the staircase. Parallaxes
-          as you scroll past. */}
-      <ParallaxImage src="/chapter/stairs-candid.jpg" />
+          type to hold up over the brightest part of the staircase. Element-sized
+          scroll parallax (not background-fixed, which iOS zooms/breaks). */}
+      <ScrollParallaxImage src="/chapter/stairs-candid.jpg" strength={0.1} />
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-navy/50"

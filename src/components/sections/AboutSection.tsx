@@ -7,7 +7,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import CountUp from "@/components/anim/CountUp";
-import ParallaxImage from "@/components/anim/ParallaxImage";
+import ScrollParallaxImage from "@/components/anim/ScrollParallaxImage";
 import Reveal from "@/components/anim/Reveal";
 import GoldParticles from "@/components/backgrounds/GoldParticles";
 import { cardIn } from "@/lib/motion";
@@ -33,8 +33,9 @@ export default function AboutSection() {
       className="relative overflow-hidden bg-white py-24 sm:py-32"
     >
       {/* Chapter photo backdrop, parallaxing behind the white scrim so the copy
-          and stat cards keep their contrast at every viewport width. */}
-      <ParallaxImage src="/chapter-group.jpg" />
+          and stat cards keep their contrast at every viewport width. Element-
+          sized scroll parallax (not background-fixed, which iOS hides/breaks). */}
+      <ScrollParallaxImage src="/chapter-group.jpg" strength={0.1} />
       {/* Scrim: a flat white wash keeps the copy legible, and a vertical
           gradient goes fully opaque only at the very top and bottom so the
           section resolves cleanly against the sections above and below. */}
