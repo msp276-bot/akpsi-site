@@ -56,10 +56,7 @@ const ROW_TWO: Company[] = [
 ];
 
 const ROW_THREE: Company[] = [
-  // No brand logo file on hand, so this renders as a text chip (BCG's mark is a
-  // "BCG" wordmark, so it reads correctly). Drop /public/logos/bcg.svg + a
-  // `logo` field here to upgrade it to the real mark.
-  { name: "BCG" },
+  { name: "BCG", logo: "/logos/bcg.svg" },
   { name: "Scotiabank", logo: "/logos/scotiabank.svg" },
   { name: "Newmark", logo: "/logos/newmark.svg" },
   { name: "Kenvue", logo: "/logos/kenvue.svg" },
