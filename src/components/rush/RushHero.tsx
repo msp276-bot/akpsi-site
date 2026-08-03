@@ -14,7 +14,10 @@ export default function RushHero() {
           buttons sit on top, so the wash has to stay heavy enough for white
           type to hold up over the brightest part of the staircase. Element-sized
           scroll parallax (not background-fixed, which iOS zooms/breaks). */}
-      <ScrollParallaxImage src="/chapter/stairs-candid.jpg" strength={0.1} />
+      {/* Low strength keeps the layer near 1:1 (only ~5% crop each side) so the
+          whole group on the stairs stays in frame - people sit at the top and
+          bottom edges of this photo, unlike the pre-framed About/Media crops. */}
+      <ScrollParallaxImage src="/chapter/stairs-candid.jpg" strength={0.05} />
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-navy/50"

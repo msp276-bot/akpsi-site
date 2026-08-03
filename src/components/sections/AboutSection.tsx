@@ -35,7 +35,7 @@ export default function AboutSection() {
       {/* Chapter photo backdrop, parallaxing behind the white scrim so the copy
           and stat cards keep their contrast at every viewport width. Element-
           sized scroll parallax (not background-fixed, which iOS hides/breaks). */}
-      <ScrollParallaxImage src="/chapter-group.jpg" strength={0.12} />
+      <ScrollParallaxImage src="/chapter-group.jpg" strength={0.23} />
       {/* Scrim: a flat white wash keeps the copy legible, and a vertical
           gradient goes fully opaque only at the very top and bottom so the
           section resolves cleanly against the sections above and below. */}

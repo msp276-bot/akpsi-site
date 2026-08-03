@@ -15,6 +15,7 @@ const NAV_LINKS = [
   { label: "Our Members", href: "/members" },
   { label: "Media", href: "/media" },
   { label: "Rush", href: "/rush" },
+  { label: "Sponsors", href: "/sponsors" },
 ];
 
 const SOCIALS = [

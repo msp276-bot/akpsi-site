@@ -72,23 +72,26 @@ export default function ScrollParallaxImage({
     offset: ["start start", "end start"],
   });
 
-  // Default layer is 150% of the section tall (top -25%). Crucially the photo
-  // shows CENTERED (as-composed) at rest - the layer only translates DOWN from
-  // zero as the hero scrolls - so pre-framed crops are never shoved off the top
-  // by the parallax. The 25% margin each side gives a big downward drift while
-  // still covering it so no edge is exposed. When a vertical bias is requested
-  // we oversize to 200% (top -50%) and keep the older symmetric drift.
+  // The layer oversize is now TIED TO `strength`, so a gentler hero shows more of
+  // the photo (a stronger one crops more at rest to buy its bigger drift). `over`
+  // is the margin on each side as a fraction of the section height; the layer is
+  // (1 + 2*over) tall, centered, so the photo shows as-composed at rest and only
+  // drifts DOWN as the hero scrolls. `yMax` is set so the full drift equals
+  // exactly `over` of the section - it consumes the top margin and no more, so no
+  // navy edge is ever exposed at max scroll (gap-safe). When a vertical bias is
+  // requested we keep the older 200% (top -50%) symmetric-drift path.
   const biased = focusY !== 0;
-  const pct = Math.max(0, Math.min(strength, biased ? 0.16 : 0.12));
-  const travel = pct * 100;
-  const layerTop = biased ? "-50%" : "-25%";
-  const layerHeight = biased ? "200%" : "150%";
+  const travel = Math.max(0, Math.min(strength, 0.16)) * 100; // biased mode only
+  const over = Math.max(0, Math.min(strength, 0.25)); // each-side margin, fraction of section height
+  const yMax = (over * 100) / (1 + 2 * over); // % of layer height == `over` of the section, gap-safe
+  const layerTop = biased ? "-50%" : `${(-100 * over).toFixed(2)}%`;
+  const layerHeight = biased ? "200%" : `${(100 + 200 * over).toFixed(2)}%`;
   const y = useTransform(
     scrollYProgress,
     [0, 1],
     biased
       ? [`${focusY - travel}%`, `${focusY + travel}%`]
-      : ["0%", `${2 * travel}%`]
+      : ["0%", `${yMax.toFixed(2)}%`]
   );
 
   return (

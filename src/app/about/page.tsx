@@ -27,7 +27,7 @@ export default function AboutPage() {
             src="/about-chapter-desktop.jpg"
             srcMobile="/about-chapter-mobile.jpg"
             position="center"
-            strength={0.12}
+            strength={0.23}
           />
           {/* Navy scrim keeps the white hero copy legible over the photo. The
               faces sit in the top third now, so the gradient is lightest up top
