@@ -14,10 +14,10 @@ export default function RushHero() {
           buttons sit on top, so the wash has to stay heavy enough for white
           type to hold up over the brightest part of the staircase. Element-sized
           scroll parallax (not background-fixed, which iOS zooms/breaks). */}
-      {/* Max strength (capped at 0.25 in the component): the strongest drift
-          that still keeps the whole group in frame. Beyond this the ~25% crop
-          each side starts cutting the back-row heads and the feet. */}
-      <ScrollParallaxImage src="/chapter/stairs-candid.jpg" strength={0.25} />
+      {/* Moderate strength: shows the photo at close to its original framing
+          (~10% crop each side, whole group visible) while keeping a real
+          parallax. Higher values zoom the picture in. */}
+      <ScrollParallaxImage src="/chapter/stairs-candid.jpg" strength={0.1} />
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-navy/50"
