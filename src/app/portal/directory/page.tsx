@@ -49,6 +49,43 @@ function Directory() {
     };
   }, []);
 
+  // Open a member's card when the ⌘K command palette picks a person. Two paths,
+  // because App Router fires no navigation for a same-page hash change:
+  //  - same page: the palette dispatches an "akpsi:open-member" CustomEvent.
+  //  - cross page: it stashes the slug in sessionStorage; we read it on mount
+  //    (deferred a frame so we never setState synchronously in the effect body).
+  useEffect(() => {
+    function openSlug(slug: string) {
+      const match = localMembers.find((m) => m.slug === slug);
+      if (match) setSelected(match);
+    }
+    function onOpenMember(e: Event) {
+      const slug = (e as CustomEvent<string>).detail;
+      if (slug) openSlug(slug);
+    }
+    window.addEventListener("akpsi:open-member", onOpenMember as EventListener);
+    const raf = requestAnimationFrame(() => {
+      let pending: string | null = null;
+      try {
+        pending = window.sessionStorage.getItem("akpsi.openMember");
+      } catch {
+        /* storage may be unavailable */
+      }
+      if (pending) {
+        try {
+          window.sessionStorage.removeItem("akpsi.openMember");
+        } catch {
+          /* ignore */
+        }
+        openSlug(pending);
+      }
+    });
+    return () => {
+      window.removeEventListener("akpsi:open-member", onOpenMember as EventListener);
+      cancelAnimationFrame(raf);
+    };
+  }, [localMembers]);
+
   // Layer an approved self-edit onto a member's static card (matched by the
   // slug<->email link in member_contacts).
   function overridesFor(m: Member) {

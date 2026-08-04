@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -9,7 +9,6 @@ import {
   Users,
   FolderOpen,
   Megaphone,
-  LogOut,
   ClipboardList,
   ClipboardCheck,
   CalendarPlus,
@@ -17,12 +16,28 @@ import {
   Award,
   ShieldCheck,
   UserRound,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Logo from "@/components/ui/Logo";
 import NotificationBell from "@/components/portal/NotificationBell";
-import { getInitials } from "@/data/members";
+import CommandPalette from "@/components/portal/CommandPalette";
+import PortalAccountMenu from "@/components/portal/PortalAccountMenu";
 import { hasPermission, roleLabel } from "@/lib/access";
+
+const THEME_KEY = "akpsi.theme";
+
+function readInitialDark(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const stored = window.localStorage.getItem(THEME_KEY);
+    if (stored) return stored === "dark";
+    return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+  } catch {
+    return false;
+  }
+}
 
 const NAV = [
   { label: "Dashboard", href: "/portal/dashboard", Icon: LayoutDashboard },
@@ -95,10 +110,35 @@ export default function PortalShell({
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  // Lazy init reads localStorage/system pref on the client. Safe from a
+  // hydration mismatch: the themed shell only renders once `user` resolves
+  // (client-only), never in the prerendered/loading branch.
+  const [dark, setDark] = useState(readInitialDark);
+
+  function toggleTheme() {
+    setDark((v) => {
+      const next = !v;
+      try {
+        window.localStorage.setItem(THEME_KEY, next ? "dark" : "light");
+      } catch {
+        /* storage may be unavailable */
+      }
+      return next;
+    });
+  }
 
   useEffect(() => {
     if (!loading && !user) router.replace("/portal");
   }, [loading, user, router]);
+
+  // Match <html>/<body> (which keep the layout's light background) to the portal
+  // theme so the scroll gutter/overscroll doesn't flash white. Cleaned up on
+  // leaving the portal.
+  useEffect(() => {
+    const el = document.documentElement;
+    el.classList.toggle("portal-dark", dark);
+    return () => el.classList.remove("portal-dark");
+  }, [dark]);
 
   if (loading || !user) {
     return (
@@ -120,7 +160,7 @@ export default function PortalShell({
   const isActive = (href: string) => currentPath === href.replace(/\/+$/, "");
 
   return (
-    <div className="min-h-svh bg-slate-50">
+    <div className={`min-h-svh bg-slate-50 ${dark ? "dark" : ""}`}>
       {/* Top bar */}
       <header className="sticky top-0 z-40 border-b border-line bg-navy text-white">
         <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:gap-3 sm:px-8">
@@ -134,27 +174,28 @@ export default function PortalShell({
           <span className="pointer-events-none absolute left-1/2 hidden -translate-x-1/2 whitespace-nowrap text-xs uppercase tracking-widest text-white/50 lg:block">
             {roleLabel(user.role)}
           </span>
-          <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-            <NotificationBell role={user.role} email={user.email} />
-            <div className="hidden text-right lg:block">
-              <p className="text-sm font-medium leading-tight">{user.name}</p>
-              <p className="text-xs text-white/50">{user.email}</p>
-            </div>
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gold text-sm font-bold text-navy">
-              {getInitials(user.name)}
-            </div>
-            {/* Icon-only below sm; the label costs ~70px the phone cannot spare. */}
+          {/* Right cluster kept lean: search, notifications, and one account
+              menu that folds in the name/email, theme toggle, and sign out. */}
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <CommandPalette role={user.role} />
             <button
-              onClick={() => {
+              onClick={toggleTheme}
+              aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+              title={dark ? "Light mode" : "Dark mode"}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/15 text-white/80 transition-colors hover:bg-white/10"
+            >
+              {dark ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+            <NotificationBell role={user.role} email={user.email} />
+            <PortalAccountMenu
+              name={user.name}
+              email={user.email}
+              roleLabel={roleLabel(user.role)}
+              onSignOut={() => {
                 signOut();
                 router.replace("/portal");
               }}
-              aria-label="Sign out"
-              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-white/20 px-2.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 sm:px-3"
-            >
-              <LogOut size={14} />
-              <span className="hidden sm:inline">Sign out</span>
-            </button>
+            />
           </div>
         </div>
       </header>

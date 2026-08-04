@@ -44,6 +44,63 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* ============================================================
+   Portal dark mode
+   ------------------------------------------------------------
+   Scoped: the `.dark` class only ever lands on the portal shell
+   root (PortalShell), so the public marketing site is untouched.
+   The theme utilities in this codebase are literal (`bg-white`,
+   `text-ink`, ...), so rather than sprinkle `dark:` on every page
+   we remap the recurring surfaces centrally here. These rules are
+   unlayered, so they win over Tailwind's utilities layer.
+   `@custom-variant dark` is still declared so new components can
+   use `dark:` where a one-off tweak is cleaner.
+   ============================================================ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  color-scheme: dark;
+  /* Inherited default so fields that don't set an explicit text color (some
+     inputs/selects) don't fall back to the light-mode ink on a dark surface. */
+  color: #e7ebf2;
+}
+
+/* `.dark` lives on the shell root, but <body> (its ancestor) keeps the light
+   `bg-white` from the layout, which shows through on overscroll. PortalShell
+   toggles `.portal-dark` on <html> so the scroll gutter matches. */
+html.portal-dark,
+html.portal-dark body {
+  background-color: #0d1524;
+}
+
+/* Surfaces. The compound `.dark.bg-slate-50` also catches the shell root, which
+   carries `.dark` and `bg-slate-50` on the same element (a descendant combinator
+   alone would skip it and leave the page canvas light behind the dark cards). */
+.dark .bg-white { background-color: #141d30; }
+.dark .bg-slate-50,
+.dark.bg-slate-50 { background-color: #0d1524; }
+.dark .bg-slate-100 { background-color: #1b2740; }
+.dark .bg-slate-200 { background-color: #26324c; }
+.dark .hover\:bg-white:hover { background-color: #1b2740; }
+.dark .hover\:bg-slate-50:hover { background-color: #1b2740; }
+.dark .hover\:bg-slate-100:hover { background-color: #26324c; }
+.dark .hover\:bg-slate-200:hover { background-color: #30405f; }
+
+/* Text */
+.dark .text-ink { color: #e7ebf2; }
+.dark .text-muted { color: #94a3b8; }
+/* `text-navy` is a heading color on light cards, so it flips light in dark,
+   EXCEPT when it sits on a solid gold chip (avatar/badges) where navy-on-gold
+   is the intended contrast. */
+.dark .text-navy { color: #dfe6f4; }
+.dark .bg-gold.text-navy { color: #1a2744; }
+
+/* Borders */
+.dark .border-line { border-color: #29344d; }
+
+/* Accent tints that assume a light backdrop */
+.dark .bg-navy\/5 { background-color: rgba(255, 255, 255, 0.06); }
+
 /* Uppercase display headline helper */
 .headline {
   font-family: var(--font-display);
