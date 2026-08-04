@@ -35,6 +35,9 @@ yarn-error.log*
 # ...but keep the committed template that documents required vars
 !.env.local.example
 
+# local-only SQL seeds that contain PII (real member emails) - never commit
+*.local.sql
+
 # vercel
 .vercel
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus, Search, X, Mail, GraduationCap } from "lucide-react";
 import { LinkedinIcon } from "@/components/BrandIcons";
@@ -8,6 +8,7 @@ import PortalShell from "@/components/portal/PortalShell";
 import { useAuth } from "@/context/AuthContext";
 import { members, getInitials, type Member } from "@/data/members";
 import { hasPermission } from "@/lib/access";
+import { listMemberContacts, type MemberContact } from "@/lib/directory";
 
 export default function DirectoryPage() {
   return (
@@ -25,6 +26,24 @@ function Directory() {
   const [localMembers, setLocalMembers] = useState<Member[]>(members);
   const [showAdd, setShowAdd] = useState(false);
   const canAddMembers = hasPermission(user?.role ?? "active", "edit:member");
+
+  // Contact info (email/LinkedIn) is private and lives in Supabase, keyed by
+  // slug - fetched with the signed-in member's session, never in the bundle.
+  const [contacts, setContacts] = useState<Record<string, MemberContact>>({});
+  useEffect(() => {
+    let active = true;
+    listMemberContacts()
+      .then((list) => {
+        if (!active) return;
+        setContacts(Object.fromEntries(list.map((c) => [c.slug, c])));
+      })
+      .catch(() => {
+        /* leave contacts empty; the UI falls back to "not on file" */
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const years = useMemo(
     () => ["all", ...Array.from(new Set(localMembers.map((m) => m.classYear))).sort()],
@@ -180,22 +199,54 @@ function Directory() {
                     </p>
                   </div>
 
-                  <div className="mt-4 flex w-full gap-2">
-                    <a
-                      href={selected.linkedin ?? "#"}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-full bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#141d34]"
-                    >
-                      <LinkedinIcon size={15} /> LinkedIn
-                    </a>
-                    <a
-                      href={`mailto:${selected.name
-                        .toLowerCase()
-                        .replace(/ /g, ".")}@rutgers.edu`}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm font-semibold text-navy hover:border-navy"
-                    >
-                      <Mail size={15} /> Contact
-                    </a>
-                  </div>
+                  {(() => {
+                    const contact = contacts[selected.slug];
+                    const linkedinHref = contact?.linkedin ?? selected.linkedin ?? null;
+                    const email = contact?.email ?? null;
+                    return (
+                      <>
+                        {email && (
+                          <p className="mt-3 w-full break-all text-center text-xs text-muted">
+                            {email}
+                          </p>
+                        )}
+                        <div className="mt-4 flex w-full gap-2">
+                          {linkedinHref ? (
+                            <a
+                              href={linkedinHref}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex flex-1 items-center justify-center gap-2 rounded-full bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#141d34]"
+                            >
+                              <LinkedinIcon size={15} /> LinkedIn
+                            </a>
+                          ) : (
+                            <span
+                              className="flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-full bg-slate-100 px-4 py-2.5 text-sm font-semibold text-muted"
+                              title="Not on file"
+                            >
+                              <LinkedinIcon size={15} /> LinkedIn
+                            </span>
+                          )}
+                          {email ? (
+                            <a
+                              href={`mailto:${email}`}
+                              className="flex flex-1 items-center justify-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm font-semibold text-navy hover:border-navy"
+                            >
+                              <Mail size={15} /> Email
+                            </a>
+                          ) : (
+                            <span
+                              className="flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm font-semibold text-muted"
+                              title="Not on file"
+                            >
+                              <Mail size={15} /> Email
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </motion.div>
             </motion.div>
