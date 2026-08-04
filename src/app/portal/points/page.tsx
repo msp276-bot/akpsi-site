@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Upload, X, Award, Clock, CheckCircle2, XCircle, HeartHandshake } from "lucide-react";
 import PortalShell from "@/components/portal/PortalShell";
+import Achievements from "@/components/portal/Achievements";
 import { useAuth } from "@/context/AuthContext";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { pointsRequiredFor, serviceHoursRequiredFor } from "@/lib/points";
@@ -205,6 +206,15 @@ function PointsBody() {
           accent="navy"
         />
       </div>
+
+      {/* Gamified achievement badges - computed from approved submissions. */}
+      <Achievements
+        points={earnedPoints}
+        hours={earnedHours}
+        pointsRequired={pointsRequiredFor(user.role)}
+        hoursRequired={serviceHoursRequiredFor(user.role)}
+        approvedCount={mine.filter((s) => s.status === "approved").length}
+      />
 
       {/* Submit form */}
       <form onSubmit={onSubmit} className="rounded-2xl border border-line bg-white p-6">

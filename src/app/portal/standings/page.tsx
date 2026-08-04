@@ -130,12 +130,27 @@ function StandingsBody() {
     );
   }
 
+  // Rank the whole chapter by approved points (then hours), so a member's rank
+  // is their true standing - then filter for display without changing the rank.
   const q = query.trim().toLowerCase();
-  const filtered = standings
-    .filter(({ member }) =>
-      !q || member.fullName.toLowerCase().includes(q) || member.email.toLowerCase().includes(q)
+  const ranked = standings
+    .slice()
+    .sort(
+      (a, b) =>
+        b.points - a.points ||
+        b.hours - a.hours ||
+        (a.member.fullName || a.member.email).localeCompare(
+          b.member.fullName || b.member.email
+        )
     )
-    .sort((a, b) => (a.member.fullName || a.member.email).localeCompare(b.member.fullName || b.member.email));
+    .map((s, i) => ({ ...s, rank: i + 1 }));
+  const filtered = ranked.filter(
+    ({ member }) =>
+      !q ||
+      member.fullName.toLowerCase().includes(q) ||
+      member.email.toLowerCase().includes(q)
+  );
+  const MEDALS: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
   return (
     <div className="space-y-6">
@@ -173,13 +188,14 @@ function StandingsBody() {
         <>
           {/* Column header (desktop) */}
           <div className="hidden px-4 text-[11px] font-semibold uppercase tracking-wide text-muted sm:flex sm:items-center sm:gap-4">
+            <span className="w-8 shrink-0 text-center">#</span>
             <span className="flex-1">Member</span>
             <span className="w-24">Points</span>
             <span className="w-24">Service hrs</span>
             <span className="w-6" />
           </div>
           <ul className="space-y-2">
-            {filtered.map(({ member, points, hours, pending, subs: mine }) => {
+            {filtered.map(({ member, points, hours, pending, subs: mine, rank }) => {
               const open = openEmail === member.email;
               const pointsReq = pointsRequiredFor(member.role);
               const hoursReq = serviceHoursRequiredFor(member.role);
@@ -189,6 +205,14 @@ function StandingsBody() {
                     onClick={() => setOpenEmail(open ? null : member.email)}
                     className="flex w-full flex-wrap items-center gap-4 p-4 text-left transition-colors hover:bg-slate-50"
                   >
+                    <span
+                      className={`grid w-8 shrink-0 place-items-center text-lg font-bold ${
+                        rank <= 3 ? "" : "text-sm text-muted"
+                      }`}
+                      aria-label={`Rank ${rank}`}
+                    >
+                      {MEDALS[rank] ?? `#${rank}`}
+                    </span>
                     <div className="min-w-0 flex-1 basis-48">
                       <div className="flex items-center gap-2">
                         <span className="truncate font-semibold text-navy">
