@@ -24,6 +24,8 @@ export interface RushApplication {
   resumeUrl?: string;
   /** One-line "why AKPsi" blurb from the application. */
   pitch?: string;
+  /** President's triage decision (keep/pass), persisted with the application. */
+  decision?: "keep" | "pass" | null;
 }
 
 export const applications: RushApplication[] = [

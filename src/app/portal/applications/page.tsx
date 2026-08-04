@@ -8,9 +8,10 @@ import {
 } from "lucide-react";
 import PortalShell from "@/components/portal/PortalShell";
 import { useAuth } from "@/context/AuthContext";
-import { applications, type RushApplication, type ApplicationStatus } from "@/data/applications";
+import { type RushApplication, type ApplicationStatus } from "@/data/applications";
 import { getInitials } from "@/data/members";
 import { hasPermission, portalRole } from "@/lib/access";
+import { listApplications, setApplicationDecision } from "@/lib/applications";
 
 const STATUS_META: Record<ApplicationStatus, string> = {
   pending: "bg-gold/15 text-[#9a7228]",
@@ -41,14 +42,43 @@ function ApplicationsBoard() {
   const [index, setIndex] = useState(0);
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
   const [expanded, setExpanded] = useState(false);
+  const [appsData, setAppsData] = useState<RushApplication[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Non-allowed users never reach the loading guard (the auth block returns
+    // first), so we only fetch - and only toggle loading - when allowed.
+    if (!allowed) return;
+    let active = true;
+    listApplications()
+      .then((rows) => {
+        if (!active) return;
+        setAppsData(rows);
+        // Seed the keep/pass state from decisions already persisted.
+        setDecisions(
+          Object.fromEntries(
+            rows
+              .filter((r) => r.decision)
+              .map((r) => [r.id, r.decision as Decision])
+          )
+        );
+        setLoading(false);
+      })
+      .catch(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [allowed]);
 
   const deck = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return applications;
-    return applications.filter((app) =>
+    if (!q) return appsData;
+    return appsData.filter((app) =>
       [app.fullName, app.email, app.major, app.status].some((v) => v.toLowerCase().includes(q))
     );
-  }, [query]);
+  }, [query, appsData]);
 
   // Clamp so a shrinking filter result never points past the end.
   const safeIndex = deck.length ? Math.min(index, deck.length - 1) : 0;
@@ -59,7 +89,10 @@ function ApplicationsBoard() {
   }
   function decide(dir: Decision) {
     if (!canSwipe || !current) return;
-    setDecision(current.id, dir);
+    const id = current.id;
+    setDecision(id, dir);
+    // Persist the decision (fire-and-forget; the optimistic UI already updated).
+    setApplicationDecision(id, dir, user?.email ?? "").catch(() => {});
     // Advance to the next card, but never past the end - the applicant stays
     // in the deck and the list, just now marked.
     setIndex((i) => Math.min(i + 1, deck.length - 1));
@@ -80,6 +113,16 @@ function ApplicationsBoard() {
         <p className="mt-2 text-sm text-muted">
           Rush applications and reviewer actions are hidden unless your account
           has E-Board or admin access.
+        </p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-5xl">
+        <p className="mt-10 text-center text-sm text-muted">
+          Loading applications…
         </p>
       </div>
     );

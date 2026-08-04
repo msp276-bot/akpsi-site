@@ -1,12 +1,11 @@
-import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
+import { ArrowUpRight, Mail } from "lucide-react";
 import SectionHeader from "@/components/ui/SectionHeader";
 
-// External intake links. The static S3/CloudFront site cannot run a form
-// backend, so both the full application and the lighter interest form live in
-// external tools (e.g. Google Forms). Drop the real URLs in here.
-// TODO: replace the placeholders with the chapter's real form links.
-const APPLICATION_PORTAL_URL = "#";
-const INTEREST_FORM_URL = "#";
+// The chapter's own application form, backed by Supabase (see /rush/apply and
+// db/rush-applications.sql). Recruits not ready to apply can reach out by email.
+const APPLICATION_URL = "/rush/apply";
+const INTEREST_EMAIL = "rutgersakpsi2024@gmail.com";
 
 export default function RushApply() {
   return (
@@ -15,29 +14,24 @@ export default function RushApply() {
         <SectionHeader title="Apply Now" subtitle="fall '26 recruitment" />
 
         <p className="mx-auto mt-6 max-w-xl text-muted">
-          Ready to get involved? Start your full application through the
-          Application Portal, or share your info with our lighter Interest Form
-          and we&rsquo;ll keep you posted on rush events.
+          Ready to get involved? Start your application below. Not ready to apply
+          yet? Reach out and we&rsquo;ll keep you posted on rush events.
         </p>
 
         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <a
-            href={APPLICATION_PORTAL_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href={APPLICATION_URL}
             className="inline-flex items-center justify-center gap-2 rounded-full bg-gold px-9 py-4 text-base font-semibold text-navy transition-all duration-200 hover:scale-[1.03] hover:bg-gold-soft active:scale-[0.98]"
           >
-            Application Portal
+            Start your application
             <ArrowUpRight size={18} />
-          </a>
+          </Link>
           <a
-            href={INTEREST_FORM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={`mailto:${INTEREST_EMAIL}?subject=AKPsi%20Rush%20Interest`}
             className="inline-flex items-center justify-center gap-2 rounded-full border border-navy/20 px-9 py-4 text-base font-medium text-navy transition-all duration-200 hover:scale-[1.03] hover:border-navy/40 active:scale-[0.98]"
           >
-            Interest Form
-            <ArrowUpRight size={18} />
+            <Mail size={18} />
+            Ask a question
           </a>
         </div>
       </div>
