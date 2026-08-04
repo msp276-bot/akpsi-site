@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { members, getInitials, type Member } from "@/data/members";
 import { hasPermission } from "@/lib/access";
 import { listMemberContacts, type MemberContact } from "@/lib/directory";
+import { listApprovedProfiles, type ApprovedProfile } from "@/lib/profile";
 
 export default function DirectoryPage() {
   return (
@@ -30,20 +31,37 @@ function Directory() {
   // Contact info (email/LinkedIn) is private and lives in Supabase, keyed by
   // slug - fetched with the signed-in member's session, never in the bundle.
   const [contacts, setContacts] = useState<Record<string, MemberContact>>({});
+  // Approved self-edit overrides (major/company/LinkedIn/photo), keyed by email.
+  const [profiles, setProfiles] = useState<Record<string, ApprovedProfile>>({});
   useEffect(() => {
     let active = true;
-    listMemberContacts()
-      .then((list) => {
+    Promise.all([listMemberContacts(), listApprovedProfiles()])
+      .then(([contactList, profileList]) => {
         if (!active) return;
-        setContacts(Object.fromEntries(list.map((c) => [c.slug, c])));
+        setContacts(Object.fromEntries(contactList.map((c) => [c.slug, c])));
+        setProfiles(Object.fromEntries(profileList.map((p) => [p.email, p])));
       })
       .catch(() => {
-        /* leave contacts empty; the UI falls back to "not on file" */
+        /* leave empty; the UI falls back to static data + "not on file" */
       });
     return () => {
       active = false;
     };
   }, []);
+
+  // Layer an approved self-edit onto a member's static card (matched by the
+  // slug<->email link in member_contacts).
+  function overridesFor(m: Member) {
+    const contact = contacts[m.slug];
+    const prof = contact ? profiles[contact.email] : undefined;
+    return {
+      email: contact?.email ?? null,
+      photo: prof?.photoUrl ?? m.photo,
+      major: prof?.major ?? m.major,
+      company: prof?.company ?? m.industry,
+      linkedin: prof?.linkedin ?? contact?.linkedin ?? m.linkedin,
+    };
+  }
 
   const years = useMemo(
     () => ["all", ...Array.from(new Set(localMembers.map((m) => m.classYear))).sort()],
@@ -120,38 +138,41 @@ function Directory() {
 
       {/* Grid */}
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {results.map((m) => (
-          <button
-            key={m.id}
-            onClick={() => setSelected(m)}
-            className="flex items-center gap-4 rounded-xl border border-line bg-white p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
-          >
-            {m.photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={m.photo}
-                alt={m.name}
-                loading="lazy"
-                style={{
-                  objectPosition: m.photoPosition ?? undefined,
-                  transform: m.photoScale ? `scale(${m.photoScale})` : undefined,
-                }}
-                className="h-14 w-14 shrink-0 rounded-full object-cover"
-              />
-            ) : (
-              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-scarlet text-sm font-bold text-white">
-                {getInitials(m.name)}
+        {results.map((m) => {
+          const o = overridesFor(m);
+          return (
+            <button
+              key={m.id}
+              onClick={() => setSelected(m)}
+              className="flex items-center gap-4 rounded-xl border border-line bg-white p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
+            >
+              {o.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={o.photo}
+                  alt={m.name}
+                  loading="lazy"
+                  style={{
+                    objectPosition: m.photoPosition ?? undefined,
+                    transform: m.photoScale ? `scale(${m.photoScale})` : undefined,
+                  }}
+                  className="h-14 w-14 shrink-0 rounded-full object-cover"
+                />
+              ) : (
+                <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-scarlet text-sm font-bold text-white">
+                  {getInitials(m.name)}
+                </div>
+              )}
+              <div className="min-w-0">
+                <h3 className="truncate font-semibold text-ink">{m.name}</h3>
+                <p className="truncate text-xs text-blue">{m.position}</p>
+                <p className="truncate text-xs text-muted">
+                  {o.major ?? m.cohort ?? "Brother"} · &rsquo;{m.classYear.slice(2)}
+                </p>
               </div>
-            )}
-            <div className="min-w-0">
-              <h3 className="truncate font-semibold text-ink">{m.name}</h3>
-              <p className="truncate text-xs text-blue">{m.position}</p>
-              <p className="truncate text-xs text-muted">
-                {m.major ?? m.cohort ?? "Brother"} · &rsquo;{m.classYear.slice(2)}
-              </p>
-            </div>
-          </button>
-        ))}
+            </button>
+          );
+        })}
         {results.length === 0 && (
           <p className="col-span-full py-12 text-center text-sm text-muted">
             No members match your search.
@@ -161,7 +182,9 @@ function Directory() {
 
       {/* Profile modal */}
       <AnimatePresence>
-        {selected && (
+        {selected && (() => {
+          const so = overridesFor(selected);
+          return (
           <>
             <motion.div
               initial={{ opacity: 0 }}
@@ -187,10 +210,10 @@ function Directory() {
                   </button>
                 </div>
                 <div className="-mt-4 flex flex-col items-center text-center">
-                  {selected.photo ? (
+                  {so.photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={selected.photo}
+                      src={so.photo}
                       alt={selected.name}
                       style={{
                         objectPosition: selected.photoPosition ?? undefined,
@@ -215,7 +238,7 @@ function Directory() {
                   <div className="mt-4 w-full space-y-2 rounded-xl bg-slate-50 p-4 text-left text-sm">
                     <div className="flex items-center gap-2 text-ink">
                       <GraduationCap size={15} className="text-muted" />
-                      {selected.major ?? selected.cohort ?? "Chapter Member"}
+                      {so.major ?? selected.cohort ?? "Chapter Member"}
                     </div>
                     {selected.minor && (
                       <p className="pl-6 text-xs text-muted">
@@ -224,14 +247,13 @@ function Directory() {
                     )}
                     <p className="pl-6 text-xs text-muted">
                       Class of {selected.classYear}
-                      {selected.industry ? ` · ${selected.industry}` : ""}
+                      {so.company ? ` · ${so.company}` : ""}
                     </p>
                   </div>
 
                   {(() => {
-                    const contact = contacts[selected.slug];
-                    const linkedinHref = contact?.linkedin ?? selected.linkedin ?? null;
-                    const email = contact?.email ?? null;
+                    const linkedinHref = so.linkedin ?? null;
+                    const email = so.email ?? null;
                     return (
                       <>
                         {email && (
@@ -280,7 +302,8 @@ function Directory() {
               </motion.div>
             </motion.div>
           </>
-        )}
+          );
+        })()}
       </AnimatePresence>
     </div>
   );

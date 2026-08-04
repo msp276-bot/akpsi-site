@@ -16,6 +16,7 @@ import {
   BarChart3,
   Award,
   ShieldCheck,
+  UserRound,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Logo from "@/components/ui/Logo";
@@ -27,6 +28,7 @@ const NAV = [
   { label: "Dashboard", href: "/portal/dashboard", Icon: LayoutDashboard },
   { label: "Events", href: "/portal/events", Icon: CalendarDays },
   { label: "Directory", href: "/portal/directory", Icon: Users },
+  { label: "My Profile", href: "/portal/profile", Icon: UserRound },
   { label: "Documents", href: "/portal/documents", Icon: FolderOpen },
   { label: "Announcements", href: "/portal/announcements", Icon: Megaphone },
   {
@@ -77,6 +79,7 @@ const PLEDGE_NAV = NAV.filter(({ href }) =>
   [
     "/portal/dashboard",
     "/portal/events",
+    "/portal/profile",
     "/portal/documents",
     "/portal/announcements",
     "/portal/points",
