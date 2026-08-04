@@ -126,9 +126,23 @@ function Directory() {
             onClick={() => setSelected(m)}
             className="flex items-center gap-4 rounded-xl border border-line bg-white p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
           >
-            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-scarlet text-sm font-bold text-white">
-              {getInitials(m.name)}
-            </div>
+            {m.photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={m.photo}
+                alt={m.name}
+                loading="lazy"
+                style={{
+                  objectPosition: m.photoPosition ?? undefined,
+                  transform: m.photoScale ? `scale(${m.photoScale})` : undefined,
+                }}
+                className="h-14 w-14 shrink-0 rounded-full object-cover"
+              />
+            ) : (
+              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-scarlet text-sm font-bold text-white">
+                {getInitials(m.name)}
+              </div>
+            )}
             <div className="min-w-0">
               <h3 className="truncate font-semibold text-ink">{m.name}</h3>
               <p className="truncate text-xs text-blue">{m.position}</p>
@@ -173,9 +187,24 @@ function Directory() {
                   </button>
                 </div>
                 <div className="-mt-4 flex flex-col items-center text-center">
-                  <div className="grid h-20 w-20 place-items-center rounded-full bg-scarlet text-xl font-bold text-white ring-2 ring-navy ring-offset-2">
-                    {getInitials(selected.name)}
-                  </div>
+                  {selected.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={selected.photo}
+                      alt={selected.name}
+                      style={{
+                        objectPosition: selected.photoPosition ?? undefined,
+                        transform: selected.photoScale
+                          ? `scale(${selected.photoScale})`
+                          : undefined,
+                      }}
+                      className="h-20 w-20 rounded-full object-cover ring-2 ring-navy ring-offset-2"
+                    />
+                  ) : (
+                    <div className="grid h-20 w-20 place-items-center rounded-full bg-scarlet text-xl font-bold text-white ring-2 ring-navy ring-offset-2">
+                      {getInitials(selected.name)}
+                    </div>
+                  )}
                   <h2 className="mt-4 text-lg font-bold text-ink">
                     {selected.name}
                   </h2>

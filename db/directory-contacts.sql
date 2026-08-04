@@ -75,6 +75,9 @@ create trigger member_contacts_touch before update on public.member_contacts
   for each row execute function public.member_contacts_touch_updated_at();
 
 -- 3) Seed --------------------------------------------------------------------
+-- If a member was already loaded and later removed from the roster, delete their
+-- row too, e.g.:  delete from public.member_contacts where slug = 'shivani-kinare';
+--
 -- The rows (real emails) are PII. Keep them OUT of this public file. Run
 -- db/directory-contacts-seed.local.sql (gitignored) after this file. Its rows
 -- look like:
