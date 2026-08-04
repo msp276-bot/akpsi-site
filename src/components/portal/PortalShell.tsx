@@ -51,11 +51,12 @@ const NAV = [
     permission: "submissions:review" as const,
   },
   {
-    label: "Standings",
+    label: "Leaderboard",
     href: "/portal/standings",
     Icon: BarChart3,
-    // VP Ops / e-board see every member's approved points + service hours.
-    permission: "submissions:review" as const,
+    // Every member sees the ranked leaderboard (totals only); reviewers also get
+    // the per-submission drill-down on the same page.
+    permission: "submissions:submit" as const,
   },
   {
     label: "Applications",
@@ -79,6 +80,7 @@ const PLEDGE_NAV = NAV.filter(({ href }) =>
     "/portal/documents",
     "/portal/announcements",
     "/portal/points",
+    "/portal/standings",
   ].includes(href)
 );
 

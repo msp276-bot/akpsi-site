@@ -13,10 +13,11 @@ import PortalShell from "@/components/portal/PortalShell";
 import { useAuth } from "@/context/AuthContext";
 import { hasPermission } from "@/lib/access";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import { listMembers, roleName, type MemberRecord } from "@/lib/roles";
+import { listMembers, roleName, type MemberRole } from "@/lib/roles";
 import { pointsRequiredFor, serviceHoursRequiredFor } from "@/lib/points";
 import {
   listAllSubmissions,
+  listChapterStandings,
   approvedPoints,
   approvedServiceHours,
   pendingCount,
@@ -25,11 +26,13 @@ import {
 } from "@/lib/submissions";
 
 interface Standing {
-  member: MemberRecord;
+  email: string;
+  name: string;
+  role: string;
   points: number;
   hours: number;
-  pending: number;
-  subs: Submission[];
+  pending: number; // reviewer view only (0 for members)
+  subs: Submission[]; // reviewer view only ([] for members)
 }
 
 const STATUS_META: Record<
@@ -68,12 +71,15 @@ function Meter({ earned, required, accent }: { earned: number; required: number;
   );
 }
 
+const MEDALS: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
+
 function StandingsBody() {
   const { user } = useAuth();
+  // Reviewers (VP Ops / e-board) get the full drill-down (who submitted what,
+  // pending counts). Everyone else sees the ranked leaderboard - totals only.
   const canReview = user ? hasPermission(user.role, "submissions:review") : false;
 
-  const [members, setMembers] = useState<MemberRecord[]>([]);
-  const [subs, setSubs] = useState<Submission[]>([]);
+  const [standings, setStandings] = useState<Standing[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [openEmail, setOpenEmail] = useState<string | null>(null);
@@ -81,12 +87,49 @@ function StandingsBody() {
   useEffect(() => {
     let active = true;
     (async () => {
-      if (!user || !canReview) return;
+      if (!user) return;
       try {
-        const [m, s] = await Promise.all([listMembers(), listAllSubmissions()]);
-        if (!active) return;
-        setMembers(m);
-        setSubs(s);
+        if (canReview) {
+          const [members, subs] = await Promise.all([
+            listMembers(),
+            listAllSubmissions(),
+          ]);
+          if (!active) return;
+          const byEmail = new Map<string, Submission[]>();
+          for (const s of subs) {
+            const arr = byEmail.get(s.submitterEmail) ?? [];
+            arr.push(s);
+            byEmail.set(s.submitterEmail, arr);
+          }
+          setStandings(
+            members.map((m) => {
+              const mine = byEmail.get(m.email) ?? [];
+              return {
+                email: m.email,
+                name: m.fullName || m.email,
+                role: m.role,
+                points: approvedPoints(mine),
+                hours: approvedServiceHours(mine),
+                pending: pendingCount(mine),
+                subs: mine,
+              };
+            })
+          );
+        } else {
+          const rows = await listChapterStandings();
+          if (!active) return;
+          setStandings(
+            rows.map((r) => ({
+              email: r.email,
+              name: r.fullName || r.email,
+              role: r.role,
+              points: r.points,
+              hours: r.hours,
+              pending: 0,
+              subs: [],
+            }))
+          );
+        }
       } catch {
         /* leave as-is */
       } finally {
@@ -98,66 +141,38 @@ function StandingsBody() {
     };
   }, [user, canReview]);
 
-  const standings = useMemo<Standing[]>(() => {
-    const byEmail = new Map<string, Submission[]>();
-    for (const s of subs) {
-      const arr = byEmail.get(s.submitterEmail) ?? [];
-      arr.push(s);
-      byEmail.set(s.submitterEmail, arr);
-    }
-    return members.map((member) => {
-      const mine = byEmail.get(member.email) ?? [];
-      return {
-        member,
-        points: approvedPoints(mine),
-        hours: approvedServiceHours(mine),
-        pending: pendingCount(mine),
-        subs: mine,
-      };
-    });
-  }, [members, subs]);
+  // Rank the whole chapter by approved points (then hours), so a member's rank
+  // is their true standing - then filter for display without changing the rank.
+  const ranked = useMemo(
+    () =>
+      standings
+        .slice()
+        .sort(
+          (a, b) =>
+            b.points - a.points ||
+            b.hours - a.hours ||
+            a.name.localeCompare(b.name)
+        )
+        .map((s, i) => ({ ...s, rank: i + 1 })),
+    [standings]
+  );
 
   if (!user) return null;
 
-  if (!canReview) {
-    return (
-      <div className="rounded-2xl border border-line bg-white p-8 text-center">
-        <h1 className="headline text-2xl uppercase text-navy">Not authorized</h1>
-        <p className="mt-2 text-sm text-muted">
-          Member standings are limited to the e-board (VP Ops).
-        </p>
-      </div>
-    );
-  }
-
-  // Rank the whole chapter by approved points (then hours), so a member's rank
-  // is their true standing - then filter for display without changing the rank.
   const q = query.trim().toLowerCase();
-  const ranked = standings
-    .slice()
-    .sort(
-      (a, b) =>
-        b.points - a.points ||
-        b.hours - a.hours ||
-        (a.member.fullName || a.member.email).localeCompare(
-          b.member.fullName || b.member.email
-        )
-    )
-    .map((s, i) => ({ ...s, rank: i + 1 }));
   const filtered = ranked.filter(
-    ({ member }) =>
-      !q ||
-      member.fullName.toLowerCase().includes(q) ||
-      member.email.toLowerCase().includes(q)
+    ({ name, email }) =>
+      !q || name.toLowerCase().includes(q) || email.toLowerCase().includes(q)
   );
-  const MEDALS: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="headline text-3xl uppercase text-navy">Standings</h1>
+        <h1 className="headline text-3xl uppercase text-navy">Leaderboard</h1>
         <p className="mt-1 text-sm text-muted">
-          Every member&rsquo;s approved points and service hours. Click a name to see their submissions.
+          {canReview
+            ? "Every member's approved points and service hours. Click a name to see their submissions."
+            : "Where you and every brother stand on approved points and service hours."}
         </p>
       </div>
 
@@ -195,48 +210,73 @@ function StandingsBody() {
             <span className="w-6" />
           </div>
           <ul className="space-y-2">
-            {filtered.map(({ member, points, hours, pending, subs: mine, rank }) => {
-              const open = openEmail === member.email;
-              const pointsReq = pointsRequiredFor(member.role);
-              const hoursReq = serviceHoursRequiredFor(member.role);
-              return (
-                <li key={member.email} className="overflow-hidden rounded-2xl border border-line bg-white">
-                  <button
-                    onClick={() => setOpenEmail(open ? null : member.email)}
-                    className="flex w-full flex-wrap items-center gap-4 p-4 text-left transition-colors hover:bg-slate-50"
+            {filtered.map(({ email, name, role, points, hours, pending, subs: mine, rank }) => {
+              const open = openEmail === email;
+              const pointsReq = pointsRequiredFor(role);
+              const hoursReq = serviceHoursRequiredFor(role);
+              const isMe = email === user.email;
+              const rowClass = `flex w-full flex-wrap items-center gap-4 p-4 text-left transition-colors ${
+                canReview ? "hover:bg-slate-50" : ""
+              }`;
+              const header = (
+                <>
+                  <span
+                    className={`grid w-8 shrink-0 place-items-center font-bold ${
+                      rank <= 3 ? "text-lg" : "text-sm text-muted"
+                    }`}
+                    aria-label={`Rank ${rank}`}
                   >
-                    <span
-                      className={`grid w-8 shrink-0 place-items-center text-lg font-bold ${
-                        rank <= 3 ? "" : "text-sm text-muted"
-                      }`}
-                      aria-label={`Rank ${rank}`}
-                    >
-                      {MEDALS[rank] ?? `#${rank}`}
-                    </span>
-                    <div className="min-w-0 flex-1 basis-48">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate font-semibold text-navy">
-                          {member.fullName || member.email}
+                    {MEDALS[rank] ?? `#${rank}`}
+                  </span>
+                  <div className="min-w-0 flex-1 basis-48">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate font-semibold text-navy">{name}</span>
+                      {isMe && (
+                        <span className="shrink-0 rounded-full bg-navy px-2 py-0.5 text-[11px] font-semibold text-white">
+                          You
                         </span>
-                        {pending > 0 && (
-                          <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
-                            {pending} pending
-                          </span>
-                        )}
-                      </div>
-                      <p className="truncate text-xs text-muted">
-                        {member.email} · {roleName(member.role)}
-                      </p>
+                      )}
+                      {canReview && pending > 0 && (
+                        <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                          {pending} pending
+                        </span>
+                      )}
                     </div>
-                    <Meter earned={points} required={pointsReq} accent="gold" />
-                    <Meter earned={hours} required={hoursReq} accent="navy" />
+                    <p className="truncate text-xs text-muted">
+                      {roleName(role as MemberRole)}
+                    </p>
+                  </div>
+                  <Meter earned={points} required={pointsReq} accent="gold" />
+                  <Meter earned={hours} required={hoursReq} accent="navy" />
+                  {canReview ? (
                     <ChevronDown
                       size={18}
                       className={`shrink-0 text-muted transition-transform ${open ? "rotate-180" : ""}`}
                     />
-                  </button>
+                  ) : (
+                    <span className="w-[18px] shrink-0" />
+                  )}
+                </>
+              );
+              return (
+                <li
+                  key={email}
+                  className={`overflow-hidden rounded-2xl border bg-white ${
+                    isMe ? "border-gold ring-1 ring-gold/40" : "border-line"
+                  }`}
+                >
+                  {canReview ? (
+                    <button
+                      onClick={() => setOpenEmail(open ? null : email)}
+                      className={rowClass}
+                    >
+                      {header}
+                    </button>
+                  ) : (
+                    <div className={rowClass}>{header}</div>
+                  )}
 
-                  {open && (
+                  {canReview && open && (
                     <div className="border-t border-line bg-slate-50/60 px-4 py-3">
                       {mine.length === 0 ? (
                         <p className="text-sm text-muted">No submissions yet.</p>

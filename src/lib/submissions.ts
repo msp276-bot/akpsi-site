@@ -1,4 +1,5 @@
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
+import { listMembers } from "@/lib/roles";
 
 /**
  * Points & service-hours submissions.
@@ -305,4 +306,74 @@ export function approvedServiceHours(submissions: Submission[]): number {
 
 export function pendingCount(submissions: Submission[]): number {
   return submissions.filter((s) => s.status === "pending").length;
+}
+
+/** One member's totals for the chapter-wide leaderboard (no raw submissions). */
+export interface StandingRow {
+  email: string;
+  fullName: string;
+  role: string;
+  points: number;
+  hours: number;
+}
+
+/**
+ * Chapter-wide leaderboard totals, readable by ANY signed-in member. In Supabase
+ * mode this calls the `chapter_standings()` SECURITY DEFINER function (see
+ * db/chapter-standings.sql), which returns only per-member approved totals - not
+ * the raw submissions (proof photos / notes stay reviewer-only via RLS). In mock
+ * mode it aggregates the local store so the preview still works.
+ */
+export async function listChapterStandings(): Promise<StandingRow[]> {
+  const sortRows = (rows: StandingRow[]) =>
+    rows.sort(
+      (a, b) =>
+        b.points - a.points ||
+        b.hours - a.hours ||
+        (a.fullName || a.email).localeCompare(b.fullName || b.email)
+    );
+
+  if (!isSupabaseConfigured) {
+    const members = await listMembers();
+    const subs = readMock();
+    const byEmail = new Map<string, Submission[]>();
+    for (const s of subs) {
+      const arr = byEmail.get(s.submitterEmail) ?? [];
+      arr.push(s);
+      byEmail.set(s.submitterEmail, arr);
+    }
+    return sortRows(
+      members.map((m) => {
+        const mine = byEmail.get(m.email) ?? [];
+        return {
+          email: m.email,
+          fullName: m.fullName,
+          role: m.role,
+          points: approvedPoints(mine),
+          hours: approvedServiceHours(mine),
+        };
+      })
+    );
+  }
+
+  const supabase = getSupabase();
+  if (!supabase) return [];
+  const { data, error } = await supabase.rpc("chapter_standings");
+  if (error) throw error;
+  type RpcRow = {
+    email: string;
+    full_name: string | null;
+    role: string;
+    points: number | string;
+    hours: number | string;
+  };
+  return sortRows(
+    ((data ?? []) as RpcRow[]).map((r) => ({
+      email: r.email,
+      fullName: r.full_name ?? "",
+      role: r.role,
+      points: Number(r.points),
+      hours: Number(r.hours),
+    }))
+  );
 }
