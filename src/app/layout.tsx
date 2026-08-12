@@ -3,6 +3,7 @@ import { Hanken_Grotesk, Bodoni_Moda, Instrument_Serif } from "next/font/google"
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import ServiceWorkerRegister from "@/components/pwa/ServiceWorkerRegister";
+import StructuredData from "@/components/seo/StructuredData";
 
 // Neutral geometric grotesk (a free Söhne / Neue Haas Grotesk stand-in) - the
 // professional-finance body voice that doesn't compete with the display serif.
@@ -96,6 +97,7 @@ export default function RootLayout({
       className={`${hanken.variable} ${bodoni.variable} ${instrument.variable} h-full`}
     >
       <body className="min-h-full flex flex-col bg-white text-ink">
+        <StructuredData />
         <AuthProvider>{children}</AuthProvider>
         <ServiceWorkerRegister />
       </body>
