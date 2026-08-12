@@ -58,11 +58,20 @@ export const metadata: Metadata = {
     description: SITE_DESC,
     type: "website",
     siteName: "AKΨ Omicron Tau",
+    url: "/",
+    // Static crest card (public/og-card.png). A static .png serves with the
+    // correct image/png type and no trailingSlash redirect, unlike the dynamic
+    // /opengraph-image route which scrapers silently reject - falling back to a
+    // scraped page photo.
+    images: [
+      { url: "/og-card.png", width: 1200, height: 630, alt: SITE_TITLE },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_TITLE,
     description: SITE_DESC,
+    images: ["/og-card.png"],
   },
   icons: {
     // The AKPsi crest ships as app/icon.png (App Router file convention); these
