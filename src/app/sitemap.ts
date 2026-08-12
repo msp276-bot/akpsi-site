@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { members } from "@/data/members";
 
-const BASE_URL = "https://rutgersakpsi.com";
+const BASE_URL = "https://www.rutgersakpsi.org";
 
 export const dynamic = "force-static";
 

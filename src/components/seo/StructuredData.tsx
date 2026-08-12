@@ -10,7 +10,7 @@ import { SOCIAL } from "@/data/social";
  * with a map/address comes from a Google Business Profile you claim separately.
  */
 
-const BASE_URL = "https://rutgersakpsi.com";
+const BASE_URL = "https://www.rutgersakpsi.org";
 
 const DESCRIPTION =
   "The Omicron Tau chapter of Alpha Kappa Psi at Rutgers University - a co-ed professional business fraternity balancing professional development and lifelong brotherhood.";
