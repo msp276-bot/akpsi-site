@@ -354,6 +354,9 @@ function EventsCalendar() {
 }
 
 function MonthGrid({ cells, year, month, byDay, onSelect }: { cells: (number | null)[]; year: number; month: number; byDay: Map<string, ChapterEventRecord[]>; onSelect: (event: ChapterEventRecord) => void }) {
+  const today = new Date();
+  const isToday = (day: number) =>
+    day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
   return (
     <div className="overflow-hidden rounded-xl border border-line bg-white">
       <div className="grid grid-cols-7 border-b border-line bg-slate-50">
@@ -367,7 +370,7 @@ function MonthGrid({ cells, year, month, byDay, onSelect }: { cells: (number | n
             <div key={key} className={`min-h-[92px] border-b border-r border-line p-1.5 [&:nth-child(7n)]:border-r-0 ${day ? "" : "bg-slate-50/50"}`}>
               {day && (
                 <>
-                  <div className="mb-1 grid h-6 w-6 place-items-center rounded-full text-xs font-medium text-muted">{day}</div>
+                  <div className={`mb-1 grid h-6 w-6 place-items-center rounded-full text-xs font-medium ${isToday(day) ? "bg-navy font-bold text-white" : "text-muted"}`}>{day}</div>
                   <div className="space-y-1">
                     {items.map((event) => {
                       const meta = EVENT_TYPE_META[event.type];
@@ -395,11 +398,22 @@ function WeekGrid({ days, byDay, onSelect }: { days: Date[]; byDay: Map<string, 
         {days.map((day) => {
           const key = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
           const items = byDay.get(key) ?? [];
+          const now = new Date();
+          const isToday =
+            day.getDate() === now.getDate() &&
+            day.getMonth() === now.getMonth() &&
+            day.getFullYear() === now.getFullYear();
           return (
             <div key={key} className="min-h-[480px] border-r border-line last:border-r-0">
               <div className="border-b border-line bg-slate-50 px-3 py-3 text-center">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">{WEEKDAYS[day.getDay()]}</p>
-                <p className="mt-1 text-lg font-bold text-navy">{day.getDate()}</p>
+                <p className="mt-1 inline-grid h-8 w-8 place-items-center rounded-full text-lg font-bold text-navy">
+                  {isToday ? (
+                    <span className="grid h-8 w-8 place-items-center rounded-full bg-navy text-white">{day.getDate()}</span>
+                  ) : (
+                    day.getDate()
+                  )}
+                </p>
               </div>
               <div className="space-y-2 p-2">
                 {items.map((event) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -17,10 +17,23 @@ import PortalShell from "@/components/portal/PortalShell";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import NotificationsToggle from "@/components/pwa/NotificationsToggle";
 import { useAuth } from "@/context/AuthContext";
-import { events, EVENT_TYPE_META } from "@/data/events";
+import { EVENT_TYPE_META } from "@/data/events";
 import { members } from "@/data/members";
+import {
+  listChapterEvents,
+  listRsvps,
+  displayedGoing,
+  type ChapterEventRecord,
+  type EventRsvp,
+} from "@/lib/chapterEvents";
 import { canAccessVisibility, portalRole } from "@/lib/access";
 import { countdownLabel, formatEventTime, formatDayMonth } from "@/lib/date";
+
+/** An event is archived once its end (or start, if no end) is in the past. */
+function isUpcoming(event: ChapterEventRecord, now: number): boolean {
+  const ends = event.end ?? event.start;
+  return new Date(ends).getTime() >= now;
+}
 
 const QUICK_LINKS = [
   {
@@ -71,10 +84,41 @@ function DashboardContent() {
   const toggle = (id: string) =>
     setRsvps((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  const upcoming = events
-    .filter((event) => canAccessVisibility(event.visibility, role))
-    .sort((a, b) => +new Date(a.start) - +new Date(b.start))
-    .slice(0, 5);
+  // Live chapter events (same source as /portal/events), so the front page
+  // reflects real dates: past events fall off "Upcoming" automatically.
+  const [chapterEvents, setChapterEvents] = useState<ChapterEventRecord[]>([]);
+  const [eventRsvps, setEventRsvps] = useState<EventRsvp[]>([]);
+  // Captured at load (impure Date.now() belongs outside render); events with an
+  // end/start before this drop off the Upcoming list.
+  const [now, setNow] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([listChapterEvents(), listRsvps()])
+      .then(([evs, rs]) => {
+        if (!active) return;
+        setChapterEvents(evs);
+        setEventRsvps(rs);
+        setNow(Date.now());
+      })
+      .catch(() => {
+        /* leave empty; the section renders an empty state */
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const upcoming = useMemo(() => {
+    if (!now) return [];
+    return chapterEvents
+      .filter(
+        (event) =>
+          canAccessVisibility(event.visibility, role) && isUpcoming(event, now)
+      )
+      .sort((a, b) => +new Date(a.start) - +new Date(b.start))
+      .slice(0, 5);
+  }, [chapterEvents, role, now]);
 
   return (
     <div>
@@ -140,10 +184,16 @@ function DashboardContent() {
           </div>
 
           <div className="mt-4 space-y-3">
+            {upcoming.length === 0 && (
+              <div className="rounded-xl border border-dashed border-line bg-white p-6 text-center text-sm text-muted">
+                No upcoming events right now. Check back soon.
+              </div>
+            )}
             {upcoming.map((ev) => {
               const meta = EVENT_TYPE_META[ev.type];
               const { day, month } = formatDayMonth(ev.start);
               const going = rsvps[ev.id];
+              const baseGoing = displayedGoing(ev, eventRsvps);
               return (
                 <div
                   key={ev.id}
@@ -191,10 +241,10 @@ function DashboardContent() {
                   >
                     {going ? (
                       <span className="inline-flex items-center gap-1">
-                        <Check size={13} /> Going · {ev.going + 1}
+                        <Check size={13} /> Going · {baseGoing + 1}
                       </span>
                     ) : (
-                      <>RSVP · {ev.going}</>
+                      <>RSVP · {baseGoing}</>
                     )}
                   </button>
                 </div>

@@ -64,7 +64,12 @@ export const metadata: Metadata = {
     description: SITE_DESC,
   },
   icons: {
-    icon: "/favicon.ico",
+    // The AKPsi crest ships as app/icon.png (App Router file convention); these
+    // point the browser tab + PWA at the same logo instead of the Next default.
+    icon: [
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512.png", type: "image/png", sizes: "512x512" },
+    ],
     apple: "/apple-icon.png",
   },
   manifest: "/manifest.webmanifest",

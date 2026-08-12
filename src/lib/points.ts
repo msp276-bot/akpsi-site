@@ -20,8 +20,8 @@ export const POINT_REQUIREMENTS = {
 
 /** Service hours required per membership status. */
 export const SERVICE_HOUR_REQUIREMENTS = {
-  pledge: 10,
-  brother: 8,
+  pledge: 5,
+  brother: 5,
 } as const;
 
 export function pointsRequiredFor(role: string): number {

@@ -1,7 +1,4 @@
-/** Demo "now" so the mock calendar stays sensible regardless of real date. */
-export const DEMO_NOW = new Date("2026-07-18T09:00:00");
-
-export function countdownLabel(iso: string, now: Date = DEMO_NOW): string {
+export function countdownLabel(iso: string, now: Date = new Date()): string {
   const target = new Date(iso);
   const ms = target.getTime() - now.getTime();
   const dayMs = 86_400_000;

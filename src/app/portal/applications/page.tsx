@@ -13,6 +13,12 @@ import { getInitials } from "@/data/members";
 import { hasPermission, portalRole } from "@/lib/access";
 import { listApplications, setApplicationDecision } from "@/lib/applications";
 
+// Applications are collected in the chapter's Google Form. Reviewers open the
+// responses in Google (the linked responses Sheet, or the Form's edit page →
+// Responses tab). Paste that URL here to enable the button below. The public
+// `viewform` link only COLLECTS responses, so it can't be used to read them.
+const GOOGLE_RESPONSES_URL = "";
+
 const STATUS_META: Record<ApplicationStatus, string> = {
   pending: "bg-gold/15 text-[#9a7228]",
   interview: "bg-blue/10 text-blue",
@@ -149,7 +155,36 @@ function ApplicationsBoard() {
         </span>
       </div>
 
-      <div className="relative mt-4 w-full max-w-xs">
+      {/* Applications are collected via the chapter's Google Form; reviewers open
+          the responses in Google from here. */}
+      <div className="mt-5 flex flex-wrap items-center gap-4 rounded-2xl border border-line bg-white p-5">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-navy/5 text-navy">
+          <FileText size={18} />
+        </span>
+        <div className="min-w-0 flex-1 basis-64">
+          <p className="font-semibold text-ink">Applications come in through Google Forms</p>
+          <p className="mt-0.5 text-sm text-muted">
+            New submissions land in the chapter&rsquo;s Google Form responses. Open
+            them in Google to review.
+          </p>
+        </div>
+        {GOOGLE_RESPONSES_URL ? (
+          <a
+            href={GOOGLE_RESPONSES_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy/90"
+          >
+            View responses <ExternalLink size={15} />
+          </a>
+        ) : (
+          <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-muted">
+            Responses link not set
+          </span>
+        )}
+      </div>
+
+      <div className="relative mt-6 w-full max-w-xs">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
         <input
           value={query}
