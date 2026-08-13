@@ -3,6 +3,10 @@
     {
       "source": "/googlef16cd7cbc60d0815.html",
       "destination": "/googlef16cd7cbc60d0815"
+    },
+    {
+      "source": "/favicon.ico",
+      "destination": "/icon-192.png"
     }
   ]
 }
