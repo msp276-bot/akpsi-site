@@ -157,9 +157,6 @@ export default function MediaPage() {
                       <p className="mt-3 text-sm font-medium text-white">
                         Rush video coming soon
                       </p>
-                      <p className="mt-1 text-xs text-white/60">
-                        Add a video URL in <code>src/app/media/page.tsx</code>.
-                      </p>
                     </div>
                   </div>
                 )}
