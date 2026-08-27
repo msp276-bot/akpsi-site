@@ -25,6 +25,7 @@ export default function RushPage() {
         <div className="relative overflow-hidden bg-[#081a10]">
           <ScrollParallaxImage
             src="/rush-jungle.jpg"
+            srcMobile="/rush-jungle-mobile.jpg"
             strength={0.16}
             position="center"
           />
