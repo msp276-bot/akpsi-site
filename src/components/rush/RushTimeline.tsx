@@ -2,39 +2,37 @@
 
 import { useRef } from "react";
 import { motion, useScroll, useSpring } from "framer-motion";
+import { Clock, MapPin } from "lucide-react";
 import SectionHeader from "@/components/ui/SectionHeader";
 import { slideIn } from "@/lib/motion";
 
 const STEPS = [
   {
     n: 1,
-    when: "Week 1",
-    title: "Info Sessions",
-    desc: "Learn about AKPsi, meet brothers, and ask all of your questions.",
+    when: "Tuesday, Sept 1",
+    title: "Meet The Bros",
+    tag: null as string | null,
+    time: "9:00 - 11:00 PM",
+    location: "Location TBD",
+    dress: "Casual",
   },
   {
     n: 2,
-    when: "Week 2",
-    title: "Meet & Greets",
-    desc: "Casual social events to connect with the chapter one-on-one.",
+    when: "Wednesday, Sept 2",
+    title: "Corporate Castaway",
+    tag: "Professional Night",
+    time: "9:00 - 11:00 PM",
+    location: "Location TBD",
+    dress: "Business Professional",
   },
   {
     n: 3,
-    when: "Week 2",
-    title: "Professional Night",
-    desc: "Network with brothers and hear about their career paths across industries.",
-  },
-  {
-    n: 4,
-    when: "Week 3",
-    title: "Interviews",
-    desc: "Formal interviews with board members to get to know you better.",
-  },
-  {
-    n: 5,
-    when: "Week 4",
-    title: "Bid Night",
-    desc: "Receive your bid and officially join the brotherhood.",
+    when: "Friday, Sept 4",
+    title: "Tribe Ties",
+    tag: "Service Night",
+    time: "6:00 - 8:00 PM",
+    location: "Buccleuch Park",
+    dress: "Casual",
   },
 ];
 
@@ -53,7 +51,7 @@ export default function RushTimeline() {
   return (
     <section id="process" className="bg-white pb-16 pt-10 sm:pb-20 sm:pt-12">
       <div className="mx-auto max-w-5xl px-6">
-        <SectionHeader title="Our Rush Process" subtitle="how to join" />
+        <SectionHeader title="Rush Week Schedule" subtitle="fall '26 events" />
 
         <div ref={ref} className="relative mt-10">
           {/* Center line (static track + animated draw) */}
@@ -93,7 +91,20 @@ export default function RushTimeline() {
                     <h3 className="mt-1 text-lg font-bold text-navy">
                       {step.title}
                     </h3>
-                    <p className="mt-1 text-sm text-muted">{step.desc}</p>
+                    {step.tag && (
+                      <p className="text-sm font-medium text-gold">{step.tag}</p>
+                    )}
+                    <div className="mt-2 space-y-1 text-sm text-muted">
+                      <p className="flex items-center gap-1.5">
+                        <Clock size={14} className="shrink-0" /> {step.time}
+                      </p>
+                      <p className="flex items-center gap-1.5">
+                        <MapPin size={14} className="shrink-0" /> {step.location}
+                      </p>
+                    </div>
+                    <span className="mt-3 inline-block rounded-full bg-navy/5 px-2.5 py-1 text-xs font-semibold text-navy">
+                      {step.dress}
+                    </span>
                   </motion.div>
                 </div>
               );
