@@ -1,15 +1,12 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useScroll, useSpring } from "framer-motion";
-import { Clock, MapPin } from "lucide-react";
-import SectionHeader from "@/components/ui/SectionHeader";
-import { slideIn } from "@/lib/motion";
+import { motion } from "framer-motion";
+import { Clock, MapPin, Leaf } from "lucide-react";
 
-const STEPS = [
+const EVENTS = [
   {
-    n: 1,
-    when: "Tuesday, Sept 1",
+    day: "Tuesday",
+    date: "Sept 1",
     title: "Meet The Bros",
     tag: null as string | null,
     time: "9:00 - 11:00 PM",
@@ -17,8 +14,8 @@ const STEPS = [
     dress: "Casual",
   },
   {
-    n: 2,
-    when: "Wednesday, Sept 2",
+    day: "Wednesday",
+    date: "Sept 2",
     title: "Corporate Castaway",
     tag: "Professional Night",
     time: "9:00 - 11:00 PM",
@@ -26,8 +23,8 @@ const STEPS = [
     dress: "Business Professional",
   },
   {
-    n: 3,
-    when: "Friday, Sept 4",
+    day: "Friday",
+    date: "Sept 4",
     title: "Tribe Ties",
     tag: "Service Night",
     time: "6:00 - 8:00 PM",
@@ -37,79 +34,81 @@ const STEPS = [
 ];
 
 export default function RushTimeline() {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start 65%", "end 60%"],
-  });
-  const scaleY = useSpring(scrollYProgress, {
-    stiffness: 80,
-    damping: 20,
-    restDelta: 0.001,
-  });
-
   return (
-    <section id="process" className="bg-white pb-16 pt-10 sm:pb-20 sm:pt-12">
-      <div className="mx-auto max-w-5xl px-6">
-        <SectionHeader title="Rush Week Schedule" subtitle="fall '26 events" />
+    <section
+      id="process"
+      className="relative overflow-hidden bg-[#0e2419] py-16 sm:py-20"
+    >
+      {/* Jungle atmosphere: layered greens with soft gold/emerald glows. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(120%_85%_at_50%_-10%,#1d4d31_0%,#0e2419_55%,#071710_100%)]" />
+        <div className="absolute -left-24 top-4 h-72 w-72 rounded-full bg-[#3fa66a]/20 blur-3xl" />
+        <div className="absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-[#d4a853]/10 blur-3xl" />
+      </div>
 
-        <div ref={ref} className="relative mt-10">
-          {/* Center line (static track + animated draw) */}
-          <div className="absolute left-6 top-0 h-full w-px bg-line md:left-1/2 md:-translate-x-1/2" />
-          <motion.div
-            style={{ scaleY }}
-            className="absolute left-6 top-0 h-full w-px origin-top bg-gold md:left-1/2 md:-translate-x-1/2"
-          />
+      <div className="relative mx-auto max-w-6xl px-6">
+        {/* Header */}
+        <div className="text-center">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-[#7fd6a0]">
+            <Leaf size={13} /> fall &rsquo;26 recruitment
+          </span>
+          <h2 className="headline mt-3 text-3xl text-white sm:text-4xl">
+            Rush Week Schedule
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm text-white/60">
+            Three nights to meet the chapter, see the professional side, and
+            give back to the community.
+          </p>
+        </div>
 
-          <div className="space-y-10">
-            {STEPS.map((step, i) => {
-              const side = i % 2 === 0 ? "left" : "right";
-              return (
-                <div
-                  key={step.n}
-                  className={`relative flex items-center ${
-                    side === "left" ? "md:justify-start" : "md:justify-end"
-                  }`}
-                >
-                  {/* Numbered node */}
-                  <div className="absolute left-6 z-10 grid h-9 w-9 -translate-x-1/2 place-items-center rounded-full bg-gold text-sm font-bold text-navy shadow-md ring-4 ring-white md:left-1/2">
-                    {step.n}
-                  </div>
+        {/* Event cards */}
+        <div className="mt-11 grid gap-5 md:grid-cols-3">
+          {EVENTS.map((ev, i) => (
+            <motion.article
+              key={ev.title}
+              initial={{ opacity: 0, y: 22 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.5, delay: i * 0.1, ease: "easeOut" }}
+              className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.06] p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-[#d4a853]/40 hover:bg-white/[0.09]"
+            >
+              {/* corner glow */}
+              <div
+                aria-hidden
+                className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#3fa66a]/20 blur-2xl transition-opacity duration-300 group-hover:bg-[#d4a853]/25"
+              />
 
-                  <motion.div
-                    variants={slideIn(side)}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, amount: 0.5 }}
-                    className={`ml-16 w-full rounded-2xl border border-line bg-white p-5 shadow-sm md:ml-0 md:w-[44%] ${
-                      side === "left" ? "md:mr-auto md:pr-8" : "md:ml-auto md:pl-8"
-                    }`}
-                  >
-                    <span className="text-xs font-semibold uppercase tracking-wide text-blue">
-                      {step.when}
-                    </span>
-                    <h3 className="mt-1 text-lg font-bold text-navy">
-                      {step.title}
-                    </h3>
-                    {step.tag && (
-                      <p className="text-sm font-medium text-gold">{step.tag}</p>
-                    )}
-                    <div className="mt-2 space-y-1 text-sm text-muted">
-                      <p className="flex items-center gap-1.5">
-                        <Clock size={14} className="shrink-0" /> {step.time}
-                      </p>
-                      <p className="flex items-center gap-1.5">
-                        <MapPin size={14} className="shrink-0" /> {step.location}
-                      </p>
-                    </div>
-                    <span className="mt-3 inline-block rounded-full bg-navy/5 px-2.5 py-1 text-xs font-semibold text-navy">
-                      {step.dress}
-                    </span>
-                  </motion.div>
+              <div className="relative">
+                <span className="inline-flex items-center rounded-full bg-[#d4a853]/15 px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#e5c583]">
+                  {ev.day} &middot; {ev.date}
+                </span>
+
+                <h3 className="mt-4 font-display text-2xl font-bold leading-tight text-white">
+                  {ev.title}
+                </h3>
+                {ev.tag && (
+                  <p className="mt-1 text-sm font-semibold text-[#7fd6a0]">
+                    {ev.tag}
+                  </p>
+                )}
+
+                <div className="mt-4 space-y-2 text-sm text-white/70">
+                  <p className="flex items-center gap-2">
+                    <Clock size={15} className="shrink-0 text-[#7fd6a0]" />
+                    {ev.time}
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <MapPin size={15} className="shrink-0 text-[#7fd6a0]" />
+                    {ev.location}
+                  </p>
                 </div>
-              );
-            })}
-          </div>
+
+                <span className="mt-5 inline-block rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80">
+                  {ev.dress}
+                </span>
+              </div>
+            </motion.article>
+          ))}
         </div>
       </div>
     </section>
