@@ -25,7 +25,7 @@ interface Testimonial {
 const TESTIMONIALS: Testimonial[] = [
   {
     quote:
-      "I joined for the professional side, but what kept me here were the late-night study sessions that turned into lifelong friendships. These are the people I'll be standing next to at weddings.",
+      "AKPsi made my freshman year great and I'm excited to make more memories.",
     name: "Pranay Karthikeyan",
     context: "Active Brother",
     tag: "Brotherhood",
