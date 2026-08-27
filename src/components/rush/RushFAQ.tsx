@@ -28,27 +28,29 @@ export default function RushFAQ() {
 
   return (
     <section className="bg-white py-16 sm:py-20">
-      <div className="mx-auto max-w-3xl px-6">
-        <h2 className="headline text-center text-3xl uppercase text-navy sm:text-4xl">
+      <div className="mx-auto max-w-6xl px-6">
+        <h2 className="headline text-center text-4xl uppercase text-navy sm:text-5xl">
           FAQ
         </h2>
 
-        <div className="mt-12 space-y-3">
+        <div className="mt-12 space-y-4">
           {FAQS.map((item, i) => {
             const isOpen = open === i;
             return (
               <div
                 key={item.q}
-                className="overflow-hidden rounded-xl border border-line bg-white"
+                className="overflow-hidden rounded-2xl border border-line bg-white"
               >
                 <button
                   onClick={() => setOpen(isOpen ? null : i)}
-                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+                  className="flex w-full items-center justify-between gap-5 px-7 py-6 text-left sm:px-9"
                   aria-expanded={isOpen}
                 >
-                  <span className="font-semibold text-navy">{item.q}</span>
+                  <span className="text-lg font-semibold text-navy sm:text-xl">
+                    {item.q}
+                  </span>
                   <Plus
-                    size={18}
+                    size={24}
                     className={`shrink-0 text-blue transition-transform duration-300 ${
                       isOpen ? "rotate-45" : ""
                     }`}
@@ -62,7 +64,7 @@ export default function RushFAQ() {
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.3, ease: "easeOut" }}
                     >
-                      <p className="px-5 pb-5 text-sm leading-relaxed text-muted">
+                      <p className="px-7 pb-6 text-base leading-relaxed text-muted sm:px-9">
                         {item.a}
                       </p>
                     </motion.div>
