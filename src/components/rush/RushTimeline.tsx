@@ -42,7 +42,7 @@ export default function RushTimeline() {
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-[#7fd6a0]">
             <Leaf size={13} /> fall &rsquo;26 recruitment
           </span>
-          <h2 className="headline mt-3 text-3xl text-white sm:text-4xl">
+          <h2 className="headline mt-3 text-3xl uppercase text-white sm:text-4xl">
             Rush Week Schedule
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-white/60">
