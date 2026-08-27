@@ -26,9 +26,10 @@ const TESTIMONIALS: Testimonial[] = [
   {
     quote:
       "I joined for the professional side, but what kept me here were the late-night study sessions that turned into lifelong friendships. These are the people I'll be standing next to at weddings.",
-    name: "Olivia Karanxha",
+    name: "Pranay Karthikeyan",
     context: "Active Brother",
     tag: "Brotherhood",
+    image: "/testimonials/pranay-karthikeyan.jpg",
   },
   {
     quote:
