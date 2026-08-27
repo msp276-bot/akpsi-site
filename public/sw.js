@@ -13,7 +13,7 @@
  *
  * Bump CACHE_VERSION on any release to force old caches out.
  */
-const CACHE_VERSION = "akpsi-v24";
+const CACHE_VERSION = "akpsi-v25";
 const PRECACHE = [
   "/",
   "/offline/",
