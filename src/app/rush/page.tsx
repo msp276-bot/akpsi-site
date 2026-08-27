@@ -6,6 +6,7 @@ import RushTimeline from "@/components/rush/RushTimeline";
 import WhyAkpsi from "@/components/rush/WhyAkpsi";
 import RushFAQ from "@/components/rush/RushFAQ";
 import RushApply from "@/components/rush/RushApply";
+import ScrollParallaxImage from "@/components/anim/ScrollParallaxImage";
 
 export const metadata: Metadata = {
   title: "Rush",
@@ -19,8 +20,27 @@ export default function RushPage() {
       <Navbar />
       <main className="flex-1">
         <RushHero />
-        <RushTimeline />
-        <WhyAkpsi />
+        {/* One continuous jungle backdrop behind both the schedule and the
+            "What Sets Us Apart" section (parallax drifts across both). */}
+        <div className="relative overflow-hidden bg-[#081a10]">
+          <ScrollParallaxImage
+            src="/rush-jungle.jpg"
+            strength={0.16}
+            position="center"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-black/35"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/45 via-black/30 to-[#06110b]/75"
+          />
+          <div className="relative">
+            <RushTimeline />
+            <WhyAkpsi />
+          </div>
+        </div>
         <RushFAQ />
         <RushApply />
       </main>

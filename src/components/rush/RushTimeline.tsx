@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { Clock, MapPin, Leaf } from "lucide-react";
-import ScrollParallaxImage from "@/components/anim/ScrollParallaxImage";
 
 const EVENTS = [
   {
@@ -36,20 +35,7 @@ const EVENTS = [
 
 export default function RushTimeline() {
   return (
-    <section
-      id="process"
-      className="relative overflow-hidden bg-[#081a10] py-16 sm:py-20"
-    >
-      {/* Parallax jungle backdrop (drifts on scroll), then dark green overlays
-          so the white text and glassy cards stay readable over the photo. */}
-      <ScrollParallaxImage src="/rush-jungle.jpg" strength={0.18} position="center" />
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        {/* Mostly-neutral darkening (keeps the photo's real colors); a faint
-            green only in the gradient for depth + text contrast. */}
-        <div className="absolute inset-0 bg-black/35" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-[#06110b]/70" />
-      </div>
-
+    <section id="process" className="relative py-16 sm:py-20">
       <div className="relative mx-auto max-w-6xl px-6">
         {/* Header */}
         <div className="text-center">
