@@ -40,6 +40,7 @@ const rawMembers: Omit<Member, "slug">[] = [
   { id: "b3", name: "Prakruti Ankem", position: "Vice President of Operations", group: "board", cohort: "Beta Founding", classYear: "2028", photo: "/members/prakruti-ankem.jpg" },
   { id: "b4", name: "Marvin Patel", position: "Vice President of Finance", group: "board", cohort: "Beta Founding", classYear: "2028", photo: "/members/marvin-patel.jpg" },
   { id: "b5", name: "Ankitha Jagadeesh", position: "Vice President of Membership", group: "board", cohort: "Beta Founding", classYear: "2028", photo: "/members/ankitha-jagadeesh.jpg" },
+  { id: "b6", name: "Aditya Mehta", position: "Vice President of Marketing", group: "board", cohort: "Beta Founding", classYear: "2027", photo: "/members/aditya-mehta.jpg" },
   { id: "b7", name: "Ashna Narielwala", position: "Vice President of Alumni Relations", group: "board", cohort: "Beta Founding", classYear: "2028", photo: "/members/ashna-narielwala.jpg" },
   { id: "b8", name: "Simone Mehta", position: "Vice President of Risk Management", group: "board", cohort: "Beta Founding", classYear: "2028", photo: "/members/simone-mehta.jpg" },
   { id: "b9", name: "Mahir Varanasi", position: "Vice President of Internal Affairs", group: "board", cohort: "Beta Founding", classYear: "2028", photo: "/members/mahir-varanasi.jpg" },

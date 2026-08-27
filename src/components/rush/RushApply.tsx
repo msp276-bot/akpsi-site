@@ -9,7 +9,7 @@ const INTEREST_EMAIL = "rutgersakpsi2024@gmail.com";
 
 export default function RushApply() {
   return (
-    <section id="apply" className="bg-white px-5 py-16 sm:px-8 sm:py-20">
+    <section id="apply" className="bg-slate-50 px-5 py-16 sm:px-8 sm:py-20">
       <div className="mx-auto max-w-2xl text-center">
         <SectionHeader title="Apply Now" subtitle="fall '26 recruitment" />
 
