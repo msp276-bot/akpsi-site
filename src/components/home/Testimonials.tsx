@@ -27,7 +27,7 @@ const TESTIMONIALS: Testimonial[] = [
     quote:
       "AKPsi made my freshman year great and I'm excited to make more memories.",
     name: "Pranay Karthikeyan",
-    context: "Active Brother",
+    context: "Class of 2029",
     tag: "Brotherhood",
     image: "/testimonials/pranay-karthikeyan.jpg",
   },
@@ -35,21 +35,21 @@ const TESTIMONIALS: Testimonial[] = [
     quote:
       "Bowling nights, chapter retreats, spontaneous diner runs at 2am - Omicron Tau gave me a home at Rutgers before I even realized I needed one.",
     name: "Justin Arnoldi",
-    context: "Active Brother",
+    context: "Class of 2027",
     tag: "Community",
   },
   {
     quote:
       "As a transfer student I thought I'd missed my chance to find my people. One rush event later, I had thirty new friends who actually showed up for me.",
     name: "Jayden Arya",
-    context: "Active Brother",
+    context: "Class of 2027",
     tag: "Belonging",
   },
   {
     quote:
       "Serving in leadership positions within AKPsi gave me unique opportunities to develop not only my leadership abilities, but also the interpersonal and soft skills that have helped me succeed throughout my co-op and internships and laid the foundation for my continued professional growth.",
     name: "Alison Wilkerson",
-    context: "Active Brother",
+    context: "Class of 2027",
     tag: "Leadership",
     image: "/testimonials/alison-wilkerson.jpg",
   },
@@ -57,7 +57,7 @@ const TESTIMONIALS: Testimonial[] = [
     quote:
       "Sometimes, all it takes is a change of environment and the right people around you to see yourself grow in ways you never expected. Joining AKPsi gave me that environment. It surrounded me with like-minded individuals who challenged me, supported me, and opened doors that have helped me grow both personally and professionally.",
     name: "David Fordjour",
-    context: "Active Brother",
+    context: "Class of 2028",
     tag: "Professional",
     image: "/testimonials/david-fordjour.jpg",
   },
