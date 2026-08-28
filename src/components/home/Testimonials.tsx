@@ -47,17 +47,19 @@ const TESTIMONIALS: Testimonial[] = [
   },
   {
     quote:
-      "Some of my favorite memories are from our service events - packing meals and fundraising for RUDM, laughing the whole way through. Giving back hits different when you do it with your brothers.",
-    name: "Judy Ku",
+      "Serving in leadership positions within AKPsi gave me unique opportunities to develop not only my leadership abilities, but also the interpersonal and soft skills that have helped me succeed throughout my co-op and internships and laid the foundation for my continued professional growth.",
+    name: "Alison Wilkerson",
     context: "Active Brother",
-    tag: "Service",
+    tag: "Leadership",
+    image: "/testimonials/alison-wilkerson.jpg",
   },
   {
     quote:
-      "AKPsi completely changed how I approached recruiting. Instead of feeling overwhelmed by the process, it felt like having a mentor by my side 24/7.",
+      "Sometimes, all it takes is a change of environment and the right people around you to see yourself grow in ways you never expected. Joining AKPsi gave me that environment. It surrounded me with like-minded individuals who challenged me, supported me, and opened doors that have helped me grow both personally and professionally.",
     name: "David Fordjour",
     context: "Active Brother",
     tag: "Professional",
+    image: "/testimonials/david-fordjour.jpg",
   },
 ];
 
