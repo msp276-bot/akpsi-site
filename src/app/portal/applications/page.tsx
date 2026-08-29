@@ -17,8 +17,7 @@ import { listApplications, setApplicationDecision } from "@/lib/applications";
 // responses in Google (the linked responses Sheet, or the Form's edit page →
 // Responses tab). Paste that URL here to enable the button below. The public
 // `viewform` link only COLLECTS responses, so it can't be used to read them.
-const GOOGLE_RESPONSES_URL =
-  "https://docs.google.com/spreadsheets/d/1gCQIu8ztSzLdWbVB9L-2Z8e2qCjKyek_g3gNaqx08Ik/edit?usp=sharing";
+const GOOGLE_RESPONSES_URL = "";
 
 const STATUS_META: Record<ApplicationStatus, string> = {
   pending: "bg-gold/15 text-[#9a7228]",
