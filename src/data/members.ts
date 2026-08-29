@@ -74,7 +74,7 @@ const rawMembers: Omit<Member, "slug">[] = [
   { id: "a43", name: "Aditya Mehta", position: "Active Brother", group: "actives", cohort: "Beta Founding", classYear: "2027", photo: "/members/aditya-mehta.jpg" },
   { id: "a28", name: "Vinesh Nagavelli", position: "Active Brother", group: "actives", cohort: "Beta Founding", classYear: "2028", photo: "/members/vinesh-nagavelli.jpg" },
   { id: "a29", name: "Dhruv Naruka", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/dhruv-naruka.jpg" },
-  { id: "a44", name: "Olivia Occhipinti", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027" },
+  { id: "a44", name: "Olivia Occhipinti", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/olivia-occhipinti.jpg" },
   { id: "a30", name: "Laksh Panchal", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/laksh-panchal.jpg" },
   { id: "a31", name: "Adarsh Patel", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/adarsh-patel.jpg" },
   { id: "a32", name: "Shruthi Raju", position: "Active Brother", group: "actives", cohort: "Alpha Tau", classYear: "2028", photo: "/members/shruthi-raju.jpg" },
