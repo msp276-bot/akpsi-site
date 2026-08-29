@@ -34,16 +34,18 @@ const TESTIMONIALS: Testimonial[] = [
   {
     quote:
       "Bowling nights, chapter retreats, spontaneous diner runs at 2am - Omicron Tau gave me a home at Rutgers before I even realized I needed one.",
-    name: "Justin Arnoldi",
+    name: "Aashay Marathe",
     context: "Class of 2027",
     tag: "Community",
+    image: "/testimonials/aashay-marathe.jpg",
   },
   {
     quote:
-      "As a transfer student I thought I'd missed my chance to find my people. One rush event later, I had thirty new friends who actually showed up for me.",
-    name: "Jayden Arya",
-    context: "Class of 2027",
+      "AKPsi didn't just give me friends for college. It gave me the confidence to be myself, and a community that pushes me to grow every single day.",
+    name: "Simone Mehta",
+    context: "Class of 2028",
     tag: "Belonging",
+    image: "/testimonials/simone-mehta.jpg",
   },
   {
     quote:
