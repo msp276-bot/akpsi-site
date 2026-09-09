@@ -127,15 +127,17 @@ function EventsBody() {
   }
 
   async function remove(ev: PointEvent) {
+    const ok = window.confirm(
+      `Delete "${ev.title}"?\n\nThis permanently removes the event and every submission (and the points those earned) logged for it. This cannot be undone.\n\nTo keep the history, cancel and use Deactivate instead.`
+    );
+    if (!ok) return;
     setBusyId(ev.id);
     setError(null);
     try {
-      await deleteEvent(ev.id);
+      await deleteEvent(ev.id, { cascade: true });
       setReloadKey((k) => k + 1);
-    } catch {
-      setError(
-        `"${ev.title}" has submissions attached, so it can't be deleted. Deactivate it instead to hide it from the submit form.`
-      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Could not delete "${ev.title}".`);
     } finally {
       setBusyId(null);
     }

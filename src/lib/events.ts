@@ -201,13 +201,27 @@ export async function updateEvent(
  * Hard-delete an event. In Supabase this fails (on delete restrict) if any
  * submission references it - deactivate instead. The caller surfaces that.
  */
-export async function deleteEvent(id: string): Promise<void> {
+export async function deleteEvent(
+  id: string,
+  opts?: { cascade?: boolean }
+): Promise<void> {
   if (!isSupabaseConfigured) {
     writeMock(readMock().filter((e) => e.id !== id));
     return;
   }
   const supabase = getSupabase();
   if (!supabase) throw new Error("Backend unavailable.");
+  // Submissions reference the event with an ON DELETE RESTRICT foreign key, so
+  // an event with any submissions can't be removed until they're deleted too.
+  // With cascade, clear those submissions first (reviewers may delete them),
+  // then delete the event.
+  if (opts?.cascade) {
+    const { error: subErr } = await supabase
+      .from("submissions")
+      .delete()
+      .eq("event_id", id);
+    if (subErr) throw subErr;
+  }
   const { error } = await supabase.from("point_events").delete().eq("id", id);
   if (error) throw error;
 }

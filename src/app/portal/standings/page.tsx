@@ -14,7 +14,7 @@ import { useAuth } from "@/context/AuthContext";
 import { hasPermission } from "@/lib/access";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { listMembers, roleName, type MemberRole } from "@/lib/roles";
-import { pointsRequiredFor, serviceHoursRequiredFor } from "@/lib/points";
+import { pointsRequiredFor } from "@/lib/points";
 import {
   listAllSubmissions,
   listChapterStandings,
@@ -150,7 +150,6 @@ function StandingsBody() {
         .sort(
           (a, b) =>
             b.points - a.points ||
-            b.hours - a.hours ||
             a.name.localeCompare(b.name)
         )
         .map((s, i) => ({ ...s, rank: i + 1 })),
@@ -171,8 +170,8 @@ function StandingsBody() {
         <h1 className="headline text-3xl uppercase text-navy">Leaderboard</h1>
         <p className="mt-1 text-sm text-muted">
           {canReview
-            ? "Every member's approved points and service hours. Click a name to see their submissions."
-            : "Where you and every brother stand on approved points and service hours."}
+            ? "Every member's approved points. Click a name to see their submissions."
+            : "Where you and every brother stand on approved points."}
         </p>
       </div>
 
@@ -206,14 +205,12 @@ function StandingsBody() {
             <span className="w-8 shrink-0 text-center">#</span>
             <span className="flex-1">Member</span>
             <span className="w-24">Points</span>
-            <span className="w-24">Service hrs</span>
             <span className="w-6" />
           </div>
           <ul className="space-y-2">
-            {filtered.map(({ email, name, role, points, hours, pending, subs: mine, rank }) => {
+            {filtered.map(({ email, name, role, points, pending, subs: mine, rank }) => {
               const open = openEmail === email;
               const pointsReq = pointsRequiredFor(role);
-              const hoursReq = serviceHoursRequiredFor(role);
               const isMe = email === user.email;
               const rowClass = `flex w-full flex-wrap items-center gap-4 p-4 text-left transition-colors ${
                 canReview ? "hover:bg-slate-50" : ""
@@ -247,7 +244,6 @@ function StandingsBody() {
                     </p>
                   </div>
                   <Meter earned={points} required={pointsReq} accent="gold" />
-                  <Meter earned={hours} required={hoursReq} accent="navy" />
                   {canReview ? (
                     <ChevronDown
                       size={18}

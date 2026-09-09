@@ -2,8 +2,6 @@ import {
   Rocket,
   Award,
   CheckCircle2,
-  Star,
-  Trophy,
   Sparkles,
   Lock,
 } from "lucide-react";
@@ -16,9 +14,7 @@ import {
  */
 interface AchievementsProps {
   points: number;
-  hours: number;
   pointsRequired: number;
-  hoursRequired: number;
   approvedCount: number;
 }
 
@@ -37,13 +33,10 @@ function plural(n: number, unit: string): string {
 
 export default function Achievements({
   points,
-  hours,
   pointsRequired,
-  hoursRequired,
   approvedCount,
 }: AchievementsProps) {
   const pointsMet = pointsRequired > 0 && points >= pointsRequired;
-  const hoursMet = hoursRequired > 0 && hours >= hoursRequired;
   const overGoal = Math.ceil(pointsRequired * 1.5);
 
   const badges: Badge[] = [
@@ -70,22 +63,6 @@ export default function Achievements({
       Icon: CheckCircle2,
       earned: pointsMet,
       hint: `${plural(Math.max(0, pointsRequired - points), "point")} to go`,
-    },
-    {
-      key: "service",
-      label: "Service Star",
-      desc: "Hit your service-hours goal",
-      Icon: Star,
-      earned: hoursMet,
-      hint: `${plural(Math.max(0, hoursRequired - hours), "hour")} to go`,
-    },
-    {
-      key: "both",
-      label: "Fully Cleared",
-      desc: "Meet both requirements",
-      Icon: Trophy,
-      earned: pointsMet && hoursMet,
-      hint: "Clear both points and service hours",
     },
     {
       key: "over",
