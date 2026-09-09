@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import ServiceWorkerRegister from "@/components/pwa/ServiceWorkerRegister";
 import StructuredData from "@/components/seo/StructuredData";
+import { Analytics } from "@vercel/analytics/next";
 
 // Neutral geometric grotesk (a free Söhne / Neue Haas Grotesk stand-in) - the
 // professional-finance body voice that doesn't compete with the display serif.
@@ -109,6 +110,7 @@ export default function RootLayout({
         <StructuredData />
         <AuthProvider>{children}</AuthProvider>
         <ServiceWorkerRegister />
+        <Analytics />
       </body>
     </html>
   );
