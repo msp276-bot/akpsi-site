@@ -6,7 +6,7 @@ import PortalShell from "@/components/portal/PortalShell";
 import Achievements from "@/components/portal/Achievements";
 import { useAuth } from "@/context/AuthContext";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import { pointsRequiredFor } from "@/lib/points";
+import { pointsRequiredForMember } from "@/lib/points";
 import { listActiveEvents, type PointEvent } from "@/lib/events";
 import {
   createSubmission,
@@ -177,7 +177,7 @@ function PointsBody() {
       <SummaryCard
         label="Points"
         earned={earnedPoints}
-        required={pointsRequiredFor(user.role)}
+        required={pointsRequiredForMember(user.email, user.role)}
         unit="pts"
         accent="gold"
       />
@@ -185,7 +185,7 @@ function PointsBody() {
       {/* Gamified achievement badges - computed from approved submissions. */}
       <Achievements
         points={earnedPoints}
-        pointsRequired={pointsRequiredFor(user.role)}
+        pointsRequired={pointsRequiredForMember(user.email, user.role)}
         approvedCount={mine.filter((s) => s.status === "approved").length}
       />
 

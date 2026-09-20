@@ -14,7 +14,7 @@ import { useAuth } from "@/context/AuthContext";
 import { hasPermission } from "@/lib/access";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { listMembers, roleName, type MemberRole } from "@/lib/roles";
-import { pointsRequiredFor } from "@/lib/points";
+import { pointsRequiredForMember } from "@/lib/points";
 import {
   listAllSubmissions,
   listChapterStandings,
@@ -210,7 +210,7 @@ function StandingsBody() {
           <ul className="space-y-2">
             {filtered.map(({ email, name, role, points, pending, subs: mine, rank }) => {
               const open = openEmail === email;
-              const pointsReq = pointsRequiredFor(role);
+              const pointsReq = pointsRequiredForMember(email, role);
               const isMe = email === user.email;
               const rowClass = `flex w-full flex-wrap items-center gap-4 p-4 text-left transition-colors ${
                 canReview ? "hover:bg-slate-50" : ""

@@ -12,6 +12,8 @@
  * progress meters on the Points page.
  */
 
+import { POINT_THRESHOLDS } from "@/data/pointThresholds";
+
 /** Points required per membership status. "brother" covers active/board/etc. */
 export const POINT_REQUIREMENTS = {
   pledge: 30,
@@ -26,6 +28,19 @@ export const SERVICE_HOUR_REQUIREMENTS = {
 
 export function pointsRequiredFor(role: string): number {
   return role === "pledge" ? POINT_REQUIREMENTS.pledge : POINT_REQUIREMENTS.brother;
+}
+
+/**
+ * Per-member points requirement. Uses the member's individual threshold from the
+ * chapter spreadsheet (see `@/data/pointThresholds`) when present, otherwise the
+ * role-based default above. Keyed by the member's login email.
+ */
+export function pointsRequiredForMember(
+  email: string | null | undefined,
+  role: string
+): number {
+  const t = email ? POINT_THRESHOLDS[email.toLowerCase()] : undefined;
+  return t ?? pointsRequiredFor(role);
 }
 
 export function serviceHoursRequiredFor(role: string): number {
