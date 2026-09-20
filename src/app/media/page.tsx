@@ -28,12 +28,20 @@ const INSTAGRAM_POSTS: string[] = [
 ];
 
 // The featured rush video. Set ONE of these:
-//   mp4:      a self-hosted .mp4 URL (rendered with native controls), or
-//   iframeSrc: a YouTube/Vimeo *embed* URL (e.g. https://www.youtube.com/embed/XXXX)
-// Leave both "" to show a "coming soon" placeholder.
-const RUSH_VIDEO: { title: string; caption: string; mp4: string; iframeSrc: string } = {
+//   instagramUrl: an Instagram post/reel permalink (rendered as an IG embed), or
+//   mp4:          a self-hosted .mp4 URL (rendered with native controls), or
+//   iframeSrc:    a YouTube/Vimeo *embed* URL (e.g. https://www.youtube.com/embed/XXXX)
+// Leave all "" to show a "coming soon" placeholder.
+const RUSH_VIDEO: {
+  title: string;
+  caption: string;
+  instagramUrl: string;
+  mp4: string;
+  iframeSrc: string;
+} = {
   title: "Fall '26 Rush",
   caption: "Meet the chapter and see what a semester in Omicron Tau looks like.",
+  instagramUrl: "https://www.instagram.com/p/Dcv2C3OuGoE/",
   mp4: "",
   iframeSrc: "",
 };
@@ -133,35 +141,44 @@ export default function MediaPage() {
             </h2>
             <p className="mt-1 text-sm text-muted">{RUSH_VIDEO.caption}</p>
 
-            <div className="mt-5 overflow-hidden rounded-2xl border border-line bg-black shadow-sm">
-              <div className="relative aspect-video w-full">
-                {RUSH_VIDEO.mp4 ? (
-                  <video
-                    src={RUSH_VIDEO.mp4}
-                    controls
-                    playsInline
-                    className="h-full w-full object-cover"
-                  />
-                ) : RUSH_VIDEO.iframeSrc ? (
-                  <iframe
-                    src={RUSH_VIDEO.iframeSrc}
-                    title={RUSH_VIDEO.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="absolute inset-0 h-full w-full border-0"
-                  />
-                ) : (
-                  <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-navy to-navy-2 text-center">
-                    <div className="px-6">
-                      <PlayCircle className="mx-auto text-gold" size={44} />
-                      <p className="mt-3 text-sm font-medium text-white">
-                        Rush video coming soon
-                      </p>
-                    </div>
-                  </div>
-                )}
+            {RUSH_VIDEO.instagramUrl ? (
+              <div className="mt-5">
+                <InstagramEmbed
+                  url={RUSH_VIDEO.instagramUrl}
+                  title={RUSH_VIDEO.title}
+                />
               </div>
-            </div>
+            ) : (
+              <div className="mt-5 overflow-hidden rounded-2xl border border-line bg-black shadow-sm">
+                <div className="relative aspect-video w-full">
+                  {RUSH_VIDEO.mp4 ? (
+                    <video
+                      src={RUSH_VIDEO.mp4}
+                      controls
+                      playsInline
+                      className="h-full w-full object-cover"
+                    />
+                  ) : RUSH_VIDEO.iframeSrc ? (
+                    <iframe
+                      src={RUSH_VIDEO.iframeSrc}
+                      title={RUSH_VIDEO.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="absolute inset-0 h-full w-full border-0"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-navy to-navy-2 text-center">
+                      <div className="px-6">
+                        <PlayCircle className="mx-auto text-gold" size={44} />
+                        <p className="mt-3 text-sm font-medium text-white">
+                          Rush video coming soon
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </section>
         </div>
       </main>
