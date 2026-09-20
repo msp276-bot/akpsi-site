@@ -41,8 +41,8 @@ const RUSH_VIDEO: {
 } = {
   title: "Fall '26 Rush",
   caption: "Meet the chapter and see what a semester in Omicron Tau looks like.",
-  instagramUrl: "https://www.instagram.com/p/Dcv2C3OuGoE/",
-  mp4: "",
+  instagramUrl: "",
+  mp4: "/rush-fall26.mp4",
   iframeSrc: "",
 };
 

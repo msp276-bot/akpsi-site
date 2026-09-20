@@ -11,6 +11,11 @@ export interface Member {
   major?: string;
   minor?: string;
   group: MemberGroup;
+  /**
+   * Roster status. Absent means active. Shown as a small badge in the portal
+   * (logged-in) directory only - never on the public members page.
+   */
+  status?: "inactive" | "abroad";
   /** Founding class the brother joined with (Alpha/Beta Founding, Alpha Tau). */
   cohort?: Cohort;
   classYear: string;
@@ -46,11 +51,11 @@ const rawMembers: Omit<Member, "slug">[] = [
   { id: "b10", name: "Oluwatomisin Abiola", position: "Vice President of Professional Development", group: "board", cohort: "Beta Founding", classYear: "2028", photo: "/members/oluwatomisin-abiola.jpg" },
 
   // ---------------- ACTIVES ----------------
-  { id: "a2", name: "Rayyan Ahmed", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/rayyan-ahmed.jpg" },
+  { id: "a2", name: "Rayyan Ahmed", position: "Active Brother", group: "actives", status: "inactive", cohort: "Alpha Founding", classYear: "2027", photo: "/members/rayyan-ahmed.jpg" },
   { id: "a3", name: "Justin Arnoldi", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/justin-arnoldi.jpg" },
   { id: "a4", name: "Jayden Arya", position: "Active Brother", group: "actives", cohort: "Beta Founding", classYear: "2027", photo: "/members/jayden-arya.jpg" },
-  { id: "a5", name: "Anika Batki", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/anika-batki.jpg" },
-  { id: "a6", name: "John Baylock", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/john-baylock.jpg" },
+  { id: "a5", name: "Anika Batki", position: "Active Brother", group: "actives", status: "abroad", cohort: "Alpha Founding", classYear: "2027", photo: "/members/anika-batki.jpg" },
+  { id: "a6", name: "John Baylock", position: "Active Brother", group: "actives", status: "inactive", cohort: "Alpha Founding", classYear: "2027", photo: "/members/john-baylock.jpg" },
   { id: "a7", name: "Joseph Anthony Candelaria", position: "Active Brother", group: "actives", cohort: "Alpha Tau", classYear: "2029", photo: "/members/joseph-anthony-candelaria.jpg" },
   { id: "a8", name: "Carolyn Chang", position: "Active Brother", group: "actives", cohort: "Alpha Tau", classYear: "2029", photo: "/members/carolyn-chang.jpg" },
   { id: "a9", name: "Parthivi Chauhan", position: "Active Brother", group: "actives", cohort: "Beta Founding", classYear: "2028", photo: "/members/parthivi-chauhan.jpg" },
@@ -65,8 +70,8 @@ const rawMembers: Omit<Member, "slug">[] = [
   { id: "a19", name: "Olivia Karanxha", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/olivia-karanxha.jpg" },
   { id: "a20", name: "Pranay Karthikeyan", position: "Active Brother", group: "actives", cohort: "Alpha Tau", classYear: "2029", photo: "/members/pranay-karthikeyan.jpg" },
   { id: "a21", name: "Judy Ku", position: "Active Brother", group: "actives", cohort: "Alpha Tau", classYear: "2029", photo: "/members/judy-ku.jpg" },
-  { id: "a22", name: "Gavin Lam", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/gavin-lam.jpg" },
-  { id: "a23", name: "Caleb Liu", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/caleb-liu.jpg" },
+  { id: "a22", name: "Gavin Lam", position: "Active Brother", group: "actives", status: "inactive", cohort: "Alpha Founding", classYear: "2027", photo: "/members/gavin-lam.jpg" },
+  { id: "a23", name: "Caleb Liu", position: "Active Brother", group: "actives", status: "inactive", cohort: "Alpha Founding", classYear: "2027", photo: "/members/caleb-liu.jpg" },
   { id: "a24", name: "Colin Lopes", position: "Active Brother", group: "actives", cohort: "Alpha Tau", classYear: "2028", photo: "/members/colin-lopes.jpg" },
   { id: "a25", name: "Ridhee Maddula", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/ridhee-maddula.jpg" },
   { id: "a26", name: "Rajvi Maniar", position: "Active Brother", group: "actives", cohort: "Beta Founding", classYear: "2028", photo: "/members/rajvi-maniar.jpg" },
@@ -84,11 +89,11 @@ const rawMembers: Omit<Member, "slug">[] = [
   { id: "a36", name: "Srihari Arthi Senthilkumar", position: "Active Brother", group: "actives", cohort: "Alpha Tau", classYear: "2028", photo: "/members/srihari-arthi-senthilkumar.jpg" },
   { id: "a37", name: "Dev Shah", position: "Active Brother", group: "actives", cohort: "Alpha Tau", classYear: "2029", photo: "/members/dev-shah.jpg" },
   { id: "a38", name: "Diya Sivasubramani", position: "Active Brother", group: "actives", cohort: "Alpha Tau", classYear: "2029", photo: "/members/diya-sivasubramani.jpg" },
-  { id: "a39", name: "Arish Sumnani", position: "Active Brother", group: "actives", cohort: "Beta Founding", classYear: "2028", photo: "/members/arish-sumnani.jpg" },
+  { id: "a39", name: "Arish Sumnani", position: "Active Brother", group: "actives", status: "abroad", cohort: "Beta Founding", classYear: "2028", photo: "/members/arish-sumnani.jpg" },
   { id: "a40", name: "Satviki Vasireddy", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/satviki-vasireddy.jpg" },
   { id: "a41", name: "Ishita Vinay", position: "Active Brother", group: "actives", cohort: "Alpha Tau", classYear: "2029", photo: "/members/ishita-vinay.jpg" },
   { id: "a42", name: "Alison Wilkerson", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/alison-wilkerson.jpg" },
-  { id: "a43", name: "Anthony Yang", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/anthony-yang.jpg" },
+  { id: "a43", name: "Anthony Yang", position: "Active Brother", group: "actives", status: "inactive", cohort: "Alpha Founding", classYear: "2027", photo: "/members/anthony-yang.jpg" },
   { id: "a44", name: "Justin Yang", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/justin-yang.jpg" },
   { id: "a45", name: "Renee Ye", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/renee-ye.jpg" },
 

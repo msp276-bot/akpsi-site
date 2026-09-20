@@ -201,7 +201,20 @@ function Directory() {
                 </div>
               )}
               <div className="min-w-0">
-                <h3 className="truncate font-semibold text-ink">{m.name}</h3>
+                <div className="flex items-center gap-1.5">
+                  <h3 className="truncate font-semibold text-ink">{m.name}</h3>
+                  {m.status && (
+                    <span
+                      className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                        m.status === "abroad"
+                          ? "bg-sky-100 text-sky-700"
+                          : "bg-slate-200 text-slate-600"
+                      }`}
+                    >
+                      {m.status === "abroad" ? "Abroad" : "Inactive"}
+                    </span>
+                  )}
+                </div>
                 <p className="truncate text-xs text-blue">{m.position}</p>
                 <p className="truncate text-xs text-muted">
                   {o.major ?? m.cohort ?? "Brother"} · &rsquo;{m.classYear.slice(2)}
