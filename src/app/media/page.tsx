@@ -21,10 +21,10 @@ export const metadata: Metadata = {
 
 // Featured Instagram posts - permalinks, embedded in order. Add or remove URLs.
 const INSTAGRAM_POSTS: string[] = [
-  "https://www.instagram.com/p/DciSrz0tt4e/",
-  "https://www.instagram.com/p/Dccpjq-lckz/",
-  "https://www.instagram.com/p/DbokCrTGn69/",
-  "https://www.instagram.com/p/Dbd-c0cGixT/",
+  "https://www.instagram.com/p/DdM4vCXtfuW/",
+  "https://www.instagram.com/p/DdKYj_TtvLs/",
+  "https://www.instagram.com/p/DdAA0RnmvUQ/",
+  "https://www.instagram.com/p/Dc4ZZ3-N__Z/",
 ];
 
 // The featured rush video. Set ONE of these:
