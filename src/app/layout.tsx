@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Hanken_Grotesk, Bodoni_Moda, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import SmoothScroll from "@/components/anim/SmoothScroll";
 import ServiceWorkerRegister from "@/components/pwa/ServiceWorkerRegister";
 import StructuredData from "@/components/seo/StructuredData";
 import { Analytics } from "@vercel/analytics/next";
@@ -109,6 +110,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-white text-ink">
         <StructuredData />
         <AuthProvider>{children}</AuthProvider>
+        <SmoothScroll />
         <ServiceWorkerRegister />
         <Analytics />
       </body>

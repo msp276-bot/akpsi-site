@@ -1,6 +1,7 @@
 import { ArrowUpRight, BriefcaseBusiness, Sparkles, UsersRound } from "lucide-react";
 import Reveal from "@/components/anim/Reveal";
 import Button from "@/components/ui/Button";
+import GoldGlobeLazy from "@/components/backgrounds/GoldGlobeLazy";
 
 export default function CTASection() {
   return (
@@ -8,6 +9,9 @@ export default function CTASection() {
       <div className="pointer-events-none absolute -left-32 top-0 h-80 w-80 rounded-full bg-gold/20 blur-3xl" />
       <div className="pointer-events-none absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-blue/25 blur-3xl" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/70 to-transparent" />
+      {/* three.js gold globe: the alumni network "across the globe". Sits
+          behind the glass cards on desktop, faint and centered on mobile. */}
+      <GoldGlobeLazy className="absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 opacity-30 lg:left-auto lg:right-[-6%] lg:h-[680px] lg:w-[680px] lg:translate-x-0 lg:opacity-70" />
 
       <div className="relative mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:px-8">
         <div>

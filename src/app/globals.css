@@ -35,6 +35,10 @@
 html {
   scroll-behavior: smooth;
 }
+/* Lenis owns the easing when it is active; native smooth would double it. */
+html.lenis {
+  scroll-behavior: auto;
+}
 
 body {
   background: var(--background);
