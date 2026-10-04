@@ -32,7 +32,12 @@ function ProfileBody() {
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
 
-  const [form, setForm] = useState({ major: "", company: "", linkedin: "" });
+  const [form, setForm] = useState({
+    major: "",
+    company: "",
+    linkedin: "",
+    contactEmail: "",
+  });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -56,6 +61,8 @@ function ProfileBody() {
           major: (mine?.hasPending ? mine.pendingMajor : mine?.major) ?? "",
           company: (mine?.hasPending ? mine.pendingCompany : mine?.company) ?? "",
           linkedin: (mine?.hasPending ? mine.pendingLinkedin : mine?.linkedin) ?? "",
+          contactEmail:
+            (mine?.hasPending ? mine.pendingContactEmail : mine?.contactEmail) ?? "",
         });
       } catch {
         /* leave empty */
@@ -87,6 +94,7 @@ function ProfileBody() {
         major: form.major,
         company: form.company,
         linkedin: form.linkedin,
+        contactEmail: form.contactEmail,
         photoFile,
         currentPhotoPath,
       });
@@ -120,8 +128,8 @@ function ProfileBody() {
       <div>
         <h1 className="headline text-3xl uppercase text-navy">My Profile</h1>
         <p className="mt-1 text-sm text-muted">
-          Update your major, company, LinkedIn, and photo. Changes go live once a
-          president approves them.
+          Update your major, company, LinkedIn, contact email, and photo. Changes
+          go live once a president approves them.
         </p>
       </div>
 
@@ -216,6 +224,21 @@ function ProfileBody() {
                 placeholder="https://linkedin.com/in/your-handle"
               />
             </label>
+            <label className="block sm:col-span-2">
+              <span className="text-sm font-medium text-ink">Contact email</span>
+              <input
+                type="email"
+                className={inputClass}
+                value={form.contactEmail}
+                onChange={(e) => setForm((f) => ({ ...f, contactEmail: e.target.value }))}
+                placeholder="you@example.com"
+                autoComplete="email"
+              />
+              <span className="mt-1 block text-xs text-muted">
+                Shown to signed-in brothers in the portal directory. This does not
+                change the email you sign in with. Leave blank to keep the one on file.
+              </span>
+            </label>
           </div>
 
           <button
@@ -261,6 +284,11 @@ function ProfileBody() {
                       </p>
                       {p.pendingLinkedin && (
                         <p className="truncate text-xs text-blue">{p.pendingLinkedin}</p>
+                      )}
+                      {p.pendingContactEmail && (
+                        <p className="truncate text-xs text-ink/70">
+                          Contact email: {p.pendingContactEmail}
+                        </p>
                       )}
                     </div>
                     <div className="flex shrink-0 gap-2">

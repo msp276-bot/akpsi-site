@@ -2,7 +2,7 @@ import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
 
 /**
  * Member self-edit profiles. A member proposes changes to their own major /
- * company / LinkedIn / photo; nothing goes live until a president/admin approves.
+ * company / LinkedIn / directory contact email / photo; nothing goes live until a president/admin approves.
  * Writes go through SECURITY DEFINER RPCs (see db/member-profiles.sql) so a
  * member can only touch their own pending fields. Mock mode uses localStorage so
  * the flow is demoable in preview.
@@ -16,11 +16,14 @@ export interface MemberProfile {
   major: string | null;
   company: string | null;
   linkedin: string | null;
+  /** Email shown on the portal directory card (not the login email). */
+  contactEmail: string | null;
   photoPath: string | null;
   photoUrl: string | null;
   pendingMajor: string | null;
   pendingCompany: string | null;
   pendingLinkedin: string | null;
+  pendingContactEmail: string | null;
   pendingPhotoPath: string | null;
   pendingPhotoUrl: string | null;
   hasPending: boolean;
@@ -31,6 +34,7 @@ export interface ApprovedProfile {
   major: string | null;
   company: string | null;
   linkedin: string | null;
+  contactEmail: string | null;
   photoUrl: string | null;
 }
 
@@ -38,6 +42,7 @@ export interface ProfileEditInput {
   major: string;
   company: string;
   linkedin: string;
+  contactEmail: string;
   /** A newly picked photo, or null to keep the current one. */
   photoFile: File | null;
   /** The photo_path already on file (kept when no new photo is picked). */
@@ -49,10 +54,12 @@ type Row = {
   major: string | null;
   company: string | null;
   linkedin: string | null;
+  contact_email: string | null;
   photo_path: string | null;
   pending_major: string | null;
   pending_company: string | null;
   pending_linkedin: string | null;
+  pending_contact_email: string | null;
   pending_photo_path: string | null;
   has_pending: boolean;
 };
@@ -102,15 +109,27 @@ function mapRow(row: Row): MemberProfile {
     major: row.major,
     company: row.company,
     linkedin: row.linkedin,
+    contactEmail: row.contact_email ?? null,
     photoPath: row.photo_path,
     photoUrl: photoUrl(row.photo_path),
     pendingMajor: row.pending_major,
     pendingCompany: row.pending_company,
     pendingLinkedin: row.pending_linkedin,
+    pendingContactEmail: row.pending_contact_email ?? null,
     pendingPhotoPath: row.pending_photo_path,
     pendingPhotoUrl: photoUrl(row.pending_photo_path),
     hasPending: row.has_pending,
   };
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Normalized contact email, or null when blank. Throws on a malformed one. */
+function normalizeContactEmail(raw: string): string | null {
+  const v = raw.trim().toLowerCase();
+  if (!v) return null;
+  if (!EMAIL_RE.test(v)) throw new Error("Enter a valid email address.");
+  return v;
 }
 
 // --- Public API ------------------------------------------------------------
@@ -137,6 +156,7 @@ export async function submitProfileEdit(
   input: ProfileEditInput
 ): Promise<void> {
   const me = email.trim().toLowerCase();
+  const contactEmail = normalizeContactEmail(input.contactEmail);
 
   if (!isSupabaseConfigured) {
     const photoPath = input.photoFile
@@ -149,10 +169,12 @@ export async function submitProfileEdit(
       major: existing?.major ?? null,
       company: existing?.company ?? null,
       linkedin: existing?.linkedin ?? null,
+      contact_email: existing?.contact_email ?? null,
       photo_path: existing?.photo_path ?? null,
       pending_major: input.major.trim() || null,
       pending_company: input.company.trim() || null,
       pending_linkedin: input.linkedin.trim() || null,
+      pending_contact_email: contactEmail,
       pending_photo_path: photoPath,
       has_pending: true,
     };
@@ -177,6 +199,7 @@ export async function submitProfileEdit(
     p_major: input.major.trim() || null,
     p_company: input.company.trim() || null,
     p_linkedin: input.linkedin.trim() || null,
+    p_contact_email: contactEmail,
     p_photo_path: photoPath,
   });
   if (error) throw error;
@@ -206,8 +229,10 @@ export async function approveProfile(email: string): Promise<void> {
       row.major = row.pending_major;
       row.company = row.pending_company;
       row.linkedin = row.pending_linkedin;
+      row.contact_email = row.pending_contact_email;
       row.photo_path = row.pending_photo_path;
-      row.pending_major = row.pending_company = row.pending_linkedin = row.pending_photo_path = null;
+      row.pending_major = row.pending_company = row.pending_linkedin = null;
+      row.pending_contact_email = row.pending_photo_path = null;
       row.has_pending = false;
       writeMock(rows);
     }
@@ -225,7 +250,8 @@ export async function rejectProfile(email: string): Promise<void> {
     const rows = readMock();
     const row = rows.find((r) => r.email === target);
     if (row) {
-      row.pending_major = row.pending_company = row.pending_linkedin = row.pending_photo_path = null;
+      row.pending_major = row.pending_company = row.pending_linkedin = null;
+      row.pending_contact_email = row.pending_photo_path = null;
       row.has_pending = false;
       writeMock(rows);
     }
@@ -241,12 +267,13 @@ export async function rejectProfile(email: string): Promise<void> {
 export async function listApprovedProfiles(): Promise<ApprovedProfile[]> {
   if (!isSupabaseConfigured) {
     return readMock()
-      .filter((r) => r.major || r.company || r.linkedin || r.photo_path)
+      .filter((r) => r.major || r.company || r.linkedin || r.contact_email || r.photo_path)
       .map((r) => ({
         email: r.email,
         major: r.major,
         company: r.company,
         linkedin: r.linkedin,
+        contactEmail: r.contact_email ?? null,
         photoUrl: photoUrl(r.photo_path),
       }));
   }
@@ -254,15 +281,19 @@ export async function listApprovedProfiles(): Promise<ApprovedProfile[]> {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("member_profiles")
-    .select("email, major, company, linkedin, photo_path");
+    .select("email, major, company, linkedin, contact_email, photo_path");
   if (error) throw error;
   return (data ?? []).map((r) => {
-    const row = r as Pick<Row, "email" | "major" | "company" | "linkedin" | "photo_path">;
+    const row = r as Pick<
+      Row,
+      "email" | "major" | "company" | "linkedin" | "contact_email" | "photo_path"
+    >;
     return {
       email: row.email,
       major: row.major,
       company: row.company,
       linkedin: row.linkedin,
+      contactEmail: row.contact_email,
       photoUrl: photoUrl(row.photo_path),
     };
   });

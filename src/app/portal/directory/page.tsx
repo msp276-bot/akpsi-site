@@ -31,7 +31,9 @@ function Directory() {
   // Contact info (email/LinkedIn) is private and lives in Supabase, keyed by
   // slug - fetched with the signed-in member's session, never in the bundle.
   const [contacts, setContacts] = useState<Record<string, MemberContact>>({});
-  // Approved self-edit overrides (major/company/LinkedIn/photo), keyed by email.
+  // Approved self-edit overrides (major/company/LinkedIn/contact email/photo),
+  // keyed by login email AND by the approved contact email, so a card still
+  // finds its profile when member_contacts.email isn't the member's login.
   const [profiles, setProfiles] = useState<Record<string, ApprovedProfile>>({});
   useEffect(() => {
     let active = true;
@@ -39,7 +41,15 @@ function Directory() {
       .then(([contactList, profileList]) => {
         if (!active) return;
         setContacts(Object.fromEntries(contactList.map((c) => [c.slug, c])));
-        setProfiles(Object.fromEntries(profileList.map((p) => [p.email, p])));
+        // Login-email keys are written last so they win any collision.
+        setProfiles(
+          Object.fromEntries([
+            ...profileList
+              .filter((p) => p.contactEmail)
+              .map((p) => [p.contactEmail!.toLowerCase(), p] as const),
+            ...profileList.map((p) => [p.email.toLowerCase(), p] as const),
+          ])
+        );
       })
       .catch(() => {
         /* leave empty; the UI falls back to static data + "not on file" */
@@ -90,9 +100,9 @@ function Directory() {
   // slug<->email link in member_contacts).
   function overridesFor(m: Member) {
     const contact = contacts[m.slug];
-    const prof = contact ? profiles[contact.email] : undefined;
+    const prof = contact ? profiles[contact.email.toLowerCase()] : undefined;
     return {
-      email: contact?.email ?? null,
+      email: prof?.contactEmail ?? contact?.email ?? null,
       photo: prof?.photoUrl ?? m.photo,
       major: prof?.major ?? m.major,
       company: prof?.company ?? m.industry,
