@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ClipboardCheck, Check, X, RotateCcw } from "lucide-react";
 import PortalShell from "@/components/portal/PortalShell";
+import AwardPoints from "@/components/portal/AwardPoints";
 import { useAuth } from "@/context/AuthContext";
 import { hasPermission } from "@/lib/access";
 import { isSupabaseConfigured } from "@/lib/supabase";
@@ -110,6 +111,11 @@ function ReviewBody() {
         </div>
       </div>
 
+      <AwardPoints
+        reviewerEmail={user.email}
+        onAwarded={() => setReloadKey((k) => k + 1)}
+      />
+
       {!isSupabaseConfigured && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           <strong>Preview mode.</strong> You&rsquo;re only seeing submissions made in
@@ -145,13 +151,16 @@ function ReviewBody() {
                   <p className="text-xs text-muted">{s.submitterEmail}</p>
                   <p className="mt-1 text-sm text-ink">
                     <span className="font-medium">
-                      {isService ? "Service hours" : s.eventTitle ?? "Event"}
+                      {isService ? "Service hours" : s.eventTitle ?? (s.addedBy ? "Custom points" : "Event")}
                     </span>
                     {isService
                       ? <> · {s.hours ?? 0} hr{s.hours === 1 ? "" : "s"}</>
                       : <> · {s.points} pt{s.points === 1 ? "" : "s"}</>}
                   </p>
                   {s.eventDescription && <p className="mt-1 text-sm text-muted">{s.eventDescription}</p>}
+                  {s.addedBy && (
+                    <p className="mt-1 text-xs font-medium text-[#a97e2b]">Added by {s.addedBy}</p>
+                  )}
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
                   {s.status !== "pending" && (

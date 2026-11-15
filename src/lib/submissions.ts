@@ -38,6 +38,8 @@ export interface Submission {
   reviewedBy: string | null;
   reviewedAt: string | null;
   createdAt: string;
+  /** Reviewer who credited these points directly (null = member submitted). */
+  addedBy: string | null;
 }
 
 export interface NewSubmission {
@@ -116,6 +118,7 @@ type Row = {
   reviewed_by: string | null;
   reviewed_at: string | null;
   created_at: string;
+  added_by?: string | null;
   point_events: { title: string } | null;
 };
 
@@ -147,6 +150,7 @@ async function mapRow(row: Row): Promise<Submission> {
     reviewedBy: row.reviewed_by,
     reviewedAt: row.reviewed_at,
     createdAt: row.created_at,
+    addedBy: row.added_by ?? null,
   };
 }
 
@@ -174,6 +178,7 @@ export async function createSubmission(input: NewSubmission): Promise<Submission
       reviewedBy: null,
       reviewedAt: null,
       createdAt: new Date().toISOString(),
+      addedBy: null,
     };
     writeMock([record, ...readMock()]);
     return record;
@@ -265,6 +270,89 @@ export async function reviewSubmission(
   // reviewer/time are stamped by the server-side trigger.
   const { error } = await supabase.from("submissions").update({ status }).eq("id", id);
   if (error) throw error;
+}
+
+export interface AwardPointsInput {
+  /** Members to credit (login emails). */
+  emails: { email: string; name: string }[];
+  /** A catalog event (its point value is used), or null for a custom amount. */
+  eventId: string | null;
+  eventTitle: string | null;
+  /** Used only when eventId is null. */
+  points: number;
+  note: string;
+}
+
+/**
+ * E-board credits points to members directly - no submission or proof from the
+ * member. Stored as already-approved points submissions. In Supabase mode the
+ * `award_points` RPC (db/manual-points.sql) checks the caller is a reviewer,
+ * reads the event's point value server-side, and skips anyone who already has a
+ * pending/approved submission for that event. Returns how many were credited.
+ */
+export async function awardPoints(
+  input: AwardPointsInput,
+  reviewerEmail: string
+): Promise<number> {
+  const reviewer = normalizeEmail(reviewerEmail);
+  if (!input.eventId && !(input.points > 0)) {
+    throw new Error("Enter a positive number of points.");
+  }
+  if (!input.eventId && !input.note.trim()) {
+    throw new Error("Add a short note saying what the points are for.");
+  }
+
+  if (!isSupabaseConfigured) {
+    const rows = readMock();
+    const now = new Date().toISOString();
+    let n = 0;
+    for (const m of input.emails) {
+      const email = normalizeEmail(m.email);
+      if (
+        input.eventId &&
+        rows.some(
+          (s) =>
+            s.submitterEmail === email &&
+            s.eventId === input.eventId &&
+            s.status !== "denied"
+        )
+      ) {
+        continue;
+      }
+      rows.unshift({
+        id: newId(),
+        submitterEmail: email,
+        submitterName: m.name,
+        type: "points",
+        eventId: input.eventId,
+        eventTitle: input.eventTitle,
+        eventDescription: input.note.trim(),
+        hours: null,
+        points: input.points,
+        proof: null,
+        proofPath: null,
+        status: "approved",
+        reviewedBy: reviewer,
+        reviewedAt: now,
+        createdAt: now,
+        addedBy: reviewer,
+      });
+      n += 1;
+    }
+    writeMock(rows);
+    return n;
+  }
+
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Backend unavailable.");
+  const { data, error } = await supabase.rpc("award_points", {
+    p_emails: input.emails.map((m) => normalizeEmail(m.email)),
+    p_event_id: input.eventId,
+    p_points: input.eventId ? null : input.points,
+    p_note: input.note.trim() || null,
+  });
+  if (error) throw error;
+  return Number(data ?? 0);
 }
 
 /** Undo a decision: send an approved/denied submission back to Pending. */

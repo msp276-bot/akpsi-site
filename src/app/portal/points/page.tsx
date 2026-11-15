@@ -293,10 +293,13 @@ function PointsBody() {
                 <div className="min-w-0 flex-1 basis-64">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-navy">
-                      {s.type === "points" ? s.eventTitle ?? "Event" : "Service hours"}
+                      {s.type === "points" ? s.eventTitle ?? "Added by e-board" : "Service hours"}
                     </span>
                     <StatusBadge status={s.status} />
                   </div>
+                  {s.addedBy && (
+                    <p className="mt-0.5 text-xs font-medium text-[#a97e2b]">Added for you by the e-board</p>
+                  )}
                   {s.eventDescription && (
                     <p className="mt-0.5 line-clamp-2 text-sm text-muted">{s.eventDescription}</p>
                   )}
