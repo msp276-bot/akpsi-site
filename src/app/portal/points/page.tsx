@@ -6,7 +6,12 @@ import PortalShell from "@/components/portal/PortalShell";
 import Achievements from "@/components/portal/Achievements";
 import { useAuth } from "@/context/AuthContext";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import { pointsRequiredForMember } from "@/lib/points";
+import {
+  loadRequirements,
+  requiredFor,
+  FALLBACK_REQUIREMENTS,
+  type Requirements,
+} from "@/lib/pointRequirements";
 import { listActiveEvents, type PointEvent } from "@/lib/events";
 import {
   createSubmission,
@@ -77,6 +82,7 @@ function PointsBody() {
 
   const [mine, setMine] = useState<Submission[]>([]);
   const [events, setEvents] = useState<PointEvent[]>([]);
+  const [requirements, setRequirements] = useState<Requirements>(FALLBACK_REQUIREMENTS);
   const [loading, setLoading] = useState(true);
 
   const [eventId, setEventId] = useState<string>("");
@@ -94,12 +100,14 @@ function PointsBody() {
     (async () => {
       if (!user) return;
       try {
-        const [rows, evts] = await Promise.all([
+        const [rows, evts, req] = await Promise.all([
           listMySubmissions(user.email),
           listActiveEvents(),
+          loadRequirements().catch(() => FALLBACK_REQUIREMENTS),
         ]);
         if (!active) return;
         setMine(rows);
+        setRequirements(req);
         setEvents(evts);
         setEventId((id) => id || evts[0]?.id || "");
       } catch {
@@ -177,7 +185,7 @@ function PointsBody() {
       <SummaryCard
         label="Points"
         earned={earnedPoints}
-        required={pointsRequiredForMember(user.email, user.role)}
+        required={requiredFor(requirements, user.email, user.role)}
         unit="pts"
         accent="gold"
       />
@@ -185,7 +193,7 @@ function PointsBody() {
       {/* Gamified achievement badges - computed from approved submissions. */}
       <Achievements
         points={earnedPoints}
-        pointsRequired={pointsRequiredForMember(user.email, user.role)}
+        pointsRequired={requiredFor(requirements, user.email, user.role)}
         approvedCount={mine.filter((s) => s.status === "approved").length}
       />
 

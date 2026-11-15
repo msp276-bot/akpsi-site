@@ -13,6 +13,7 @@ import {
   Award,
   ClipboardCheck,
   CalendarPlus,
+  Target,
   BarChart3,
   ClipboardList,
   ShieldCheck,
@@ -77,6 +78,7 @@ const PAGES: PageDef[] = [
   { title: "Leaderboard", href: "/portal/standings", Icon: BarChart3, keywords: "standings rank ranking totals", permission: "submissions:submit" },
   { title: "Review Submissions", href: "/portal/review", Icon: ClipboardCheck, keywords: "approve deny pending", permission: "submissions:review" },
   { title: "Point Events", href: "/portal/point-events", Icon: CalendarPlus, keywords: "create point event catalog", permission: "submissions:review" },
+  { title: "Point Requirements", href: "/portal/point-requirements", Icon: Target, keywords: "points threshold requirement needed quota", permission: "submissions:review" },
   { title: "Applications", href: "/portal/applications", Icon: ClipboardList, keywords: "rush recruits applicants deck", permission: "read:applications" },
   { title: "Admin", href: "/portal/admin", Icon: ShieldCheck, keywords: "roles manage settings", permission: "manage:roles" },
 ];

@@ -14,7 +14,12 @@ import { useAuth } from "@/context/AuthContext";
 import { hasPermission } from "@/lib/access";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { listMembers, roleName, type MemberRole } from "@/lib/roles";
-import { pointsRequiredForMember } from "@/lib/points";
+import {
+  loadRequirements,
+  requiredFor,
+  FALLBACK_REQUIREMENTS,
+  type Requirements,
+} from "@/lib/pointRequirements";
 import {
   listAllSubmissions,
   listChapterStandings,
@@ -80,6 +85,7 @@ function StandingsBody() {
   const canReview = user ? hasPermission(user.role, "submissions:review") : false;
 
   const [standings, setStandings] = useState<Standing[]>([]);
+  const [requirements, setRequirements] = useState<Requirements>(FALLBACK_REQUIREMENTS);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [openEmail, setOpenEmail] = useState<string | null>(null);
@@ -89,6 +95,9 @@ function StandingsBody() {
     (async () => {
       if (!user) return;
       try {
+        const req = await loadRequirements().catch(() => FALLBACK_REQUIREMENTS);
+        if (!active) return;
+        setRequirements(req);
         if (canReview) {
           const [members, subs] = await Promise.all([
             listMembers(),
@@ -210,7 +219,7 @@ function StandingsBody() {
           <ul className="space-y-2">
             {filtered.map(({ email, name, role, points, pending, subs: mine, rank }) => {
               const open = openEmail === email;
-              const pointsReq = pointsRequiredForMember(email, role);
+              const pointsReq = requiredFor(requirements, email, role);
               const isMe = email === user.email;
               const rowClass = `flex w-full flex-wrap items-center gap-4 p-4 text-left transition-colors ${
                 canReview ? "hover:bg-slate-50" : ""

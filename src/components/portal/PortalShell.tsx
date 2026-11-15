@@ -14,6 +14,7 @@ import {
   CalendarPlus,
   BarChart3,
   Award,
+  Target,
   ShieldCheck,
   UserRound,
   Moon,
@@ -65,6 +66,13 @@ const NAV = [
     href: "/portal/point-events",
     Icon: CalendarPlus,
     // VP Ops / e-board create the events brothers submit for points.
+    permission: "submissions:review" as const,
+  },
+  {
+    label: "Point Requirements",
+    href: "/portal/point-requirements",
+    Icon: Target,
+    // VP Ops / e-board set how many points each member needs.
     permission: "submissions:review" as const,
   },
   {
