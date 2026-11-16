@@ -188,11 +188,21 @@ function Directory() {
         {results.map((m) => {
           const o = overridesFor(m);
           return (
-            <button
+            <div
               key={m.id}
+              role="button"
+              tabIndex={0}
               onClick={() => setSelected(m)}
-              className="flex items-center gap-4 rounded-xl border border-line bg-white p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
+              onKeyDown={(e) => {
+                if (e.target !== e.currentTarget) return;
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setSelected(m);
+                }
+              }}
+              className="flex cursor-pointer items-center gap-4 rounded-xl border border-line bg-white p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
             >
+              <LinkedInPhoto href={o.linkedin} name={m.name}>
               {o.photo ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -210,6 +220,7 @@ function Directory() {
                   {getInitials(m.name)}
                 </div>
               )}
+              </LinkedInPhoto>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <h3 className="truncate font-semibold text-ink">{m.name}</h3>
@@ -230,7 +241,7 @@ function Directory() {
                   {o.major ?? m.cohort ?? "Brother"} · &rsquo;{m.classYear.slice(2)}
                 </p>
               </div>
-            </button>
+            </div>
           );
         })}
         {results.length === 0 && (
@@ -270,6 +281,7 @@ function Directory() {
                   </button>
                 </div>
                 <div className="-mt-4 flex flex-col items-center text-center">
+                  <LinkedInPhoto href={so.linkedin} name={selected.name}>
                   {so.photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -288,6 +300,7 @@ function Directory() {
                       {getInitials(selected.name)}
                     </div>
                   )}
+                  </LinkedInPhoto>
                   <h2 className="mt-4 text-lg font-bold text-ink">
                     {selected.name}
                   </h2>
@@ -456,5 +469,39 @@ function AddMemberForm({
         Add to directory
       </button>
     </form>
+  );
+}
+
+/**
+ * Wraps a directory headshot so clicking it opens the member's LinkedIn in a
+ * new tab. Without a LinkedIn on file it renders the photo as-is, so the click
+ * falls through to the card (which opens the profile).
+ */
+function LinkedInPhoto({
+  href,
+  name,
+  children,
+}: {
+  href: string | null | undefined;
+  name: string;
+  children: React.ReactNode;
+}) {
+  const url = href && href !== "#" ? href : null;
+  if (!url) return <>{children}</>;
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      aria-label={`${name} on LinkedIn`}
+      title={`${name} on LinkedIn`}
+      className="group/photo relative block shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
+    >
+      {children}
+      <span className="absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-[#0A66C2] text-white ring-2 ring-white transition-transform group-hover/photo:scale-110">
+        <LinkedinIcon size={10} />
+      </span>
+    </a>
   );
 }

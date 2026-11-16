@@ -1,7 +1,7 @@
 export type MemberGroup = "board" | "directors" | "actives" | "alumni";
 
-/** Founding cohort a brother joined with. */
-export type Cohort = "Alpha Founding" | "Beta Founding" | "Alpha Tau";
+/** Founding class / pledge class a brother joined with. */
+export type Cohort = "Alpha Founding" | "Beta Founding" | "Alpha Tau" | "Alpha Upsilon";
 
 export interface Member {
   id: string;
@@ -96,6 +96,26 @@ const rawMembers: Omit<Member, "slug">[] = [
   { id: "a43", name: "Anthony Yang", position: "Active Brother", group: "actives", status: "inactive", cohort: "Alpha Founding", classYear: "2027", photo: "/members/anthony-yang.jpg" },
   { id: "a44", name: "Justin Yang", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/justin-yang.jpg" },
   { id: "a45", name: "Renee Ye", position: "Active Brother", group: "actives", cohort: "Alpha Founding", classYear: "2027", photo: "/members/renee-ye.jpg" },
+
+  // Alpha Upsilon (crossed Fall 2026)
+  { id: "au1", name: "Aiden Stephen", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029", photo: "/members/aiden-stephen.jpg" },
+  { id: "au2", name: "Arnav Kommaraju", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029", photo: "/members/arnav-kommaraju.jpg" },
+  { id: "au3", name: "Christopher Tran", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029", photo: "/members/christopher-tran.jpg" },
+  { id: "au4", name: "Ethan Lin", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029", photo: "/members/ethan-lin.jpg" },
+  { id: "au5", name: "Hanshika Yaduguru", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029", photo: "/members/hanshika-yaduguru.jpg" },
+  { id: "au6", name: "Ian Qiu", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029", photo: "/members/ian-qiu.jpg" },
+  { id: "au7", name: "Kirtan Patel", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029", photo: "/members/kirtan-patel.jpg" },
+  { id: "au8", name: "Maansi Amin", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029", photo: "/members/maansi-amin.jpg" },
+  { id: "au9", name: "Mason Lo", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029" },
+  { id: "au10", name: "Nilaksh Patil", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029", photo: "/members/nilaksh-patil.jpg" },
+  { id: "au11", name: "Prisha Trivedi", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029", photo: "/members/prisha-trivedi.jpg" },
+  { id: "au12", name: "Priyali Shah", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029", photo: "/members/priyali-shah.jpg" },
+  { id: "au13", name: "Sanaya Patel", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029", photo: "/members/sanaya-patel.jpg" },
+  { id: "au14", name: "Sara Newalkar", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029", photo: "/members/sara-newalkar.jpg" },
+  { id: "au15", name: "Shagun Girdhar", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029", photo: "/members/shagun-girdhar.jpg" },
+  { id: "au16", name: "Sharad Patel", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029", photo: "/members/sharad-patel.jpg" },
+  { id: "au17", name: "Shayan Khan", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029", photo: "/members/shayan-khan.jpg" },
+  { id: "au18", name: "Shaylen Patel", position: "Active Brother", group: "actives", cohort: "Alpha Upsilon", classYear: "2029", photo: "/members/shaylen-patel.jpg" },
 
   // ---------------- ALUMNI ----------------
   { id: "al1", name: "Nikhil Badlani", position: "Alumni", group: "alumni", cohort: "Alpha Founding", classYear: "2026", photo: "/members/nikhil-badlani.jpg" },

@@ -23,7 +23,7 @@ const TAB_LABELS: Record<Tab, string> = {
 };
 
 /** Founding classes, oldest first - used to divide the Actives view. */
-const COHORT_ORDER: Cohort[] = ["Alpha Founding", "Beta Founding", "Alpha Tau"];
+const COHORT_ORDER: Cohort[] = ["Alpha Founding", "Beta Founding", "Alpha Tau", "Alpha Upsilon"];
 
 // Stable board hierarchy: order board members by their position in the roster
 // (President → EVP → VPs), everyone else after.
