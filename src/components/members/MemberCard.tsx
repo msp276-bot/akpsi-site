@@ -65,32 +65,26 @@ export default function MemberCard({
 }) {
   const linkedin = useMemberLinkedin(member.slug) ?? member.linkedin ?? null;
 
-  // With a LinkedIn on file: the headshot opens LinkedIn (new tab) and the
-  // name plate opens the member's page. Two sibling overlay links, since
-  // links can't be nested.
-  if (href && linkedin) {
+  // With a LinkedIn on file, clicking anywhere on the card opens it (new tab).
+  if (linkedin) {
     return (
-      <motion.div variants={cardIn} className={cardClass}>
-        <CardInner member={member} />
-        <Link
-          href={href}
-          aria-label={`${member.name}'s profile`}
-          className="absolute inset-0 z-[1]"
-        />
+      <motion.div variants={cardIn}>
         <a
           href={linkedin}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`${member.name} on LinkedIn`}
           title={`${member.name} on LinkedIn`}
-          className="absolute inset-x-0 top-0 bottom-24 z-[2]"
-        />
-        <span
-          aria-hidden
-          className="pointer-events-none absolute right-3 top-3 z-[3] grid h-9 w-9 place-items-center rounded-full bg-white/90 text-[#0A66C2] shadow-sm backdrop-blur-sm transition-transform duration-300 group-hover:scale-110"
+          className={cardClass}
         >
-          <LinkedinIcon size={15} />
-        </span>
+          <CardInner member={member} />
+          <span
+            aria-hidden
+            className="pointer-events-none absolute right-3 top-3 z-[3] grid h-9 w-9 place-items-center rounded-full bg-white/90 text-[#0A66C2] shadow-sm backdrop-blur-sm transition-transform duration-300 group-hover:scale-110"
+          >
+            <LinkedinIcon size={15} />
+          </span>
+        </a>
       </motion.div>
     );
   }
@@ -108,17 +102,6 @@ export default function MemberCard({
   return (
     <motion.article variants={cardIn} className={cardClass}>
       <CardInner member={member} />
-      {linkedin && (
-        <a
-          href={linkedin}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`${member.name} on LinkedIn`}
-          className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-navy backdrop-blur-sm transition-colors hover:bg-white"
-        >
-          <LinkedinIcon size={15} />
-        </a>
-      )}
     </motion.article>
   );
 }
