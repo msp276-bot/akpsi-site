@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { LinkedinIcon } from "@/components/BrandIcons";
 import { getInitials, type Member } from "@/data/members";
 import { cardIn } from "@/lib/motion";
+import { useMemberLinkedin } from "@/lib/publicLinkedin";
 
 /**
  * Large vertical member card - a tall portrait tile with an overlaid name plate.
@@ -62,6 +63,38 @@ export default function MemberCard({
   member: Member;
   href?: string;
 }) {
+  const linkedin = useMemberLinkedin(member.slug) ?? member.linkedin ?? null;
+
+  // With a LinkedIn on file: the headshot opens LinkedIn (new tab) and the
+  // name plate opens the member's page. Two sibling overlay links, since
+  // links can't be nested.
+  if (href && linkedin) {
+    return (
+      <motion.div variants={cardIn} className={cardClass}>
+        <CardInner member={member} />
+        <Link
+          href={href}
+          aria-label={`${member.name}'s profile`}
+          className="absolute inset-0 z-[1]"
+        />
+        <a
+          href={linkedin}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${member.name} on LinkedIn`}
+          title={`${member.name} on LinkedIn`}
+          className="absolute inset-x-0 top-0 bottom-24 z-[2]"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute right-3 top-3 z-[3] grid h-9 w-9 place-items-center rounded-full bg-white/90 text-[#0A66C2] shadow-sm backdrop-blur-sm transition-transform duration-300 group-hover:scale-110"
+        >
+          <LinkedinIcon size={15} />
+        </span>
+      </motion.div>
+    );
+  }
+
   if (href) {
     return (
       <motion.div variants={cardIn}>
@@ -75,9 +108,11 @@ export default function MemberCard({
   return (
     <motion.article variants={cardIn} className={cardClass}>
       <CardInner member={member} />
-      {member.linkedin && (
+      {linkedin && (
         <a
-          href={member.linkedin}
+          href={linkedin}
+          target="_blank"
+          rel="noopener noreferrer"
           aria-label={`${member.name} on LinkedIn`}
           className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-navy backdrop-blur-sm transition-colors hover:bg-white"
         >

@@ -10,6 +10,7 @@ import {
   getInitials,
   GROUP_LABELS,
 } from "@/data/members";
+import LinkedInHeadshot from "@/components/members/LinkedInHeadshot";
 
 export function generateStaticParams() {
   return members.map((m) => ({ slug: m.slug }));
@@ -56,6 +57,7 @@ export default async function MemberProfilePage({
 
             <div className="px-6 pb-8 sm:px-10">
               <div className="-mt-14 flex flex-col items-center text-center sm:flex-row sm:items-end sm:gap-6 sm:text-left">
+                <LinkedInHeadshot slug={member.slug} name={member.name}>
                 <div className="grid h-28 w-28 shrink-0 place-items-center overflow-hidden rounded-full bg-scarlet text-2xl font-bold text-white ring-4 ring-white">
                   {member.photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -69,6 +71,7 @@ export default async function MemberProfilePage({
                     <span className="headline">{getInitials(member.name)}</span>
                   )}
                 </div>
+                </LinkedInHeadshot>
                 <div className="mt-4 sm:mb-2 sm:mt-0">
                   <span className="inline-block rounded-full bg-gold px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-navy shadow-sm">
                     {GROUP_LABELS[member.group]}
@@ -121,9 +124,9 @@ export default async function MemberProfilePage({
                 </p>
               )}
 
-              {/* Contact details (email, LinkedIn) are intentionally NOT shown
-                  on this public page - they live only in the authenticated
-                  /portal/ member directory. See build spec §5.4. */}
+              {/* Emails stay private (portal directory only). The headshot
+                  links to LinkedIn via the public_member_linkedins() RPC,
+                  which exposes nothing but the LinkedIn URL. */}
             </div>
           </div>
         </div>
