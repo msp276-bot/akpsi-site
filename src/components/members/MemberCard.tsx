@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { LinkedinIcon } from "@/components/BrandIcons";
 import { getInitials, type Member } from "@/data/members";
 import { cardIn } from "@/lib/motion";
 import { useMemberLinkedin } from "@/lib/publicLinkedin";
@@ -78,12 +77,6 @@ export default function MemberCard({
           className={cardClass}
         >
           <CardInner member={member} />
-          <span
-            aria-hidden
-            className="pointer-events-none absolute right-3 top-3 z-[3] grid h-9 w-9 place-items-center rounded-full bg-white/90 text-[#0A66C2] shadow-sm backdrop-blur-sm transition-transform duration-300 group-hover:scale-110"
-          >
-            <LinkedinIcon size={15} />
-          </span>
         </a>
       </motion.div>
     );
